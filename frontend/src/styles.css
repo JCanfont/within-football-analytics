@@ -382,6 +382,12 @@ td {
   border-color: #2f6f73;
 }
 
+.row-action.active {
+  border-color: #2f6f73;
+  background: #eaf4f1;
+  color: #1f5b5f;
+}
+
 .row-action svg {
   flex: 0 0 auto;
 }
@@ -1133,6 +1139,80 @@ td {
 
 .forebet-source-summary a {
   color: #2f6f73;
+}
+
+.forebet-live-watch {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 10px 16px;
+  align-items: center;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+  background: #f7fafb;
+}
+
+.forebet-live-watch div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.forebet-live-watch span {
+  color: #536174;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.forebet-live-watch strong {
+  color: #18212f;
+  font-size: 15px;
+}
+
+.forebet-live-watch small,
+.forebet-live-watch p {
+  margin: 0;
+  color: #617083;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.forebet-live-watch p {
+  grid-column: 1 / -1;
+}
+
+.forebet-live-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.forebet-live-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid #c9d7d2;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #245c60;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.forebet-live-actions button.active {
+  border-color: #2f6f73;
+  background: #2f6f73;
+  color: #ffffff;
+}
+
+.forebet-live-actions button:disabled {
+  cursor: default;
+  opacity: 0.62;
 }
 
 .forebet-empty-date {

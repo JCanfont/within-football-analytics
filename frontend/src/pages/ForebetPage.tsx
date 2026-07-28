@@ -1,4 +1,4 @@
-import { Calculator, CalendarDays, ChevronDown, ChevronRight } from "lucide-react";
+import { Bell, BellRing, Calculator, CalendarDays, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { loadForebetDate } from "../services/api";
 import type { ForebetDateLoadResult, ForebetRangeItem } from "../types/api";
@@ -12,18 +12,34 @@ const goalPredictionModes: Array<{ label: string; mode: GoalPredictionMode }> = 
   { label: "Over/Under", mode: "overUnder" },
 ];
 
+const FOREBET_WATCH_KEY = "within_forebet_watch";
+const LIVE_REFRESH_MS = 15 * 60 * 1000;
+
+type ForebetWatchState = {
+  autoRefresh: boolean;
+  matchIds: number[];
+  notifiedStartedIds: number[];
+};
+
 export function ForebetPage() {
   const [items, setItems] = useState<ForebetRangeItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLiveRefreshing, setIsLiveRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [targetDate, setTargetDate] = useState(todayInputValue());
   const [loadMessage, setLoadMessage] = useState<string | null>(null);
+  const [liveMessage, setLiveMessage] = useState<string | null>(null);
   const [forebetLoad, setForebetLoad] = useState<ForebetDateLoadResult | null>(null);
   const [expandedMatchId, setExpandedMatchId] = useState<number | null>(null);
   const [hasCalculatedRanges, setHasCalculatedRanges] = useState(false);
   const [loadingMode, setLoadingMode] = useState<"matches" | "ranges">("matches");
   const [goalPredictionMode, setGoalPredictionMode] = useState<GoalPredictionMode>("full");
+  const [watchedMatchIds, setWatchedMatchIds] = useState<number[]>(() => readForebetWatchState().matchIds);
+  const [notifiedStartedIds, setNotifiedStartedIds] = useState<number[]>(() => readForebetWatchState().notifiedStartedIds);
+  const [autoRefresh, setAutoRefresh] = useState(() => readForebetWatchState().autoRefresh);
+  const [lastLiveRefresh, setLastLiveRefresh] = useState<string | null>(null);
+  const [nextLiveRefresh, setNextLiveRefresh] = useState<string | null>(null);
   const isCalculatingRanges = isLoading && loadingMode === "ranges";
   const showRangeColumns = hasCalculatedRanges || isCalculatingRanges;
 
@@ -68,9 +84,76 @@ export function ForebetPage() {
       });
   }
 
+  function refreshLiveResults(manual = false) {
+    if (!targetDate || isLiveRefreshing) {
+      return;
+    }
+    setIsLiveRefreshing(true);
+    setLiveMessage(manual ? "Actualizando Forebet ahora..." : "Actualizacion automatica de Forebet en curso...");
+    loadForebetDate(targetDate, false)
+      .then((result) => {
+        setItems((current) => mergeForebetItems(current, result.matches));
+        setForebetLoad(result);
+        setLastLiveRefresh(new Date().toISOString());
+        setNextLiveRefresh(new Date(Date.now() + LIVE_REFRESH_MS).toISOString());
+        checkStartedAlerts(result.matches);
+        setLiveMessage(`Forebet actualizado: ${result.matches.length} partidos revisados.`);
+      })
+      .catch(() => {
+        setLiveMessage("No se pudo actualizar Forebet en este intento.");
+      })
+      .finally(() => setIsLiveRefreshing(false));
+  }
+
+  function toggleStartAlert(item: ForebetRangeItem) {
+    const isWatched = watchedMatchIds.includes(item.match_id);
+    if (isWatched) {
+      setWatchedMatchIds((current) => current.filter((matchId) => matchId !== item.match_id));
+      setNotifiedStartedIds((current) => current.filter((matchId) => matchId !== item.match_id));
+      setLiveMessage(`Aviso desactivado para ${item.home_team} - ${item.away_team}.`);
+      return;
+    }
+    requestNotificationPermission();
+    setWatchedMatchIds((current) => [...new Set([...current, item.match_id])]);
+    setAutoRefresh(true);
+    setLiveMessage(`Avisaremos cuando comience ${item.home_team} - ${item.away_team}.`);
+    if (hasMatchStarted(item)) {
+      notifyMatchStarted(item);
+      setNotifiedStartedIds((current) => [...new Set([...current, item.match_id])]);
+    }
+  }
+
+  function checkStartedAlerts(nextItems: ForebetRangeItem[]) {
+    const nextNotified = new Set(notifiedStartedIds);
+    for (const item of nextItems) {
+      if (!watchedMatchIds.includes(item.match_id) || nextNotified.has(item.match_id) || !hasMatchStarted(item)) {
+        continue;
+      }
+      notifyMatchStarted(item);
+      nextNotified.add(item.match_id);
+    }
+    if (nextNotified.size !== notifiedStartedIds.length) {
+      setNotifiedStartedIds(Array.from(nextNotified));
+    }
+  }
+
   useEffect(() => {
     loadDateFor(todayInputValue(), false);
   }, []);
+
+  useEffect(() => {
+    writeForebetWatchState({ autoRefresh, matchIds: watchedMatchIds, notifiedStartedIds });
+  }, [autoRefresh, watchedMatchIds, notifiedStartedIds]);
+
+  useEffect(() => {
+    if (!autoRefresh || watchedMatchIds.length === 0) {
+      setNextLiveRefresh(null);
+      return;
+    }
+    setNextLiveRefresh(new Date(Date.now() + LIVE_REFRESH_MS).toISOString());
+    const intervalId = window.setInterval(() => refreshLiveResults(false), LIVE_REFRESH_MS);
+    return () => window.clearInterval(intervalId);
+  }, [autoRefresh, targetDate, watchedMatchIds.join(",")]);
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -147,6 +230,16 @@ export function ForebetPage() {
         {error ? <div className="detail-state">{error}</div> : null}
         {loadMessage ? <div className="forebet-load-message">{loadMessage}</div> : null}
         {forebetLoad ? <ForebetLoadSummary result={forebetLoad} /> : null}
+        <ForebetLiveWatchPanel
+          autoRefresh={autoRefresh}
+          isRefreshing={isLiveRefreshing}
+          lastRefresh={lastLiveRefresh}
+          liveMessage={liveMessage}
+          nextRefresh={nextLiveRefresh}
+          onRefreshNow={() => refreshLiveResults(true)}
+          onToggleAuto={() => setAutoRefresh((current) => !current)}
+          watchedCount={watchedMatchIds.length}
+        />
         {isLoading ? <div className="detail-state">{loadingDetail(loadingMode)}</div> : null}
         {!error && filteredItems.length > 0 ? (
           <div className="table-wrap">
@@ -155,6 +248,7 @@ export function ForebetPage() {
                 <tr>
                   <th>Fecha</th>
                   <th>Partido</th>
+                  <th>Seguimiento</th>
                   <th>Forebet</th>
                   <th>Predicción goles</th>
                   <th>Goles esperados</th>
@@ -170,9 +264,11 @@ export function ForebetPage() {
                     item={item}
                     key={item.match_id}
                     onToggle={() => setExpandedMatchId((current) => (current === item.match_id ? null : item.match_id))}
+                    onToggleWatch={() => toggleStartAlert(item)}
                     predictionMode={goalPredictionMode}
                     showRanges={showRangeColumns}
                     isCalculatingRanges={isCalculatingRanges}
+                    isWatched={watchedMatchIds.includes(item.match_id)}
                   />
                 ))}
               </tbody>
@@ -187,6 +283,54 @@ export function ForebetPage() {
         ) : null}
       </section>
     </section>
+  );
+}
+
+function ForebetLiveWatchPanel({
+  autoRefresh,
+  isRefreshing,
+  lastRefresh,
+  liveMessage,
+  nextRefresh,
+  onRefreshNow,
+  onToggleAuto,
+  watchedCount,
+}: {
+  autoRefresh: boolean;
+  isRefreshing: boolean;
+  lastRefresh: string | null;
+  liveMessage: string | null;
+  nextRefresh: string | null;
+  onRefreshNow: () => void;
+  onToggleAuto: () => void;
+  watchedCount: number;
+}) {
+  return (
+    <div className="forebet-live-watch">
+      <div>
+        <span>Seguimiento de inicio y directo</span>
+        <strong>{watchedCount} partidos con aviso</strong>
+        <small>
+          {autoRefresh && watchedCount > 0
+            ? `Actualizacion cada 15 minutos${nextRefresh ? `, proxima ${formatTimeOnly(nextRefresh)}` : ""}`
+            : "Marca un partido para activar el seguimiento"}
+        </small>
+      </div>
+      <div className="forebet-live-actions">
+        <button className={autoRefresh ? "active" : ""} type="button" onClick={onToggleAuto}>
+          <RefreshCw size={16} aria-hidden="true" />
+          Cada 15 min
+        </button>
+        <button type="button" onClick={onRefreshNow} disabled={isRefreshing}>
+          <RefreshCw size={16} aria-hidden="true" />
+          {isRefreshing ? "Actualizando" : "Actualizar ahora"}
+        </button>
+      </div>
+      <p>
+        {liveMessage ??
+          (lastRefresh ? `Ultima actualizacion Forebet: ${formatTimeOnly(lastRefresh)}` : "Sin actualizaciones automaticas todavia.")}
+      </p>
+    </div>
   );
 }
 
@@ -245,15 +389,19 @@ function formatDateLabel(value: string) {
 function ForebetRangeRow({
   isExpanded,
   isCalculatingRanges,
+  isWatched,
   item,
   onToggle,
+  onToggleWatch,
   predictionMode,
   showRanges,
 }: {
   isExpanded: boolean;
   isCalculatingRanges: boolean;
+  isWatched: boolean;
   item: ForebetRangeItem;
   onToggle: () => void;
+  onToggleWatch: () => void;
   predictionMode: GoalPredictionMode;
   showRanges: boolean;
 }) {
@@ -265,6 +413,13 @@ function ForebetRangeRow({
         <td>
           <strong>{item.home_team}</strong> vs <strong>{item.away_team}</strong>
           <span className="table-subtext">{item.competition} · {formatSeason(item.season)}</span>
+        </td>
+        <td>
+          <button className={isWatched ? "row-action active" : "row-action"} type="button" onClick={onToggleWatch}>
+            {isWatched ? <BellRing size={15} aria-hidden="true" /> : <Bell size={15} aria-hidden="true" />}
+            {isWatched ? "Aviso activo" : "Avisar inicio"}
+          </button>
+          <span className="table-subtext">{hasMatchStarted(item) ? "En curso o iniciado" : `Inicio ${formatTimeOnly(item.match_date)}`}</span>
         </td>
         <td>{item.forebet_prediction ?? "Sin captura"}</td>
         <td>{formatGoalPrediction(item, predictionMode)}</td>
@@ -282,7 +437,7 @@ function ForebetRangeRow({
       </tr>
       {showRanges && isExpanded ? (
         <tr className="forebet-calculation-row">
-          <td colSpan={8}>
+          <td colSpan={9}>
             <ForebetCalculation range={range} reliability={item.reliability} />
           </td>
         </tr>
@@ -348,6 +503,10 @@ function formatDateOnly(value: string) {
   return new Intl.DateTimeFormat("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(value));
 }
 
+function formatTimeOnly(value: string) {
+  return new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+}
+
 function formatSeason(value: string) {
   const match = value.match(/(\d{2})(\d{2})\D+(\d{2})(\d{2})/);
   return match ? `${match[2]}-${match[4]}` : value;
@@ -410,4 +569,68 @@ function formatUnknown(value: unknown) {
     return value;
   }
   return "n/d";
+}
+
+function hasMatchStarted(item: ForebetRangeItem) {
+  const normalizedStatus = item.status.toLowerCase();
+  if (["live", "in_play", "playing", "1h", "2h", "ht"].some((status) => normalizedStatus.includes(status))) {
+    return true;
+  }
+  const matchStart = new Date(item.match_date).getTime();
+  const now = Date.now();
+  return Number.isFinite(matchStart) && now >= matchStart && now <= matchStart + 150 * 60 * 1000;
+}
+
+function mergeForebetItems(current: ForebetRangeItem[], incoming: ForebetRangeItem[]) {
+  const currentById = new Map(current.map((item) => [item.match_id, item]));
+  return incoming.map((item) => {
+    const previous = currentById.get(item.match_id);
+    if (!previous) {
+      return item;
+    }
+    return {
+      ...previous,
+      ...item,
+      score_range: previous.score_range ?? item.score_range,
+      reliability: previous.score_range ? previous.reliability : item.reliability,
+    };
+  });
+}
+
+function requestNotificationPermission() {
+  if (!("Notification" in window) || Notification.permission !== "default") {
+    return;
+  }
+  Notification.requestPermission().catch(() => undefined);
+}
+
+function notifyMatchStarted(item: ForebetRangeItem) {
+  const title = "Ha comenzado el partido";
+  const body = `${item.home_team} - ${item.away_team}`;
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification(title, { body });
+  }
+}
+
+function readForebetWatchState(): ForebetWatchState {
+  try {
+    const raw = localStorage.getItem(FOREBET_WATCH_KEY);
+    if (!raw) {
+      return { autoRefresh: false, matchIds: [], notifiedStartedIds: [] };
+    }
+    const parsed = JSON.parse(raw) as Partial<ForebetWatchState>;
+    return {
+      autoRefresh: Boolean(parsed.autoRefresh),
+      matchIds: Array.isArray(parsed.matchIds) ? parsed.matchIds.filter((id): id is number => typeof id === "number") : [],
+      notifiedStartedIds: Array.isArray(parsed.notifiedStartedIds)
+        ? parsed.notifiedStartedIds.filter((id): id is number => typeof id === "number")
+        : [],
+    };
+  } catch {
+    return { autoRefresh: false, matchIds: [], notifiedStartedIds: [] };
+  }
+}
+
+function writeForebetWatchState(state: ForebetWatchState) {
+  localStorage.setItem(FOREBET_WATCH_KEY, JSON.stringify(state));
 }

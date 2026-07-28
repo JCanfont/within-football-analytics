@@ -541,6 +541,27 @@ describe("App", () => {
     expect(screen.getByText("Over 2.5")).toBeInTheDocument();
   }, 30000);
 
+  it("can watch a Forebet match start and refresh live results", async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Forebet" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Avisar inicio" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Avisar inicio" }));
+    expect(screen.getByRole("button", { name: "Aviso activo" })).toBeInTheDocument();
+    expect(screen.getByText("1 partidos con aviso")).toBeInTheDocument();
+
+    mockedApi.loadForebetDate.mockClear();
+    fireEvent.click(screen.getByRole("button", { name: "Actualizar ahora" }));
+
+    await waitFor(() => {
+      expect(mockedApi.loadForebetDate).toHaveBeenCalledWith("2026-07-28", false);
+    });
+  }, 30000);
+
   it("enables live tracking globally and for the selected match", async () => {
     render(<App />);
 
