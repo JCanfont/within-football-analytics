@@ -1041,6 +1041,27 @@ td {
   color: #2f6f73;
 }
 
+.forebet-empty-date {
+  display: grid;
+  gap: 6px;
+  margin: 0 18px 18px;
+  padding: 18px;
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #f9fbfc;
+}
+
+.forebet-empty-date strong {
+  color: #18212f;
+  font-size: 15px;
+}
+
+.forebet-empty-date span {
+  color: #617083;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .forebet-calculation-row td {
   background: #f7fbf9;
   white-space: normal;

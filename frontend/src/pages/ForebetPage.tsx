@@ -1,6 +1,6 @@
-import { Calculator, CalendarDays, ChevronDown, ChevronRight, RefreshCcw } from "lucide-react";
+import { Calculator, CalendarDays, ChevronDown, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { fetchForebetRanges, loadForebetDate } from "../services/api";
+import { loadForebetDate } from "../services/api";
 import type { ForebetDateLoadResult, ForebetRangeItem } from "../types/api";
 
 export function ForebetPage() {
@@ -12,22 +12,6 @@ export function ForebetPage() {
   const [loadMessage, setLoadMessage] = useState<string | null>(null);
   const [forebetLoad, setForebetLoad] = useState<ForebetDateLoadResult | null>(null);
   const [expandedMatchId, setExpandedMatchId] = useState<number | null>(null);
-
-  function load() {
-    setIsLoading(true);
-    setError(null);
-    setLoadMessage(null);
-    setForebetLoad(null);
-    fetchForebetRanges()
-      .then((data) => {
-        setItems(data);
-        setIsLoading(false);
-      })
-      .catch(() => {
-        setError("No se pudieron cargar los rangos Forebet.");
-        setIsLoading(false);
-      });
-  }
 
   function loadDate() {
     if (!targetDate) {
@@ -84,16 +68,17 @@ export function ForebetPage() {
               aria-label="Fecha de jornada Forebet"
               type="date"
               value={targetDate}
-              onChange={(event) => setTargetDate(event.target.value)}
+              onChange={(event) => {
+                setTargetDate(event.target.value);
+                if (event.target.value) {
+                  loadDateFor(event.target.value);
+                }
+              }}
             />
           </label>
           <button className="filter-show" type="button" onClick={loadDate}>
             <CalendarDays size={17} aria-hidden="true" />
             Cargar jornada
-          </button>
-          <button className="filter-show secondary" type="button" onClick={load}>
-            <RefreshCcw size={17} aria-hidden="true" />
-            Ver todos
           </button>
         </div>
       </header>
@@ -101,8 +86,8 @@ export function ForebetPage() {
       <section className="panel forebet-panel">
         <div className="panel-heading">
           <div>
-            <h2>Rangos de resultado por partido</h2>
-            <p>{isLoading ? "Calculando rangos..." : `${filteredItems.length} partidos visibles de ${items.length}`}</p>
+            <h2>Jornada del {formatDateLabel(targetDate)}</h2>
+            <p>{isLoading ? "Calculando rangos..." : `${filteredItems.length} partidos de la fecha solicitada`}</p>
           </div>
           <input
             className="forebet-search"
@@ -117,7 +102,7 @@ export function ForebetPage() {
         {loadMessage ? <div className="forebet-load-message">{loadMessage}</div> : null}
         {forebetLoad ? <ForebetLoadSummary result={forebetLoad} /> : null}
         {isLoading ? <div className="detail-state">Calculando rangos de resultado para los partidos importados...</div> : null}
-        {!isLoading && !error ? (
+        {!isLoading && !error && filteredItems.length > 0 ? (
           <div className="table-wrap">
             <table>
               <thead>
@@ -141,6 +126,12 @@ export function ForebetPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        ) : null}
+        {!isLoading && !error && filteredItems.length === 0 ? (
+          <div className="forebet-empty-date">
+            <strong>No hay partidos para {formatDateLabel(targetDate)}</strong>
+            <span>La vista Forebet solo muestra la fecha solicitada. Cambia la fecha para consultar otra jornada.</span>
           </div>
         ) : null}
       </section>
@@ -180,6 +171,13 @@ function formatExternalStatus(value: string) {
 
 function todayInputValue() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function formatDateLabel(value: string) {
+  if (!value) {
+    return "fecha seleccionada";
+  }
+  return new Intl.DateTimeFormat("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(`${value}T12:00:00`));
 }
 
 function ForebetRangeRow({ isExpanded, item, onToggle }: { isExpanded: boolean; item: ForebetRangeItem; onToggle: () => void }) {
