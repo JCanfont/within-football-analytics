@@ -15,7 +15,7 @@ from app.models import ForebetPrediction, Match, Team
 from app.utils.normalization import normalize_name
 
 
-FOREBET_PREDICTIONS_URL = "https://www.forebet.com/football-predictions"
+FOREBET_PREDICTIONS_URL = "https://www.forebet.com/en/football-predictions"
 DATE_RE = re.compile(r"(?P<day>\d{2})/(?P<month>\d{2})/(?P<year>\d{4})\s+(?P<time>\d{1,2}:\d{2})")
 SCORE_RE = re.compile(r"\b(?P<home>\d+)\s*-\s*(?P<away>\d+)\b")
 
@@ -137,7 +137,7 @@ def import_forebet_jornada(db: Session, target_date: date) -> ForebetImportOutco
 
 
 def _forebet_url(target_date: date) -> str:
-    return f"{FOREBET_PREDICTIONS_URL}?date={target_date.isoformat()}&lang=en"
+    return f"{FOREBET_PREDICTIONS_URL}?lang=en"
 
 
 def _is_cloudflare_challenge(html: str) -> bool:
