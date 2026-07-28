@@ -1,18 +1,19 @@
 import { Bell, CalendarDays, DatabaseZap, Gauge, Goal, HelpCircle, ListChecks, SearchCheck, Settings, Shield, Scale, Trophy, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { AlertsPage } from "./pages/AlertsPage";
-import { CompetitionsPage, MatchesPage, TeamsPage } from "./pages/CatalogPages";
+import { CompetitionsPage, TeamsPage } from "./pages/CatalogPages";
 import { ContraPage } from "./pages/ContraPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ForebetPage } from "./pages/ForebetPage";
 import { ImportsPage } from "./pages/ImportsPage";
+import { LiveMatchesPage } from "./pages/LiveMatchesPage";
 import { PlayersPage } from "./pages/PlayersPage";
 import { QuestionsPage } from "./pages/QuestionsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
 const navigation = [
   { label: "Dashboard", icon: Gauge, view: "dashboard" },
-  { label: "Partidos", icon: CalendarDays, view: "matches" },
+  { label: "Partidos en directo", icon: CalendarDays, view: "live-matches" },
   { label: "Competiciones", icon: Trophy, view: "competitions" },
   { label: "Equipos", icon: Shield, view: "teams" },
   { label: "Jugadores", icon: UsersRound, view: "players" },
@@ -80,8 +81,8 @@ export default function App() {
           <ImportsPage />
         ) : activeView === "players" ? (
           <PlayersPage />
-        ) : activeView === "matches" ? (
-          <MatchesPage />
+        ) : activeView === "live-matches" ? (
+          <LiveMatchesPage />
         ) : activeView === "competitions" ? (
           <CompetitionsPage />
         ) : activeView === "teams" ? (

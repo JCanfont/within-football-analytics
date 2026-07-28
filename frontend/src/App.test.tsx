@@ -582,16 +582,22 @@ describe("App", () => {
     expect(screen.getByText("Rendimiento por estadio")).toBeInTheDocument();
   }, 30000);
 
-  it("opens matches competitions and teams catalog pages", async () => {
+  it("opens live matches and compares selected Forebet parameters", async () => {
     render(<App />);
+    localStorage.setItem("within_forebet_watch", JSON.stringify({ autoRefresh: true, forecastAlerts: false, matchIds: [50] }));
 
-    fireEvent.click(screen.getByRole("button", { name: "Partidos" }));
+    fireEvent.click(screen.getByRole("button", { name: "Partidos en directo" }));
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Partidos", level: 1 })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Partidos en directo", level: 1 })).toBeInTheDocument();
     });
-    expect(screen.getByText("Hora")).toBeInTheDocument();
-    expect(screen.getByText("19:30")).toBeInTheDocument();
-    expect(screen.getByText("Getafe")).toBeInTheDocument();
+    expect(screen.getByText("Getafe vs Celta")).toBeInTheDocument();
+    expect(screen.getByText("0-1")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Getafe tiros a puerta"), { target: { value: "1" } });
+    expect(screen.getAllByText("Dificultad alta").length).toBeGreaterThan(0);
+  }, 30000);
+
+  it("opens competitions and teams catalog pages", async () => {
+    render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: "Competiciones" }));
     await waitFor(() => {
