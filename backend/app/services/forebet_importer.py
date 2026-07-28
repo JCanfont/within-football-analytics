@@ -156,8 +156,8 @@ def _store_forebet_predictions(
         return ForebetImportOutcome(
             status="storage_unavailable",
             message=(
-                "Forebet devolvio partidos, pero no se pudieron guardar en la base de datos. "
-                f"Detalle: {exc}"
+                "Forebet devolvio partidos y se mostraran como lectura temporal. "
+                "Para guardarlos de forma persistente en produccion hace falta una base de datos externa."
             ),
             source_url=source_url,
             fetched=len(predictions),

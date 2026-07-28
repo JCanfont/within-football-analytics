@@ -165,7 +165,7 @@ function formatExternalStatus(value: string) {
     http_error: "error HTTP",
     no_forebet_matches: "sin partidos extraidos",
     no_local_match: "sin cruce local",
-    storage_unavailable: "sin escritura persistente",
+    storage_unavailable: "lectura temporal",
   };
   return labels[value] ?? value;
 }
