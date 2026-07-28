@@ -355,6 +355,29 @@ Tambien se pueden indicar otras ligas compatibles con FootyStats:
 .\backend\.venv\Scripts\python.exe scripts\sync_footystats_leagues.py --targets "Honduras:Liga Nacional de Futbol Profesional de Honduras" "South Africa:Premier Soccer League"
 ```
 
+## Importar Honduras y Sudafrica desde SofaScore gratis
+
+SofaScore cubre Honduras y Sudafrica, pero su API directa bloquea llamadas de
+backend con `403 Forbidden`. La ruta gratuita preparada usa Crawlora, que ofrece
+endpoints de SofaScore con plan Free y clave API.
+
+IDs de SofaScore usados por defecto:
+
+- Honduras Liga Nacional: `925`.
+- South African Premier Division: `358`.
+
+Comando:
+
+```powershell
+$env:CRAWLORA_API_KEY="TU_CLAVE_GRATUITA"
+.\backend\.venv\Scripts\python.exe scripts\sync_sofascore_crawlora_leagues.py --import-db --with-standings
+```
+
+El importador usa temporadas, clasificaciones y partidos recientes por equipo
+para reconstruir resultados de esas competiciones. En el plan gratuito conviene
+respetar el ritmo lento por defecto, porque la cuota indicada por Crawlora es de
+5 peticiones por minuto.
+
 ## Tests
 
 Desde `backend`:
