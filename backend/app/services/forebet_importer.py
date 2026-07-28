@@ -358,7 +358,7 @@ def _reader_team_split_index(words: list[str]) -> int:
             return 2
         return 2 if len(words[0]) <= 4 or words[0].isupper() else 1
     if len(words) == 4:
-        if words[0].upper() in prefixes:
+        if words[0].upper() in {"FK"}:
             return 3
         return 2
     if len(words) == 5:

@@ -93,6 +93,8 @@ def test_parse_forebet_reader_predictions_accepts_european_date_links(monkeypatc
 
 def test_split_reader_compact_teams_handles_common_compound_names() -> None:
     assert _split_reader_compact_teams("FK Kauno Zalgiris Klaksvik") == ("FK Kauno Zalgiris", "Klaksvik")
+    assert _split_reader_compact_teams("CA Tigre Nacional (URU)") == ("CA Tigre", "Nacional (URU)")
+    assert _split_reader_compact_teams("CA Banfield Sarmiento Junín") == ("CA Banfield", "Sarmiento Junín")
     assert _split_reader_compact_teams("Gornik Zabrze Fenerbahçe") == ("Gornik Zabrze", "Fenerbahçe")
     assert _split_reader_compact_teams("Crvena Zvezda Larne") == ("Crvena Zvezda", "Larne")
     assert _split_reader_compact_teams("Slovan Bratislava Saburtalo") == ("Slovan Bratislava", "Saburtalo")
