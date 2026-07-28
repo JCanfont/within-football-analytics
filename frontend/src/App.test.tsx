@@ -21,6 +21,10 @@ describe("App", () => {
   beforeEach(() => {
     localStorage.clear();
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    Object.defineProperty(window, "scrollTo", {
+      configurable: true,
+      value: vi.fn(),
+    });
     Object.defineProperty(window, "speechSynthesis", {
       configurable: true,
       value: {
@@ -386,6 +390,9 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByRole("heading", { name: "WITHIN Football Analytics" })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, left: 0, behavior: "auto" });
+    });
 
     await waitFor(() => {
       expect(screen.getAllByText("Getafe").length).toBeGreaterThan(0);

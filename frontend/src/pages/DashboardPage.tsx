@@ -80,7 +80,6 @@ export function DashboardPage() {
 
   function selectMatchFromVoice(matchId: number) {
     selectMatchAndSyncPair(matchId);
-    revealAnalysisPanels();
   }
 
   function showSelectedAnalysis() {
@@ -111,6 +110,15 @@ export function DashboardPage() {
     utterance.rate = 0.9;
     window.speechSynthesis.speak(utterance);
   }
+
+  useEffect(() => {
+    const previousScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
+    return () => {
+      window.history.scrollRestoration = previousScrollRestoration;
+    };
+  }, []);
 
   useEffect(() => {
     if (filters.equilibriumRange !== "all") {
