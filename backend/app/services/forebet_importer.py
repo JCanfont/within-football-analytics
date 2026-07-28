@@ -22,6 +22,7 @@ DATE_RE = re.compile(r"(?P<day>\d{2})/(?P<month>\d{2})/(?P<year>\d{4})\s+(?P<tim
 READER_DATE_RE = re.compile(
     r"(?P<month>\d{2})/(?P<day>\d{2})/(?P<year>\d{4})\s+(?P<hour>\d{1,2}):(?P<minute>\d{2})\s+(?P<ampm>AM|PM)"
 )
+READER_EU_DATE_RE = re.compile(r"(?P<day>\d{2})/(?P<month>\d{2})/(?P<year>\d{4})\s+(?P<hour>\d{1,2}):(?P<minute>\d{2})")
 READER_STATS_RE = re.compile(
     r"^(?P<home_probability>\d{2})(?P<draw_probability>\d{2})(?P<away_probability>\d{2})"
     r"(?P<prediction>[12X])(?P<home_score>\d+)\s*-\s*(?P<away_score>\d+)"
@@ -216,31 +217,129 @@ def _parse_forebet_predictions(html: str, target_date: date) -> list[ForebetSour
 
 
 def _parse_forebet_reader_predictions(markdown: str, target_date: date) -> list[ForebetSourcePrediction]:
-    lines = [line.strip() for line in markdown.splitlines() if line.strip()]
+    raw_lines = [line.strip() for line in markdown.splitlines() if line.strip()]
+    lines = [_clean_reader_line(line) for line in raw_lines]
     predictions: list[ForebetSourcePrediction] = []
     for index, line in enumerate(lines):
         parsed_date = _parse_forebet_reader_datetime(line)
         if not parsed_date or parsed_date.date() != target_date:
             continue
-        if index < 2 or index + 1 >= len(lines):
+        if index + 1 >= len(lines):
             continue
-        stats_match = READER_STATS_RE.search(lines[index + 1].replace(" ", ""))
-        if not stats_match:
+        match_label, href = _reader_match_reference(raw_lines[index])
+        if match_label:
+            teams = _teams_from_reader_detail_page(href) if href else None
+            if not teams:
+                teams = _split_reader_compact_teams(match_label)
+            stats = _reader_stats_from_lines(lines, index + 1)
+        else:
+            if index < 2:
+                continue
+            teams = (lines[index - 2], lines[index - 1])
+            stats = _reader_stats_from_lines(lines, index + 1)
+        if not teams or not stats:
             continue
         predictions.append(
             ForebetSourcePrediction(
-                home_team=lines[index - 2],
-                away_team=lines[index - 1],
+                home_team=teams[0],
+                away_team=teams[1],
                 match_date=parsed_date,
-                prediction=stats_match.group("prediction"),
-                predicted_score=f"{stats_match.group('home_score')}-{stats_match.group('away_score')}",
-                expected_goals=Decimal(stats_match.group("expected_goals")),
-                home_probability=Decimal(stats_match.group("home_probability")),
-                draw_probability=Decimal(stats_match.group("draw_probability")),
-                away_probability=Decimal(stats_match.group("away_probability")),
+                prediction=stats["prediction"],
+                predicted_score=stats["predicted_score"],
+                expected_goals=stats["expected_goals"],
+                home_probability=stats["home_probability"],
+                draw_probability=stats["draw_probability"],
+                away_probability=stats["away_probability"],
             )
         )
     return predictions
+
+
+def _clean_reader_line(line: str) -> str:
+    line = re.sub(r"!\[[^\]]*\]\([^)]+\)", " ", line)
+    line = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", line)
+    line = re.sub(r"cite\d+†([^]+)", r"\1", line)
+    return re.sub(r"\s+", " ", line).strip()
+
+
+def _reader_match_reference(line: str) -> tuple[str, str | None]:
+    href_match = re.search(r"\[([^\]]+)\]\((https?://[^)]+|/[^)]+)\)", line)
+    if href_match:
+        label = href_match.group(1)
+        href = href_match.group(2)
+    else:
+        label = line
+        href = None
+    label = READER_DATE_RE.sub("", label)
+    label = READER_EU_DATE_RE.sub("", label).strip(" -")
+    if not label:
+        return "", href
+    return label, href
+
+
+def _reader_stats_from_lines(lines: list[str], start_index: int) -> dict[str, Decimal | str | None] | None:
+    compact_line = lines[start_index].replace(" ", "") if start_index < len(lines) else ""
+    compact_match = READER_STATS_RE.search(compact_line)
+    if compact_match:
+        return {
+            "prediction": compact_match.group("prediction"),
+            "predicted_score": f"{compact_match.group('home_score')}-{compact_match.group('away_score')}",
+            "expected_goals": Decimal(compact_match.group("expected_goals")),
+            "home_probability": Decimal(compact_match.group("home_probability")),
+            "draw_probability": Decimal(compact_match.group("draw_probability")),
+            "away_probability": Decimal(compact_match.group("away_probability")),
+        }
+
+    probabilities = _probabilities_from_text(lines[start_index] if start_index < len(lines) else "")
+    if len(probabilities) < 3:
+        return None
+    prediction, predicted_score = _prediction_and_score(lines[start_index + 1] if start_index + 1 < len(lines) else "")
+    if not predicted_score and start_index + 2 < len(lines):
+        _, predicted_score = _prediction_and_score(lines[start_index + 2])
+    expected_goals = next(
+        (
+            _decimal(lines[index])
+            for index in range(start_index + 2, min(len(lines), start_index + 6))
+            if _decimal(lines[index]) is not None and "." in lines[index]
+        ),
+        None,
+    )
+    return {
+        "prediction": prediction,
+        "predicted_score": predicted_score,
+        "expected_goals": expected_goals,
+        "home_probability": probabilities[0],
+        "draw_probability": probabilities[1],
+        "away_probability": probabilities[2],
+    }
+
+
+def _teams_from_reader_detail_page(href: str | None) -> tuple[str, str] | None:
+    if not href:
+        return None
+    source_url = href if href.startswith("http") else urljoin(FOREBET_PREDICTIONS_URL, href)
+    teams = _teams_from_detail_page(source_url)
+    if teams:
+        return teams
+    reader_url = f"https://r.jina.ai/http://r.jina.ai/http://{source_url}"
+    try:
+        response = requests.get(reader_url, timeout=5, headers=REQUEST_HEADERS)
+    except requests.RequestException:
+        return None
+    if response.status_code >= 400:
+        return None
+    for line in response.text.splitlines():
+        teams = _split_vs_text(_clean_reader_line(line))
+        if teams:
+            return teams
+    return None
+
+
+def _split_reader_compact_teams(label: str) -> tuple[str, str] | None:
+    teams = _split_vs_text(label)
+    if teams:
+        return teams
+    return None
 
 
 def _prediction_from_row(row, target_date: date) -> ForebetSourcePrediction | None:
@@ -389,13 +488,24 @@ def _parse_forebet_datetime(value: str) -> datetime | None:
 
 def _parse_forebet_reader_datetime(value: str) -> datetime | None:
     match = READER_DATE_RE.search(value)
+    if match:
+        hour = int(match.group("hour"))
+        if match.group("ampm") == "PM" and hour != 12:
+            hour += 12
+        if match.group("ampm") == "AM" and hour == 12:
+            hour = 0
+        return datetime(
+            int(match.group("year")),
+            int(match.group("month")),
+            int(match.group("day")),
+            hour,
+            int(match.group("minute")),
+            tzinfo=UTC,
+        )
+    match = READER_EU_DATE_RE.search(value)
     if not match:
         return None
     hour = int(match.group("hour"))
-    if match.group("ampm") == "PM" and hour != 12:
-        hour += 12
-    if match.group("ampm") == "AM" and hour == 12:
-        hour = 0
     return datetime(
         int(match.group("year")),
         int(match.group("month")),

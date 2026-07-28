@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from bs4 import BeautifulSoup
 
+from app.services import forebet_importer
 from app.services.forebet_importer import _parse_forebet_reader_predictions, _prediction_from_row
 
 
@@ -63,3 +64,28 @@ def test_parse_forebet_reader_predictions_builds_rows_from_markdown() -> None:
     assert predictions[1].away_team == "Mjällby AIF"
     assert predictions[1].prediction == "2"
     assert predictions[1].predicted_score == "1-3"
+
+
+def test_parse_forebet_reader_predictions_accepts_european_date_links(monkeypatch) -> None:
+    def fake_teams_from_detail(href: str | None) -> tuple[str, str] | None:
+        assert href == "https://www.forebet.com/en/football/matches/kups-kuopio-sabah-2477553"
+        return "KuPS Kuopio", "Sabah"
+
+    monkeypatch.setattr(forebet_importer, "_teams_from_reader_detail_page", fake_teams_from_detail)
+    markdown = """
+    [KuPS Kuopio Sabah 28/07/2026 17:00](https://www.forebet.com/en/football/matches/kups-kuopio-sabah-2477553)
+    28 24 48
+    2 0-1
+    0 - 1
+    2.07
+    """
+
+    predictions = _parse_forebet_reader_predictions(markdown, date(2026, 7, 28))
+
+    assert len(predictions) == 1
+    assert predictions[0].home_team == "KuPS Kuopio"
+    assert predictions[0].away_team == "Sabah"
+    assert predictions[0].match_date.hour == 17
+    assert predictions[0].prediction == "2"
+    assert predictions[0].predicted_score == "0-1"
+    assert predictions[0].expected_goals == Decimal("2.07")
