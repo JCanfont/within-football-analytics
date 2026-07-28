@@ -1,0 +1,12 @@
+backend/.venv/
+**/__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+**/*.db
+!backend/within_football_analytics.db
+**/*.sqlite
+**/*.sqlite3
+.env
+node_modules/
+dist/

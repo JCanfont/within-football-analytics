@@ -1,0 +1,1141 @@
+competition,season,country,competition_type,matchday,match_date,home_team,away_team,stadium,city,home_score,away_score,status,is_friendly,source,external_id
+LaLiga,2023/2024,Spain,domestic_league,1,2023-08-11T20:00:00+00:00,Almeria,Vallecano,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2023-08-11-almeria-vallecano
+LaLiga,2023/2024,Spain,domestic_league,1,2023-08-11T20:00:00+00:00,Sevilla,Valencia,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2023-08-11-sevilla-valencia
+LaLiga,2023/2024,Spain,domestic_league,1,2023-08-12T20:00:00+00:00,Ath Bilbao,Real Madrid,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2023-08-12-ath-bilbao-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,1,2023-08-12T20:00:00+00:00,Las Palmas,Mallorca,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-08-12-las-palmas-mallorca
+LaLiga,2023/2024,Spain,domestic_league,1,2023-08-12T20:00:00+00:00,Sociedad,Girona,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-08-12-sociedad-girona
+LaLiga,2023/2024,Spain,domestic_league,1,2023-08-13T20:00:00+00:00,Celta,Osasuna,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2023-08-13-celta-osasuna
+LaLiga,2023/2024,Spain,domestic_league,1,2023-08-13T20:00:00+00:00,Getafe,Barcelona,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-08-13-getafe-barcelona
+LaLiga,2023/2024,Spain,domestic_league,1,2023-08-13T20:00:00+00:00,Villarreal,Betis,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2023-08-13-villarreal-betis
+LaLiga,2023/2024,Spain,domestic_league,1,2023-08-14T20:00:00+00:00,Ath Madrid,Granada,,,3,1,finished,false,datahub-football-data,laliga-2023-2024-2023-08-14-ath-madrid-granada
+LaLiga,2023/2024,Spain,domestic_league,1,2023-08-14T20:00:00+00:00,Cadiz,Alaves,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-08-14-cadiz-alaves
+LaLiga,2023/2024,Spain,domestic_league,2,2023-08-18T20:00:00+00:00,Mallorca,Villarreal,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2023-08-18-mallorca-villarreal
+LaLiga,2023/2024,Spain,domestic_league,2,2023-08-18T20:00:00+00:00,Valencia,Las Palmas,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-08-18-valencia-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,2,2023-08-19T20:00:00+00:00,Almeria,Real Madrid,,,1,3,finished,false,datahub-football-data,laliga-2023-2024-2023-08-19-almeria-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,2,2023-08-19T20:00:00+00:00,Osasuna,Ath Bilbao,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2023-08-19-osasuna-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,2,2023-08-19T20:00:00+00:00,Sociedad,Celta,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-08-19-sociedad-celta
+LaLiga,2023/2024,Spain,domestic_league,2,2023-08-20T20:00:00+00:00,Barcelona,Cadiz,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2023-08-20-barcelona-cadiz
+LaLiga,2023/2024,Spain,domestic_league,2,2023-08-20T20:00:00+00:00,Betis,Ath Madrid,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-08-20-betis-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,2,2023-08-20T20:00:00+00:00,Girona,Getafe,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2023-08-20-girona-getafe
+LaLiga,2023/2024,Spain,domestic_league,2,2023-08-21T20:00:00+00:00,Alaves,Sevilla,,,4,3,finished,false,datahub-football-data,laliga-2023-2024-2023-08-21-alaves-sevilla
+LaLiga,2023/2024,Spain,domestic_league,2,2023-08-21T20:00:00+00:00,Granada,Vallecano,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2023-08-21-granada-vallecano
+LaLiga,2023/2024,Spain,domestic_league,3,2023-08-25T20:00:00+00:00,Celta,Real Madrid,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2023-08-25-celta-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,3,2023-08-25T20:00:00+00:00,Las Palmas,Sociedad,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-08-25-las-palmas-sociedad
+LaLiga,2023/2024,Spain,domestic_league,3,2023-08-26T20:00:00+00:00,Cadiz,Almeria,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-08-26-cadiz-almeria
+LaLiga,2023/2024,Spain,domestic_league,3,2023-08-26T20:00:00+00:00,Granada,Mallorca,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2023-08-26-granada-mallorca
+LaLiga,2023/2024,Spain,domestic_league,3,2023-08-26T20:00:00+00:00,Sevilla,Girona,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2023-08-26-sevilla-girona
+LaLiga,2023/2024,Spain,domestic_league,3,2023-08-27T20:00:00+00:00,Ath Bilbao,Betis,,,4,2,finished,false,datahub-football-data,laliga-2023-2024-2023-08-27-ath-bilbao-betis
+LaLiga,2023/2024,Spain,domestic_league,3,2023-08-27T20:00:00+00:00,Valencia,Osasuna,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2023-08-27-valencia-osasuna
+LaLiga,2023/2024,Spain,domestic_league,3,2023-08-27T20:00:00+00:00,Villarreal,Barcelona,,,3,4,finished,false,datahub-football-data,laliga-2023-2024-2023-08-27-villarreal-barcelona
+LaLiga,2023/2024,Spain,domestic_league,3,2023-08-28T20:00:00+00:00,Getafe,Alaves,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-08-28-getafe-alaves
+LaLiga,2023/2024,Spain,domestic_league,3,2023-08-28T20:00:00+00:00,Vallecano,Ath Madrid,,,0,7,finished,false,datahub-football-data,laliga-2023-2024-2023-08-28-vallecano-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,4,2023-09-01T20:00:00+00:00,Almeria,Celta,,,2,3,finished,false,datahub-football-data,laliga-2023-2024-2023-09-01-almeria-celta
+LaLiga,2023/2024,Spain,domestic_league,4,2023-09-01T20:00:00+00:00,Cadiz,Villarreal,,,3,1,finished,false,datahub-football-data,laliga-2023-2024-2023-09-01-cadiz-villarreal
+LaLiga,2023/2024,Spain,domestic_league,4,2023-09-02T20:00:00+00:00,Alaves,Valencia,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-02-alaves-valencia
+LaLiga,2023/2024,Spain,domestic_league,4,2023-09-02T20:00:00+00:00,Betis,Vallecano,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-02-betis-vallecano
+LaLiga,2023/2024,Spain,domestic_league,4,2023-09-02T20:00:00+00:00,Real Madrid,Getafe,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2023-09-02-real-madrid-getafe
+LaLiga,2023/2024,Spain,domestic_league,4,2023-09-02T20:00:00+00:00,Sociedad,Granada,,,5,3,finished,false,datahub-football-data,laliga-2023-2024-2023-09-02-sociedad-granada
+LaLiga,2023/2024,Spain,domestic_league,4,2023-09-03T20:00:00+00:00,Girona,Las Palmas,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-03-girona-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,4,2023-09-03T20:00:00+00:00,Mallorca,Ath Bilbao,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-03-mallorca-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,4,2023-09-03T20:00:00+00:00,Osasuna,Barcelona,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2023-09-03-osasuna-barcelona
+LaLiga,2023/2024,Spain,domestic_league,4,2023-09-15T20:00:00+00:00,Vallecano,Alaves,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-15-vallecano-alaves
+LaLiga,2023/2024,Spain,domestic_league,5,2023-09-16T20:00:00+00:00,Ath Bilbao,Cadiz,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-16-ath-bilbao-cadiz
+LaLiga,2023/2024,Spain,domestic_league,5,2023-09-16T20:00:00+00:00,Barcelona,Betis,,,5,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-16-barcelona-betis
+LaLiga,2023/2024,Spain,domestic_league,5,2023-09-16T20:00:00+00:00,Celta,Mallorca,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2023-09-16-celta-mallorca
+LaLiga,2023/2024,Spain,domestic_league,5,2023-09-16T20:00:00+00:00,Valencia,Ath Madrid,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-16-valencia-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,5,2023-09-17T20:00:00+00:00,Getafe,Osasuna,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2023-09-17-getafe-osasuna
+LaLiga,2023/2024,Spain,domestic_league,5,2023-09-17T20:00:00+00:00,Real Madrid,Sociedad,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2023-09-17-real-madrid-sociedad
+LaLiga,2023/2024,Spain,domestic_league,5,2023-09-17T20:00:00+00:00,Sevilla,Las Palmas,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-17-sevilla-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,5,2023-09-17T20:00:00+00:00,Villarreal,Almeria,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2023-09-17-villarreal-almeria
+LaLiga,2023/2024,Spain,domestic_league,5,2023-09-18T20:00:00+00:00,Granada,Girona,,,2,4,finished,false,datahub-football-data,laliga-2023-2024-2023-09-18-granada-girona
+LaLiga,2023/2024,Spain,domestic_league,5,2023-09-22T20:00:00+00:00,Alaves,Ath Bilbao,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2023-09-22-alaves-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,6,2023-09-23T20:00:00+00:00,Almeria,Valencia,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2023-09-23-almeria-valencia
+LaLiga,2023/2024,Spain,domestic_league,6,2023-09-23T20:00:00+00:00,Barcelona,Celta,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2023-09-23-barcelona-celta
+LaLiga,2023/2024,Spain,domestic_league,6,2023-09-23T20:00:00+00:00,Girona,Mallorca,,,5,3,finished,false,datahub-football-data,laliga-2023-2024-2023-09-23-girona-mallorca
+LaLiga,2023/2024,Spain,domestic_league,6,2023-09-23T20:00:00+00:00,Osasuna,Sevilla,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-23-osasuna-sevilla
+LaLiga,2023/2024,Spain,domestic_league,6,2023-09-24T20:00:00+00:00,Ath Madrid,Real Madrid,,,3,1,finished,false,datahub-football-data,laliga-2023-2024-2023-09-24-ath-madrid-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,6,2023-09-24T20:00:00+00:00,Betis,Cadiz,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-09-24-betis-cadiz
+LaLiga,2023/2024,Spain,domestic_league,6,2023-09-24T20:00:00+00:00,Las Palmas,Granada,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-24-las-palmas-granada
+LaLiga,2023/2024,Spain,domestic_league,6,2023-09-24T20:00:00+00:00,Sociedad,Getafe,,,4,3,finished,false,datahub-football-data,laliga-2023-2024-2023-09-24-sociedad-getafe
+LaLiga,2023/2024,Spain,domestic_league,6,2023-09-24T20:00:00+00:00,Vallecano,Villarreal,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-09-24-vallecano-villarreal
+LaLiga,2023/2024,Spain,domestic_league,6,2023-09-26T20:00:00+00:00,Mallorca,Barcelona,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2023-09-26-mallorca-barcelona
+LaLiga,2023/2024,Spain,domestic_league,7,2023-09-26T20:00:00+00:00,Sevilla,Almeria,,,5,1,finished,false,datahub-football-data,laliga-2023-2024-2023-09-26-sevilla-almeria
+LaLiga,2023/2024,Spain,domestic_league,7,2023-09-27T20:00:00+00:00,Ath Bilbao,Getafe,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2023-09-27-ath-bilbao-getafe
+LaLiga,2023/2024,Spain,domestic_league,7,2023-09-27T20:00:00+00:00,Cadiz,Vallecano,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-27-cadiz-vallecano
+LaLiga,2023/2024,Spain,domestic_league,7,2023-09-27T20:00:00+00:00,Real Madrid,Las Palmas,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-27-real-madrid-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,7,2023-09-27T20:00:00+00:00,Valencia,Sociedad,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2023-09-27-valencia-sociedad
+LaLiga,2023/2024,Spain,domestic_league,7,2023-09-27T20:00:00+00:00,Villarreal,Girona,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2023-09-27-villarreal-girona
+LaLiga,2023/2024,Spain,domestic_league,7,2023-09-28T20:00:00+00:00,Celta,Alaves,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-09-28-celta-alaves
+LaLiga,2023/2024,Spain,domestic_league,7,2023-09-28T20:00:00+00:00,Granada,Betis,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-09-28-granada-betis
+LaLiga,2023/2024,Spain,domestic_league,7,2023-09-28T20:00:00+00:00,Osasuna,Ath Madrid,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2023-09-28-osasuna-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,7,2023-09-29T20:00:00+00:00,Barcelona,Sevilla,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-29-barcelona-sevilla
+LaLiga,2023/2024,Spain,domestic_league,8,2023-09-30T20:00:00+00:00,Getafe,Villarreal,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-30-getafe-villarreal
+LaLiga,2023/2024,Spain,domestic_league,8,2023-09-30T20:00:00+00:00,Girona,Real Madrid,,,0,3,finished,false,datahub-football-data,laliga-2023-2024-2023-09-30-girona-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,8,2023-09-30T20:00:00+00:00,Sociedad,Ath Bilbao,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2023-09-30-sociedad-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,8,2023-09-30T20:00:00+00:00,Vallecano,Mallorca,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2023-09-30-vallecano-mallorca
+LaLiga,2023/2024,Spain,domestic_league,8,2023-10-01T20:00:00+00:00,Alaves,Osasuna,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2023-10-01-alaves-osasuna
+LaLiga,2023/2024,Spain,domestic_league,8,2023-10-01T20:00:00+00:00,Almeria,Granada,,,3,3,finished,false,datahub-football-data,laliga-2023-2024-2023-10-01-almeria-granada
+LaLiga,2023/2024,Spain,domestic_league,8,2023-10-01T20:00:00+00:00,Ath Madrid,Cadiz,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2023-10-01-ath-madrid-cadiz
+LaLiga,2023/2024,Spain,domestic_league,8,2023-10-01T20:00:00+00:00,Betis,Valencia,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2023-10-01-betis-valencia
+LaLiga,2023/2024,Spain,domestic_league,8,2023-10-02T20:00:00+00:00,Las Palmas,Celta,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2023-10-02-las-palmas-celta
+LaLiga,2023/2024,Spain,domestic_league,8,2023-10-06T20:00:00+00:00,Ath Bilbao,Almeria,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2023-10-06-ath-bilbao-almeria
+LaLiga,2023/2024,Spain,domestic_league,9,2023-10-07T20:00:00+00:00,Cadiz,Girona,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2023-10-07-cadiz-girona
+LaLiga,2023/2024,Spain,domestic_league,9,2023-10-07T20:00:00+00:00,Mallorca,Valencia,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-10-07-mallorca-valencia
+LaLiga,2023/2024,Spain,domestic_league,9,2023-10-07T20:00:00+00:00,Real Madrid,Osasuna,,,4,0,finished,false,datahub-football-data,laliga-2023-2024-2023-10-07-real-madrid-osasuna
+LaLiga,2023/2024,Spain,domestic_league,9,2023-10-07T20:00:00+00:00,Sevilla,Vallecano,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2023-10-07-sevilla-vallecano
+LaLiga,2023/2024,Spain,domestic_league,9,2023-10-08T20:00:00+00:00,Alaves,Betis,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-10-08-alaves-betis
+LaLiga,2023/2024,Spain,domestic_league,9,2023-10-08T20:00:00+00:00,Ath Madrid,Sociedad,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2023-10-08-ath-madrid-sociedad
+LaLiga,2023/2024,Spain,domestic_league,9,2023-10-08T20:00:00+00:00,Celta,Getafe,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2023-10-08-celta-getafe
+LaLiga,2023/2024,Spain,domestic_league,9,2023-10-08T20:00:00+00:00,Granada,Barcelona,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2023-10-08-granada-barcelona
+LaLiga,2023/2024,Spain,domestic_league,9,2023-10-08T20:00:00+00:00,Villarreal,Las Palmas,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2023-10-08-villarreal-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,9,2023-10-20T20:00:00+00:00,Osasuna,Granada,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2023-10-20-osasuna-granada
+LaLiga,2023/2024,Spain,domestic_league,10,2023-10-21T20:00:00+00:00,Celta,Ath Madrid,,,0,3,finished,false,datahub-football-data,laliga-2023-2024-2023-10-21-celta-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,10,2023-10-21T20:00:00+00:00,Getafe,Betis,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-10-21-getafe-betis
+LaLiga,2023/2024,Spain,domestic_league,10,2023-10-21T20:00:00+00:00,Sevilla,Real Madrid,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-10-21-sevilla-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,10,2023-10-21T20:00:00+00:00,Sociedad,Mallorca,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-10-21-sociedad-mallorca
+LaLiga,2023/2024,Spain,domestic_league,10,2023-10-22T20:00:00+00:00,Barcelona,Ath Bilbao,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-10-22-barcelona-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,10,2023-10-22T20:00:00+00:00,Girona,Almeria,,,5,2,finished,false,datahub-football-data,laliga-2023-2024-2023-10-22-girona-almeria
+LaLiga,2023/2024,Spain,domestic_league,10,2023-10-22T20:00:00+00:00,Las Palmas,Vallecano,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2023-10-22-las-palmas-vallecano
+LaLiga,2023/2024,Spain,domestic_league,10,2023-10-22T20:00:00+00:00,Villarreal,Alaves,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-10-22-villarreal-alaves
+LaLiga,2023/2024,Spain,domestic_league,10,2023-10-23T20:00:00+00:00,Valencia,Cadiz,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2023-10-23-valencia-cadiz
+LaLiga,2023/2024,Spain,domestic_league,10,2023-10-27T20:00:00+00:00,Girona,Celta,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-10-27-girona-celta
+LaLiga,2023/2024,Spain,domestic_league,11,2023-10-28T20:00:00+00:00,Almeria,Las Palmas,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2023-10-28-almeria-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,11,2023-10-28T20:00:00+00:00,Barcelona,Real Madrid,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2023-10-28-barcelona-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,11,2023-10-28T20:00:00+00:00,Cadiz,Sevilla,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2023-10-28-cadiz-sevilla
+LaLiga,2023/2024,Spain,domestic_league,11,2023-10-28T20:00:00+00:00,Mallorca,Getafe,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-10-28-mallorca-getafe
+LaLiga,2023/2024,Spain,domestic_league,11,2023-10-29T20:00:00+00:00,Ath Bilbao,Valencia,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2023-10-29-ath-bilbao-valencia
+LaLiga,2023/2024,Spain,domestic_league,11,2023-10-29T20:00:00+00:00,Ath Madrid,Alaves,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2023-10-29-ath-madrid-alaves
+LaLiga,2023/2024,Spain,domestic_league,11,2023-10-29T20:00:00+00:00,Betis,Osasuna,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2023-10-29-betis-osasuna
+LaLiga,2023/2024,Spain,domestic_league,11,2023-10-29T20:00:00+00:00,Vallecano,Sociedad,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2023-10-29-vallecano-sociedad
+LaLiga,2023/2024,Spain,domestic_league,11,2023-10-30T20:00:00+00:00,Granada,Villarreal,,,2,3,finished,false,datahub-football-data,laliga-2023-2024-2023-10-30-granada-villarreal
+LaLiga,2023/2024,Spain,domestic_league,11,2023-11-03T20:00:00+00:00,Las Palmas,Ath Madrid,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-03-las-palmas-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,12,2023-11-04T20:00:00+00:00,Betis,Mallorca,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2023-11-04-betis-mallorca
+LaLiga,2023/2024,Spain,domestic_league,12,2023-11-04T20:00:00+00:00,Celta,Sevilla,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-04-celta-sevilla
+LaLiga,2023/2024,Spain,domestic_league,12,2023-11-04T20:00:00+00:00,Osasuna,Girona,,,2,4,finished,false,datahub-football-data,laliga-2023-2024-2023-11-04-osasuna-girona
+LaLiga,2023/2024,Spain,domestic_league,12,2023-11-04T20:00:00+00:00,Sociedad,Barcelona,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-04-sociedad-barcelona
+LaLiga,2023/2024,Spain,domestic_league,12,2023-11-05T20:00:00+00:00,Alaves,Almeria,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-11-05-alaves-almeria
+LaLiga,2023/2024,Spain,domestic_league,12,2023-11-05T20:00:00+00:00,Real Madrid,Vallecano,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-11-05-real-madrid-vallecano
+LaLiga,2023/2024,Spain,domestic_league,12,2023-11-05T20:00:00+00:00,Valencia,Granada,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-11-05-valencia-granada
+LaLiga,2023/2024,Spain,domestic_league,12,2023-11-05T20:00:00+00:00,Villarreal,Ath Bilbao,,,2,3,finished,false,datahub-football-data,laliga-2023-2024-2023-11-05-villarreal-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,12,2023-11-06T20:00:00+00:00,Getafe,Cadiz,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-11-06-getafe-cadiz
+LaLiga,2023/2024,Spain,domestic_league,12,2023-11-10T20:00:00+00:00,Ath Bilbao,Celta,,,4,3,finished,false,datahub-football-data,laliga-2023-2024-2023-11-10-ath-bilbao-celta
+LaLiga,2023/2024,Spain,domestic_league,13,2023-11-11T20:00:00+00:00,Almeria,Sociedad,,,1,3,finished,false,datahub-football-data,laliga-2023-2024-2023-11-11-almeria-sociedad
+LaLiga,2023/2024,Spain,domestic_league,13,2023-11-11T20:00:00+00:00,Granada,Getafe,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-11-granada-getafe
+LaLiga,2023/2024,Spain,domestic_league,13,2023-11-11T20:00:00+00:00,Osasuna,Las Palmas,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-11-osasuna-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,13,2023-11-11T20:00:00+00:00,Real Madrid,Valencia,,,5,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-11-real-madrid-valencia
+LaLiga,2023/2024,Spain,domestic_league,13,2023-11-11T20:00:00+00:00,Vallecano,Girona,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2023-11-11-vallecano-girona
+LaLiga,2023/2024,Spain,domestic_league,13,2023-11-12T20:00:00+00:00,Ath Madrid,Villarreal,,,3,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-12-ath-madrid-villarreal
+LaLiga,2023/2024,Spain,domestic_league,13,2023-11-12T20:00:00+00:00,Barcelona,Alaves,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-12-barcelona-alaves
+LaLiga,2023/2024,Spain,domestic_league,13,2023-11-12T20:00:00+00:00,Sevilla,Betis,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-12-sevilla-betis
+LaLiga,2023/2024,Spain,domestic_league,13,2023-11-24T20:00:00+00:00,Alaves,Granada,,,3,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-24-alaves-granada
+LaLiga,2023/2024,Spain,domestic_league,13,2023-11-25T20:00:00+00:00,Ath Madrid,Mallorca,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-11-25-ath-madrid-mallorca
+LaLiga,2023/2024,Spain,domestic_league,14,2023-11-25T20:00:00+00:00,Getafe,Almeria,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-25-getafe-almeria
+LaLiga,2023/2024,Spain,domestic_league,14,2023-11-25T20:00:00+00:00,Valencia,Celta,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-11-25-valencia-celta
+LaLiga,2023/2024,Spain,domestic_league,14,2023-11-25T20:00:00+00:00,Vallecano,Barcelona,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-25-vallecano-barcelona
+LaLiga,2023/2024,Spain,domestic_league,14,2023-11-26T20:00:00+00:00,Betis,Las Palmas,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-11-26-betis-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,14,2023-11-26T20:00:00+00:00,Cadiz,Real Madrid,,,0,3,finished,false,datahub-football-data,laliga-2023-2024-2023-11-26-cadiz-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,14,2023-11-26T20:00:00+00:00,Sociedad,Sevilla,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-26-sociedad-sevilla
+LaLiga,2023/2024,Spain,domestic_league,14,2023-11-26T20:00:00+00:00,Villarreal,Osasuna,,,3,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-26-villarreal-osasuna
+LaLiga,2023/2024,Spain,domestic_league,14,2023-11-27T20:00:00+00:00,Girona,Ath Bilbao,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-27-girona-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,14,2023-11-29T20:00:00+00:00,Mallorca,Cadiz,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-11-29-mallorca-cadiz
+LaLiga,2023/2024,Spain,domestic_league,14,2023-12-01T20:00:00+00:00,Las Palmas,Getafe,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-01-las-palmas-getafe
+LaLiga,2023/2024,Spain,domestic_league,15,2023-12-02T20:00:00+00:00,Ath Bilbao,Vallecano,,,4,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-02-ath-bilbao-vallecano
+LaLiga,2023/2024,Spain,domestic_league,15,2023-12-02T20:00:00+00:00,Girona,Valencia,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-02-girona-valencia
+LaLiga,2023/2024,Spain,domestic_league,15,2023-12-02T20:00:00+00:00,Osasuna,Sociedad,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-02-osasuna-sociedad
+LaLiga,2023/2024,Spain,domestic_league,15,2023-12-02T20:00:00+00:00,Real Madrid,Granada,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-02-real-madrid-granada
+LaLiga,2023/2024,Spain,domestic_league,15,2023-12-03T20:00:00+00:00,Almeria,Betis,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-03-almeria-betis
+LaLiga,2023/2024,Spain,domestic_league,15,2023-12-03T20:00:00+00:00,Barcelona,Ath Madrid,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-03-barcelona-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,15,2023-12-03T20:00:00+00:00,Mallorca,Alaves,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-03-mallorca-alaves
+LaLiga,2023/2024,Spain,domestic_league,15,2023-12-03T20:00:00+00:00,Sevilla,Villarreal,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-03-sevilla-villarreal
+LaLiga,2023/2024,Spain,domestic_league,15,2023-12-04T20:00:00+00:00,Celta,Cadiz,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-04-celta-cadiz
+LaLiga,2023/2024,Spain,domestic_league,15,2023-12-08T20:00:00+00:00,Getafe,Valencia,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-08-getafe-valencia
+LaLiga,2023/2024,Spain,domestic_league,16,2023-12-09T20:00:00+00:00,Alaves,Las Palmas,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-09-alaves-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,16,2023-12-09T20:00:00+00:00,Betis,Real Madrid,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-09-betis-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,16,2023-12-09T20:00:00+00:00,Mallorca,Sevilla,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-09-mallorca-sevilla
+LaLiga,2023/2024,Spain,domestic_league,16,2023-12-09T20:00:00+00:00,Villarreal,Sociedad,,,0,3,finished,false,datahub-football-data,laliga-2023-2024-2023-12-09-villarreal-sociedad
+LaLiga,2023/2024,Spain,domestic_league,16,2023-12-10T20:00:00+00:00,Ath Madrid,Almeria,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-10-ath-madrid-almeria
+LaLiga,2023/2024,Spain,domestic_league,16,2023-12-10T20:00:00+00:00,Barcelona,Girona,,,2,4,finished,false,datahub-football-data,laliga-2023-2024-2023-12-10-barcelona-girona
+LaLiga,2023/2024,Spain,domestic_league,16,2023-12-10T20:00:00+00:00,Cadiz,Osasuna,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-10-cadiz-osasuna
+LaLiga,2023/2024,Spain,domestic_league,16,2023-12-11T20:00:00+00:00,Granada,Ath Bilbao,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-11-granada-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,16,2023-12-11T20:00:00+00:00,Vallecano,Celta,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-11-vallecano-celta
+LaLiga,2023/2024,Spain,domestic_league,16,2023-12-15T20:00:00+00:00,Osasuna,Vallecano,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-15-osasuna-vallecano
+LaLiga,2023/2024,Spain,domestic_league,17,2023-12-16T20:00:00+00:00,Ath Bilbao,Ath Madrid,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-16-ath-bilbao-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,17,2023-12-16T20:00:00+00:00,Celta,Granada,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-16-celta-granada
+LaLiga,2023/2024,Spain,domestic_league,17,2023-12-16T20:00:00+00:00,Sevilla,Getafe,,,0,3,finished,false,datahub-football-data,laliga-2023-2024-2023-12-16-sevilla-getafe
+LaLiga,2023/2024,Spain,domestic_league,17,2023-12-16T20:00:00+00:00,Valencia,Barcelona,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-16-valencia-barcelona
+LaLiga,2023/2024,Spain,domestic_league,17,2023-12-17T20:00:00+00:00,Almeria,Mallorca,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-17-almeria-mallorca
+LaLiga,2023/2024,Spain,domestic_league,17,2023-12-17T20:00:00+00:00,Las Palmas,Cadiz,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-17-las-palmas-cadiz
+LaLiga,2023/2024,Spain,domestic_league,17,2023-12-17T20:00:00+00:00,Real Madrid,Villarreal,,,4,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-17-real-madrid-villarreal
+LaLiga,2023/2024,Spain,domestic_league,17,2023-12-17T20:00:00+00:00,Sociedad,Betis,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-17-sociedad-betis
+LaLiga,2023/2024,Spain,domestic_league,17,2023-12-18T20:00:00+00:00,Girona,Alaves,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-18-girona-alaves
+LaLiga,2023/2024,Spain,domestic_league,17,2023-12-19T20:00:00+00:00,Ath Madrid,Getafe,,,3,3,finished,false,datahub-football-data,laliga-2023-2024-2023-12-19-ath-madrid-getafe
+LaLiga,2023/2024,Spain,domestic_league,18,2023-12-19T20:00:00+00:00,Granada,Sevilla,,,0,3,finished,false,datahub-football-data,laliga-2023-2024-2023-12-19-granada-sevilla
+LaLiga,2023/2024,Spain,domestic_league,18,2023-12-19T20:00:00+00:00,Vallecano,Valencia,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-19-vallecano-valencia
+LaLiga,2023/2024,Spain,domestic_league,18,2023-12-20T20:00:00+00:00,Ath Bilbao,Las Palmas,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-20-ath-bilbao-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,18,2023-12-20T20:00:00+00:00,Barcelona,Almeria,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2023-12-20-barcelona-almeria
+LaLiga,2023/2024,Spain,domestic_league,18,2023-12-20T20:00:00+00:00,Villarreal,Celta,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2023-12-20-villarreal-celta
+LaLiga,2023/2024,Spain,domestic_league,18,2023-12-21T20:00:00+00:00,Alaves,Real Madrid,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-21-alaves-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,18,2023-12-21T20:00:00+00:00,Betis,Girona,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2023-12-21-betis-girona
+LaLiga,2023/2024,Spain,domestic_league,18,2023-12-21T20:00:00+00:00,Cadiz,Sociedad,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-21-cadiz-sociedad
+LaLiga,2023/2024,Spain,domestic_league,18,2023-12-21T20:00:00+00:00,Mallorca,Osasuna,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2023-12-21-mallorca-osasuna
+LaLiga,2023/2024,Spain,domestic_league,18,2023-12-23T20:00:00+00:00,Ath Madrid,Sevilla,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2023-12-23-ath-madrid-sevilla
+LaLiga,2023/2024,Spain,domestic_league,19,2024-01-02T20:00:00+00:00,Getafe,Vallecano,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2024-01-02-getafe-vallecano
+LaLiga,2023/2024,Spain,domestic_league,19,2024-01-02T20:00:00+00:00,Sociedad,Alaves,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-01-02-sociedad-alaves
+LaLiga,2023/2024,Spain,domestic_league,19,2024-01-02T20:00:00+00:00,Valencia,Villarreal,,,3,1,finished,false,datahub-football-data,laliga-2023-2024-2024-01-02-valencia-villarreal
+LaLiga,2023/2024,Spain,domestic_league,19,2024-01-03T20:00:00+00:00,Celta,Betis,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2024-01-03-celta-betis
+LaLiga,2023/2024,Spain,domestic_league,19,2024-01-03T20:00:00+00:00,Girona,Ath Madrid,,,4,3,finished,false,datahub-football-data,laliga-2023-2024-2024-01-03-girona-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,19,2024-01-03T20:00:00+00:00,Granada,Cadiz,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-01-03-granada-cadiz
+LaLiga,2023/2024,Spain,domestic_league,19,2024-01-03T20:00:00+00:00,Real Madrid,Mallorca,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-01-03-real-madrid-mallorca
+LaLiga,2023/2024,Spain,domestic_league,19,2024-01-04T20:00:00+00:00,Las Palmas,Barcelona,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2024-01-04-las-palmas-barcelona
+LaLiga,2023/2024,Spain,domestic_league,19,2024-01-04T20:00:00+00:00,Osasuna,Almeria,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-01-04-osasuna-almeria
+LaLiga,2023/2024,Spain,domestic_league,19,2024-01-04T20:00:00+00:00,Sevilla,Ath Bilbao,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2024-01-04-sevilla-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,20,2024-01-12T20:00:00+00:00,Sevilla,Alaves,,,2,3,finished,false,datahub-football-data,laliga-2023-2024-2024-01-12-sevilla-alaves
+LaLiga,2023/2024,Spain,domestic_league,20,2024-01-13T20:00:00+00:00,Ath Bilbao,Sociedad,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2024-01-13-ath-bilbao-sociedad
+LaLiga,2023/2024,Spain,domestic_league,20,2024-01-13T20:00:00+00:00,Betis,Granada,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-01-13-betis-granada
+LaLiga,2023/2024,Spain,domestic_league,20,2024-01-13T20:00:00+00:00,Las Palmas,Villarreal,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2024-01-13-las-palmas-villarreal
+LaLiga,2023/2024,Spain,domestic_league,20,2024-01-13T20:00:00+00:00,Mallorca,Celta,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-01-13-mallorca-celta
+LaLiga,2023/2024,Spain,domestic_league,20,2024-01-14T20:00:00+00:00,Almeria,Girona,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-01-14-almeria-girona
+LaLiga,2023/2024,Spain,domestic_league,20,2024-01-14T20:00:00+00:00,Cadiz,Valencia,,,1,4,finished,false,datahub-football-data,laliga-2023-2024-2024-01-14-cadiz-valencia
+LaLiga,2023/2024,Spain,domestic_league,20,2024-01-19T20:00:00+00:00,Alaves,Cadiz,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-01-19-alaves-cadiz
+LaLiga,2023/2024,Spain,domestic_league,20,2024-01-20T20:00:00+00:00,Celta,Sociedad,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-01-20-celta-sociedad
+LaLiga,2023/2024,Spain,domestic_league,20,2024-01-20T20:00:00+00:00,Valencia,Ath Bilbao,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-01-20-valencia-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,21,2024-01-20T20:00:00+00:00,Vallecano,Las Palmas,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2024-01-20-vallecano-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,21,2024-01-20T20:00:00+00:00,Villarreal,Mallorca,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-01-20-villarreal-mallorca
+LaLiga,2023/2024,Spain,domestic_league,21,2024-01-21T20:00:00+00:00,Betis,Barcelona,,,2,4,finished,false,datahub-football-data,laliga-2023-2024-2024-01-21-betis-barcelona
+LaLiga,2023/2024,Spain,domestic_league,21,2024-01-21T20:00:00+00:00,Girona,Sevilla,,,5,1,finished,false,datahub-football-data,laliga-2023-2024-2024-01-21-girona-sevilla
+LaLiga,2023/2024,Spain,domestic_league,21,2024-01-21T20:00:00+00:00,Osasuna,Getafe,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2024-01-21-osasuna-getafe
+LaLiga,2023/2024,Spain,domestic_league,21,2024-01-21T20:00:00+00:00,Real Madrid,Almeria,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2024-01-21-real-madrid-almeria
+LaLiga,2023/2024,Spain,domestic_league,21,2024-01-22T20:00:00+00:00,Granada,Ath Madrid,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-01-22-granada-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,21,2024-01-26T20:00:00+00:00,Almeria,Alaves,,,0,3,finished,false,datahub-football-data,laliga-2023-2024-2024-01-26-almeria-alaves
+LaLiga,2023/2024,Spain,domestic_league,21,2024-01-27T20:00:00+00:00,Barcelona,Villarreal,,,3,5,finished,false,datahub-football-data,laliga-2023-2024-2024-01-27-barcelona-villarreal
+LaLiga,2023/2024,Spain,domestic_league,21,2024-01-27T20:00:00+00:00,Las Palmas,Real Madrid,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2024-01-27-las-palmas-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,22,2024-01-27T20:00:00+00:00,Mallorca,Betis,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-01-27-mallorca-betis
+LaLiga,2023/2024,Spain,domestic_league,22,2024-01-27T20:00:00+00:00,Sociedad,Vallecano,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-01-27-sociedad-vallecano
+LaLiga,2023/2024,Spain,domestic_league,22,2024-01-28T20:00:00+00:00,Ath Madrid,Valencia,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-01-28-ath-madrid-valencia
+LaLiga,2023/2024,Spain,domestic_league,22,2024-01-28T20:00:00+00:00,Cadiz,Ath Bilbao,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-01-28-cadiz-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,22,2024-01-28T20:00:00+00:00,Celta,Girona,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-01-28-celta-girona
+LaLiga,2023/2024,Spain,domestic_league,22,2024-01-28T20:00:00+00:00,Sevilla,Osasuna,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-01-28-sevilla-osasuna
+LaLiga,2023/2024,Spain,domestic_league,22,2024-01-29T20:00:00+00:00,Getafe,Granada,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-01-29-getafe-granada
+LaLiga,2023/2024,Spain,domestic_league,22,2024-01-31T20:00:00+00:00,Ath Madrid,Vallecano,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2024-01-31-ath-madrid-vallecano
+LaLiga,2023/2024,Spain,domestic_league,22,2024-01-31T20:00:00+00:00,Barcelona,Osasuna,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-01-31-barcelona-osasuna
+LaLiga,2023/2024,Spain,domestic_league,22,2024-02-01T20:00:00+00:00,Getafe,Real Madrid,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2024-02-01-getafe-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,23,2024-02-02T20:00:00+00:00,Ath Bilbao,Mallorca,,,4,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-02-ath-bilbao-mallorca
+LaLiga,2023/2024,Spain,domestic_league,23,2024-02-03T20:00:00+00:00,Alaves,Barcelona,,,1,3,finished,false,datahub-football-data,laliga-2023-2024-2024-02-03-alaves-barcelona
+LaLiga,2023/2024,Spain,domestic_league,23,2024-02-03T20:00:00+00:00,Girona,Sociedad,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-03-girona-sociedad
+LaLiga,2023/2024,Spain,domestic_league,23,2024-02-03T20:00:00+00:00,Granada,Las Palmas,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-02-03-granada-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,23,2024-02-03T20:00:00+00:00,Valencia,Almeria,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2024-02-03-valencia-almeria
+LaLiga,2023/2024,Spain,domestic_league,23,2024-02-04T20:00:00+00:00,Betis,Getafe,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-02-04-betis-getafe
+LaLiga,2023/2024,Spain,domestic_league,23,2024-02-04T20:00:00+00:00,Osasuna,Celta,,,0,3,finished,false,datahub-football-data,laliga-2023-2024-2024-02-04-osasuna-celta
+LaLiga,2023/2024,Spain,domestic_league,23,2024-02-04T20:00:00+00:00,Real Madrid,Ath Madrid,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-02-04-real-madrid-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,23,2024-02-04T20:00:00+00:00,Villarreal,Cadiz,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-04-villarreal-cadiz
+LaLiga,2023/2024,Spain,domestic_league,23,2024-02-05T20:00:00+00:00,Vallecano,Sevilla,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2024-02-05-vallecano-sevilla
+LaLiga,2023/2024,Spain,domestic_league,24,2024-02-09T20:00:00+00:00,Cadiz,Betis,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2024-02-09-cadiz-betis
+LaLiga,2023/2024,Spain,domestic_league,24,2024-02-10T20:00:00+00:00,Alaves,Villarreal,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-02-10-alaves-villarreal
+LaLiga,2023/2024,Spain,domestic_league,24,2024-02-10T20:00:00+00:00,Las Palmas,Valencia,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-10-las-palmas-valencia
+LaLiga,2023/2024,Spain,domestic_league,24,2024-02-10T20:00:00+00:00,Real Madrid,Girona,,,4,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-10-real-madrid-girona
+LaLiga,2023/2024,Spain,domestic_league,24,2024-02-10T20:00:00+00:00,Sociedad,Osasuna,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-02-10-sociedad-osasuna
+LaLiga,2023/2024,Spain,domestic_league,24,2024-02-11T20:00:00+00:00,Barcelona,Granada,,,3,3,finished,false,datahub-football-data,laliga-2023-2024-2024-02-11-barcelona-granada
+LaLiga,2023/2024,Spain,domestic_league,24,2024-02-11T20:00:00+00:00,Getafe,Celta,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2024-02-11-getafe-celta
+LaLiga,2023/2024,Spain,domestic_league,24,2024-02-11T20:00:00+00:00,Mallorca,Vallecano,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2024-02-11-mallorca-vallecano
+LaLiga,2023/2024,Spain,domestic_league,24,2024-02-11T20:00:00+00:00,Sevilla,Ath Madrid,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-11-sevilla-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,24,2024-02-12T20:00:00+00:00,Almeria,Ath Bilbao,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-12-almeria-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,25,2024-02-16T20:00:00+00:00,Villarreal,Getafe,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-02-16-villarreal-getafe
+LaLiga,2023/2024,Spain,domestic_league,25,2024-02-17T20:00:00+00:00,Ath Madrid,Las Palmas,,,5,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-17-ath-madrid-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,25,2024-02-17T20:00:00+00:00,Celta,Barcelona,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2024-02-17-celta-barcelona
+LaLiga,2023/2024,Spain,domestic_league,25,2024-02-17T20:00:00+00:00,Osasuna,Cadiz,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-17-osasuna-cadiz
+LaLiga,2023/2024,Spain,domestic_league,25,2024-02-17T20:00:00+00:00,Valencia,Sevilla,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-17-valencia-sevilla
+LaLiga,2023/2024,Spain,domestic_league,25,2024-02-18T20:00:00+00:00,Betis,Alaves,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-18-betis-alaves
+LaLiga,2023/2024,Spain,domestic_league,25,2024-02-18T20:00:00+00:00,Granada,Almeria,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-02-18-granada-almeria
+LaLiga,2023/2024,Spain,domestic_league,25,2024-02-18T20:00:00+00:00,Mallorca,Sociedad,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2024-02-18-mallorca-sociedad
+LaLiga,2023/2024,Spain,domestic_league,25,2024-02-18T20:00:00+00:00,Vallecano,Real Madrid,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-02-18-vallecano-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,25,2024-02-19T20:00:00+00:00,Ath Bilbao,Girona,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2024-02-19-ath-bilbao-girona
+LaLiga,2023/2024,Spain,domestic_league,26,2024-02-23T20:00:00+00:00,Sociedad,Villarreal,,,1,3,finished,false,datahub-football-data,laliga-2023-2024-2024-02-23-sociedad-villarreal
+LaLiga,2023/2024,Spain,domestic_league,26,2024-02-24T20:00:00+00:00,Alaves,Mallorca,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-02-24-alaves-mallorca
+LaLiga,2023/2024,Spain,domestic_league,26,2024-02-24T20:00:00+00:00,Almeria,Ath Madrid,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2024-02-24-almeria-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,26,2024-02-24T20:00:00+00:00,Barcelona,Getafe,,,4,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-24-barcelona-getafe
+LaLiga,2023/2024,Spain,domestic_league,26,2024-02-25T20:00:00+00:00,Betis,Ath Bilbao,,,3,1,finished,false,datahub-football-data,laliga-2023-2024-2024-02-25-betis-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,26,2024-02-25T20:00:00+00:00,Cadiz,Celta,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2024-02-25-cadiz-celta
+LaLiga,2023/2024,Spain,domestic_league,26,2024-02-25T20:00:00+00:00,Las Palmas,Osasuna,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-02-25-las-palmas-osasuna
+LaLiga,2023/2024,Spain,domestic_league,26,2024-02-25T20:00:00+00:00,Real Madrid,Sevilla,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-25-real-madrid-sevilla
+LaLiga,2023/2024,Spain,domestic_league,26,2024-02-26T20:00:00+00:00,Girona,Vallecano,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2024-02-26-girona-vallecano
+LaLiga,2023/2024,Spain,domestic_league,26,2024-03-01T20:00:00+00:00,Celta,Almeria,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-01-celta-almeria
+LaLiga,2023/2024,Spain,domestic_league,27,2024-03-02T20:00:00+00:00,Getafe,Las Palmas,,,3,3,finished,false,datahub-football-data,laliga-2023-2024-2024-03-02-getafe-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,27,2024-03-02T20:00:00+00:00,Sevilla,Sociedad,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2024-03-02-sevilla-sociedad
+LaLiga,2023/2024,Spain,domestic_league,27,2024-03-02T20:00:00+00:00,Valencia,Real Madrid,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2024-03-02-valencia-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,27,2024-03-02T20:00:00+00:00,Vallecano,Cadiz,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-03-02-vallecano-cadiz
+LaLiga,2023/2024,Spain,domestic_league,27,2024-03-03T20:00:00+00:00,Ath Bilbao,Barcelona,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-03-ath-bilbao-barcelona
+LaLiga,2023/2024,Spain,domestic_league,27,2024-03-03T20:00:00+00:00,Ath Madrid,Betis,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2024-03-03-ath-madrid-betis
+LaLiga,2023/2024,Spain,domestic_league,27,2024-03-03T20:00:00+00:00,Mallorca,Girona,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-03-mallorca-girona
+LaLiga,2023/2024,Spain,domestic_league,27,2024-03-03T20:00:00+00:00,Villarreal,Granada,,,5,1,finished,false,datahub-football-data,laliga-2023-2024-2024-03-03-villarreal-granada
+LaLiga,2023/2024,Spain,domestic_league,27,2024-03-04T20:00:00+00:00,Osasuna,Alaves,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-04-osasuna-alaves
+LaLiga,2023/2024,Spain,domestic_league,27,2024-03-08T20:00:00+00:00,Barcelona,Mallorca,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-08-barcelona-mallorca
+LaLiga,2023/2024,Spain,domestic_league,28,2024-03-09T20:00:00+00:00,Cadiz,Ath Madrid,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-09-cadiz-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,28,2024-03-09T20:00:00+00:00,Girona,Osasuna,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-09-girona-osasuna
+LaLiga,2023/2024,Spain,domestic_league,28,2024-03-09T20:00:00+00:00,Granada,Sociedad,,,2,3,finished,false,datahub-football-data,laliga-2023-2024-2024-03-09-granada-sociedad
+LaLiga,2023/2024,Spain,domestic_league,28,2024-03-09T20:00:00+00:00,Valencia,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-09-valencia-getafe
+LaLiga,2023/2024,Spain,domestic_league,28,2024-03-10T20:00:00+00:00,Alaves,Vallecano,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-10-alaves-vallecano
+LaLiga,2023/2024,Spain,domestic_league,28,2024-03-10T20:00:00+00:00,Betis,Villarreal,,,2,3,finished,false,datahub-football-data,laliga-2023-2024-2024-03-10-betis-villarreal
+LaLiga,2023/2024,Spain,domestic_league,28,2024-03-10T20:00:00+00:00,Las Palmas,Ath Bilbao,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2024-03-10-las-palmas-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,28,2024-03-10T20:00:00+00:00,Real Madrid,Celta,,,4,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-10-real-madrid-celta
+LaLiga,2023/2024,Spain,domestic_league,28,2024-03-11T20:00:00+00:00,Almeria,Sevilla,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2024-03-11-almeria-sevilla
+LaLiga,2023/2024,Spain,domestic_league,28,2024-03-15T20:00:00+00:00,Sociedad,Cadiz,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-15-sociedad-cadiz
+LaLiga,2023/2024,Spain,domestic_league,29,2024-03-16T20:00:00+00:00,Ath Bilbao,Alaves,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-16-ath-bilbao-alaves
+LaLiga,2023/2024,Spain,domestic_league,29,2024-03-16T20:00:00+00:00,Getafe,Girona,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-16-getafe-girona
+LaLiga,2023/2024,Spain,domestic_league,29,2024-03-16T20:00:00+00:00,Mallorca,Granada,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-16-mallorca-granada
+LaLiga,2023/2024,Spain,domestic_league,29,2024-03-16T20:00:00+00:00,Osasuna,Real Madrid,,,2,4,finished,false,datahub-football-data,laliga-2023-2024-2024-03-16-osasuna-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,29,2024-03-17T20:00:00+00:00,Ath Madrid,Barcelona,,,0,3,finished,false,datahub-football-data,laliga-2023-2024-2024-03-17-ath-madrid-barcelona
+LaLiga,2023/2024,Spain,domestic_league,29,2024-03-17T20:00:00+00:00,Las Palmas,Almeria,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-03-17-las-palmas-almeria
+LaLiga,2023/2024,Spain,domestic_league,29,2024-03-17T20:00:00+00:00,Sevilla,Celta,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2024-03-17-sevilla-celta
+LaLiga,2023/2024,Spain,domestic_league,29,2024-03-17T20:00:00+00:00,Vallecano,Betis,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-17-vallecano-betis
+LaLiga,2023/2024,Spain,domestic_league,29,2024-03-17T20:00:00+00:00,Villarreal,Valencia,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-17-villarreal-valencia
+LaLiga,2023/2024,Spain,domestic_league,29,2024-03-29T20:00:00+00:00,Cadiz,Granada,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-29-cadiz-granada
+LaLiga,2023/2024,Spain,domestic_league,30,2024-03-30T20:00:00+00:00,Almeria,Osasuna,,,0,3,finished,false,datahub-football-data,laliga-2023-2024-2024-03-30-almeria-osasuna
+LaLiga,2023/2024,Spain,domestic_league,30,2024-03-30T20:00:00+00:00,Barcelona,Las Palmas,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-30-barcelona-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,30,2024-03-30T20:00:00+00:00,Getafe,Sevilla,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-03-30-getafe-sevilla
+LaLiga,2023/2024,Spain,domestic_league,30,2024-03-30T20:00:00+00:00,Valencia,Mallorca,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-30-valencia-mallorca
+LaLiga,2023/2024,Spain,domestic_league,30,2024-03-31T20:00:00+00:00,Alaves,Sociedad,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-03-31-alaves-sociedad
+LaLiga,2023/2024,Spain,domestic_league,30,2024-03-31T20:00:00+00:00,Celta,Vallecano,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-31-celta-vallecano
+LaLiga,2023/2024,Spain,domestic_league,30,2024-03-31T20:00:00+00:00,Girona,Betis,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2024-03-31-girona-betis
+LaLiga,2023/2024,Spain,domestic_league,30,2024-03-31T20:00:00+00:00,Real Madrid,Ath Bilbao,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-03-31-real-madrid-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,30,2024-04-01T20:00:00+00:00,Villarreal,Ath Madrid,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2024-04-01-villarreal-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,30,2024-04-04T20:00:00+00:00,Granada,Valencia,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-04-granada-valencia
+LaLiga,2023/2024,Spain,domestic_league,31,2024-04-12T20:00:00+00:00,Betis,Celta,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-12-betis-celta
+LaLiga,2023/2024,Spain,domestic_league,31,2024-04-13T20:00:00+00:00,Ath Madrid,Girona,,,3,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-13-ath-madrid-girona
+LaLiga,2023/2024,Spain,domestic_league,31,2024-04-13T20:00:00+00:00,Cadiz,Barcelona,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-13-cadiz-barcelona
+LaLiga,2023/2024,Spain,domestic_league,31,2024-04-13T20:00:00+00:00,Mallorca,Real Madrid,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-13-mallorca-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,31,2024-04-13T20:00:00+00:00,Vallecano,Getafe,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-04-13-vallecano-getafe
+LaLiga,2023/2024,Spain,domestic_league,31,2024-04-14T20:00:00+00:00,Ath Bilbao,Villarreal,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-14-ath-bilbao-villarreal
+LaLiga,2023/2024,Spain,domestic_league,31,2024-04-14T20:00:00+00:00,Granada,Alaves,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-04-14-granada-alaves
+LaLiga,2023/2024,Spain,domestic_league,31,2024-04-14T20:00:00+00:00,Las Palmas,Sevilla,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2024-04-14-las-palmas-sevilla
+LaLiga,2023/2024,Spain,domestic_league,31,2024-04-14T20:00:00+00:00,Sociedad,Almeria,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2024-04-14-sociedad-almeria
+LaLiga,2023/2024,Spain,domestic_league,31,2024-04-15T20:00:00+00:00,Osasuna,Valencia,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-15-osasuna-valencia
+LaLiga,2023/2024,Spain,domestic_league,32,2024-04-19T20:00:00+00:00,Ath Bilbao,Granada,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-19-ath-bilbao-granada
+LaLiga,2023/2024,Spain,domestic_league,32,2024-04-20T20:00:00+00:00,Celta,Las Palmas,,,4,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-20-celta-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,32,2024-04-20T20:00:00+00:00,Girona,Cadiz,,,4,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-20-girona-cadiz
+LaLiga,2023/2024,Spain,domestic_league,32,2024-04-20T20:00:00+00:00,Valencia,Betis,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2024-04-20-valencia-betis
+LaLiga,2023/2024,Spain,domestic_league,32,2024-04-20T20:00:00+00:00,Vallecano,Osasuna,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-20-vallecano-osasuna
+LaLiga,2023/2024,Spain,domestic_league,32,2024-04-21T20:00:00+00:00,Alaves,Ath Madrid,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-04-21-alaves-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,32,2024-04-21T20:00:00+00:00,Almeria,Villarreal,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2024-04-21-almeria-villarreal
+LaLiga,2023/2024,Spain,domestic_league,32,2024-04-21T20:00:00+00:00,Getafe,Sociedad,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-21-getafe-sociedad
+LaLiga,2023/2024,Spain,domestic_league,32,2024-04-21T20:00:00+00:00,Real Madrid,Barcelona,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2024-04-21-real-madrid-barcelona
+LaLiga,2023/2024,Spain,domestic_league,32,2024-04-22T20:00:00+00:00,Sevilla,Mallorca,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-22-sevilla-mallorca
+LaLiga,2023/2024,Spain,domestic_league,33,2024-04-26T20:00:00+00:00,Sociedad,Real Madrid,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-26-sociedad-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,33,2024-04-27T20:00:00+00:00,Alaves,Celta,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2024-04-27-alaves-celta
+LaLiga,2023/2024,Spain,domestic_league,33,2024-04-27T20:00:00+00:00,Almeria,Getafe,,,1,3,finished,false,datahub-football-data,laliga-2023-2024-2024-04-27-almeria-getafe
+LaLiga,2023/2024,Spain,domestic_league,33,2024-04-27T20:00:00+00:00,Ath Madrid,Ath Bilbao,,,3,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-27-ath-madrid-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,33,2024-04-27T20:00:00+00:00,Las Palmas,Girona,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2024-04-27-las-palmas-girona
+LaLiga,2023/2024,Spain,domestic_league,33,2024-04-28T20:00:00+00:00,Betis,Sevilla,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-28-betis-sevilla
+LaLiga,2023/2024,Spain,domestic_league,33,2024-04-28T20:00:00+00:00,Cadiz,Mallorca,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-04-28-cadiz-mallorca
+LaLiga,2023/2024,Spain,domestic_league,33,2024-04-28T20:00:00+00:00,Granada,Osasuna,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2024-04-28-granada-osasuna
+LaLiga,2023/2024,Spain,domestic_league,33,2024-04-28T20:00:00+00:00,Villarreal,Vallecano,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2024-04-28-villarreal-vallecano
+LaLiga,2023/2024,Spain,domestic_league,33,2024-04-29T20:00:00+00:00,Barcelona,Valencia,,,4,2,finished,false,datahub-football-data,laliga-2023-2024-2024-04-29-barcelona-valencia
+LaLiga,2023/2024,Spain,domestic_league,34,2024-05-03T20:00:00+00:00,Getafe,Ath Bilbao,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-03-getafe-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,34,2024-05-04T20:00:00+00:00,Girona,Barcelona,,,4,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-04-girona-barcelona
+LaLiga,2023/2024,Spain,domestic_league,34,2024-05-04T20:00:00+00:00,Mallorca,Ath Madrid,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-05-04-mallorca-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,34,2024-05-04T20:00:00+00:00,Real Madrid,Cadiz,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-04-real-madrid-cadiz
+LaLiga,2023/2024,Spain,domestic_league,34,2024-05-04T20:00:00+00:00,Sociedad,Las Palmas,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-04-sociedad-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,34,2024-05-05T20:00:00+00:00,Celta,Villarreal,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-05-celta-villarreal
+LaLiga,2023/2024,Spain,domestic_league,34,2024-05-05T20:00:00+00:00,Osasuna,Betis,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-05-osasuna-betis
+LaLiga,2023/2024,Spain,domestic_league,34,2024-05-05T20:00:00+00:00,Sevilla,Granada,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-05-sevilla-granada
+LaLiga,2023/2024,Spain,domestic_league,34,2024-05-05T20:00:00+00:00,Valencia,Alaves,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-05-05-valencia-alaves
+LaLiga,2023/2024,Spain,domestic_league,34,2024-05-05T20:00:00+00:00,Vallecano,Almeria,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-05-05-vallecano-almeria
+LaLiga,2023/2024,Spain,domestic_league,35,2024-05-10T20:00:00+00:00,Alaves,Girona,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-10-alaves-girona
+LaLiga,2023/2024,Spain,domestic_league,35,2024-05-11T20:00:00+00:00,Ath Bilbao,Osasuna,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-11-ath-bilbao-osasuna
+LaLiga,2023/2024,Spain,domestic_league,35,2024-05-11T20:00:00+00:00,Granada,Real Madrid,,,0,4,finished,false,datahub-football-data,laliga-2023-2024-2024-05-11-granada-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,35,2024-05-11T20:00:00+00:00,Mallorca,Las Palmas,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-11-mallorca-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,35,2024-05-11T20:00:00+00:00,Villarreal,Sevilla,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-11-villarreal-sevilla
+LaLiga,2023/2024,Spain,domestic_league,35,2024-05-12T20:00:00+00:00,Ath Madrid,Celta,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-12-ath-madrid-celta
+LaLiga,2023/2024,Spain,domestic_league,35,2024-05-12T20:00:00+00:00,Betis,Almeria,,,3,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-12-betis-almeria
+LaLiga,2023/2024,Spain,domestic_league,35,2024-05-12T20:00:00+00:00,Cadiz,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-12-cadiz-getafe
+LaLiga,2023/2024,Spain,domestic_league,35,2024-05-12T20:00:00+00:00,Valencia,Vallecano,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-12-valencia-vallecano
+LaLiga,2023/2024,Spain,domestic_league,35,2024-05-13T20:00:00+00:00,Barcelona,Sociedad,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-13-barcelona-sociedad
+LaLiga,2023/2024,Spain,domestic_league,36,2024-05-14T20:00:00+00:00,Girona,Villarreal,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-05-14-girona-villarreal
+LaLiga,2023/2024,Spain,domestic_league,36,2024-05-14T20:00:00+00:00,Osasuna,Mallorca,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-05-14-osasuna-mallorca
+LaLiga,2023/2024,Spain,domestic_league,36,2024-05-14T20:00:00+00:00,Real Madrid,Alaves,,,5,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-14-real-madrid-alaves
+LaLiga,2023/2024,Spain,domestic_league,36,2024-05-15T20:00:00+00:00,Celta,Ath Bilbao,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2024-05-15-celta-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,36,2024-05-15T20:00:00+00:00,Getafe,Ath Madrid,,,0,3,finished,false,datahub-football-data,laliga-2023-2024-2024-05-15-getafe-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,36,2024-05-15T20:00:00+00:00,Sevilla,Cadiz,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-05-15-sevilla-cadiz
+LaLiga,2023/2024,Spain,domestic_league,36,2024-05-15T20:00:00+00:00,Vallecano,Granada,,,2,1,finished,false,datahub-football-data,laliga-2023-2024-2024-05-15-vallecano-granada
+LaLiga,2023/2024,Spain,domestic_league,36,2024-05-16T20:00:00+00:00,Almeria,Barcelona,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-16-almeria-barcelona
+LaLiga,2023/2024,Spain,domestic_league,36,2024-05-16T20:00:00+00:00,Las Palmas,Betis,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-16-las-palmas-betis
+LaLiga,2023/2024,Spain,domestic_league,36,2024-05-16T20:00:00+00:00,Sociedad,Valencia,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-16-sociedad-valencia
+LaLiga,2023/2024,Spain,domestic_league,37,2024-05-18T20:00:00+00:00,Alaves,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-18-alaves-getafe
+LaLiga,2023/2024,Spain,domestic_league,37,2024-05-19T20:00:00+00:00,Ath Bilbao,Sevilla,,,2,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-19-ath-bilbao-sevilla
+LaLiga,2023/2024,Spain,domestic_league,37,2024-05-19T20:00:00+00:00,Ath Madrid,Osasuna,,,1,4,finished,false,datahub-football-data,laliga-2023-2024-2024-05-19-ath-madrid-osasuna
+LaLiga,2023/2024,Spain,domestic_league,37,2024-05-19T20:00:00+00:00,Barcelona,Vallecano,,,3,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-19-barcelona-vallecano
+LaLiga,2023/2024,Spain,domestic_league,37,2024-05-19T20:00:00+00:00,Betis,Sociedad,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-19-betis-sociedad
+LaLiga,2023/2024,Spain,domestic_league,37,2024-05-19T20:00:00+00:00,Cadiz,Las Palmas,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-19-cadiz-las-palmas
+LaLiga,2023/2024,Spain,domestic_league,37,2024-05-19T20:00:00+00:00,Granada,Celta,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-19-granada-celta
+LaLiga,2023/2024,Spain,domestic_league,37,2024-05-19T20:00:00+00:00,Mallorca,Almeria,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-19-mallorca-almeria
+LaLiga,2023/2024,Spain,domestic_league,37,2024-05-19T20:00:00+00:00,Valencia,Girona,,,1,3,finished,false,datahub-football-data,laliga-2023-2024-2024-05-19-valencia-girona
+LaLiga,2023/2024,Spain,domestic_league,37,2024-05-19T20:00:00+00:00,Villarreal,Real Madrid,,,4,4,finished,false,datahub-football-data,laliga-2023-2024-2024-05-19-villarreal-real-madrid
+LaLiga,2023/2024,Spain,domestic_league,38,2024-05-24T20:00:00+00:00,Girona,Granada,,,7,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-24-girona-granada
+LaLiga,2023/2024,Spain,domestic_league,38,2024-05-25T20:00:00+00:00,Almeria,Cadiz,,,6,1,finished,false,datahub-football-data,laliga-2023-2024-2024-05-25-almeria-cadiz
+LaLiga,2023/2024,Spain,domestic_league,38,2024-05-25T20:00:00+00:00,Osasuna,Villarreal,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-05-25-osasuna-villarreal
+LaLiga,2023/2024,Spain,domestic_league,38,2024-05-25T20:00:00+00:00,Real Madrid,Betis,,,0,0,finished,false,datahub-football-data,laliga-2023-2024-2024-05-25-real-madrid-betis
+LaLiga,2023/2024,Spain,domestic_league,38,2024-05-25T20:00:00+00:00,Sociedad,Ath Madrid,,,0,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-25-sociedad-ath-madrid
+LaLiga,2023/2024,Spain,domestic_league,38,2024-05-25T20:00:00+00:00,Vallecano,Ath Bilbao,,,0,1,finished,false,datahub-football-data,laliga-2023-2024-2024-05-25-vallecano-ath-bilbao
+LaLiga,2023/2024,Spain,domestic_league,38,2024-05-26T20:00:00+00:00,Celta,Valencia,,,2,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-26-celta-valencia
+LaLiga,2023/2024,Spain,domestic_league,38,2024-05-26T20:00:00+00:00,Getafe,Mallorca,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-26-getafe-mallorca
+LaLiga,2023/2024,Spain,domestic_league,38,2024-05-26T20:00:00+00:00,Las Palmas,Alaves,,,1,1,finished,false,datahub-football-data,laliga-2023-2024-2024-05-26-las-palmas-alaves
+LaLiga,2023/2024,Spain,domestic_league,38,2024-05-26T20:00:00+00:00,Sevilla,Barcelona,,,1,2,finished,false,datahub-football-data,laliga-2023-2024-2024-05-26-sevilla-barcelona
+LaLiga,2024/2025,Spain,domestic_league,1,2024-08-15T20:00:00+00:00,Ath Bilbao,Getafe,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-15-ath-bilbao-getafe
+LaLiga,2024/2025,Spain,domestic_league,1,2024-08-15T20:00:00+00:00,Betis,Girona,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-15-betis-girona
+LaLiga,2024/2025,Spain,domestic_league,1,2024-08-16T20:00:00+00:00,Celta,Alaves,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-16-celta-alaves
+LaLiga,2024/2025,Spain,domestic_league,1,2024-08-16T20:00:00+00:00,Las Palmas,Sevilla,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2024-08-16-las-palmas-sevilla
+LaLiga,2024/2025,Spain,domestic_league,1,2024-08-17T20:00:00+00:00,Osasuna,Leganes,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-17-osasuna-leganes
+LaLiga,2024/2025,Spain,domestic_league,1,2024-08-17T20:00:00+00:00,Valencia,Barcelona,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-08-17-valencia-barcelona
+LaLiga,2024/2025,Spain,domestic_league,1,2024-08-18T20:00:00+00:00,Mallorca,Real Madrid,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-18-mallorca-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,1,2024-08-18T20:00:00+00:00,Sociedad,Vallecano,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-08-18-sociedad-vallecano
+LaLiga,2024/2025,Spain,domestic_league,1,2024-08-19T20:00:00+00:00,Valladolid,Espanol,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-08-19-valladolid-espanol
+LaLiga,2024/2025,Spain,domestic_league,1,2024-08-19T20:00:00+00:00,Villarreal,Ath Madrid,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2024-08-19-villarreal-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,2,2024-08-23T20:00:00+00:00,Celta,Valencia,,,3,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-23-celta-valencia
+LaLiga,2024/2025,Spain,domestic_league,2,2024-08-23T20:00:00+00:00,Sevilla,Villarreal,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-08-23-sevilla-villarreal
+LaLiga,2024/2025,Spain,domestic_league,2,2024-08-24T20:00:00+00:00,Barcelona,Ath Bilbao,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-24-barcelona-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,2,2024-08-24T20:00:00+00:00,Espanol,Sociedad,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-24-espanol-sociedad
+LaLiga,2024/2025,Spain,domestic_league,2,2024-08-24T20:00:00+00:00,Getafe,Vallecano,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2024-08-24-getafe-vallecano
+LaLiga,2024/2025,Spain,domestic_league,2,2024-08-24T20:00:00+00:00,Osasuna,Mallorca,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-08-24-osasuna-mallorca
+LaLiga,2024/2025,Spain,domestic_league,2,2024-08-25T20:00:00+00:00,Alaves,Betis,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2024-08-25-alaves-betis
+LaLiga,2024/2025,Spain,domestic_league,2,2024-08-25T20:00:00+00:00,Ath Madrid,Girona,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2024-08-25-ath-madrid-girona
+LaLiga,2024/2025,Spain,domestic_league,2,2024-08-25T20:00:00+00:00,Leganes,Las Palmas,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-25-leganes-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,2,2024-08-25T20:00:00+00:00,Real Madrid,Valladolid,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2024-08-25-real-madrid-valladolid
+LaLiga,2024/2025,Spain,domestic_league,3,2024-08-26T20:00:00+00:00,Villarreal,Celta,,,4,3,finished,false,datahub-football-data,laliga-2024-2025-2024-08-26-villarreal-celta
+LaLiga,2024/2025,Spain,domestic_league,3,2024-08-27T20:00:00+00:00,Mallorca,Sevilla,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2024-08-27-mallorca-sevilla
+LaLiga,2024/2025,Spain,domestic_league,3,2024-08-27T20:00:00+00:00,Vallecano,Barcelona,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-08-27-vallecano-barcelona
+LaLiga,2024/2025,Spain,domestic_league,3,2024-08-28T20:00:00+00:00,Ath Bilbao,Valencia,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-08-28-ath-bilbao-valencia
+LaLiga,2024/2025,Spain,domestic_league,3,2024-08-28T20:00:00+00:00,Ath Madrid,Espanol,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2024-08-28-ath-madrid-espanol
+LaLiga,2024/2025,Spain,domestic_league,3,2024-08-28T20:00:00+00:00,Sociedad,Alaves,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-08-28-sociedad-alaves
+LaLiga,2024/2025,Spain,domestic_league,3,2024-08-28T20:00:00+00:00,Valladolid,Leganes,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2024-08-28-valladolid-leganes
+LaLiga,2024/2025,Spain,domestic_league,3,2024-08-29T20:00:00+00:00,Girona,Osasuna,,,4,0,finished,false,datahub-football-data,laliga-2024-2025-2024-08-29-girona-osasuna
+LaLiga,2024/2025,Spain,domestic_league,3,2024-08-29T20:00:00+00:00,Las Palmas,Real Madrid,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-29-las-palmas-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,3,2024-08-31T20:00:00+00:00,Ath Bilbao,Ath Madrid,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-31-ath-bilbao-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,4,2024-08-31T20:00:00+00:00,Barcelona,Valladolid,,,7,0,finished,false,datahub-football-data,laliga-2024-2025-2024-08-31-barcelona-valladolid
+LaLiga,2024/2025,Spain,domestic_league,4,2024-08-31T20:00:00+00:00,Espanol,Vallecano,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-31-espanol-vallecano
+LaLiga,2024/2025,Spain,domestic_league,4,2024-08-31T20:00:00+00:00,Leganes,Mallorca,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-31-leganes-mallorca
+LaLiga,2024/2025,Spain,domestic_league,4,2024-08-31T20:00:00+00:00,Valencia,Villarreal,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-08-31-valencia-villarreal
+LaLiga,2024/2025,Spain,domestic_league,4,2024-09-01T20:00:00+00:00,Alaves,Las Palmas,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-01-alaves-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,4,2024-09-01T20:00:00+00:00,Getafe,Sociedad,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-01-getafe-sociedad
+LaLiga,2024/2025,Spain,domestic_league,4,2024-09-01T20:00:00+00:00,Osasuna,Celta,,,3,2,finished,false,datahub-football-data,laliga-2024-2025-2024-09-01-osasuna-celta
+LaLiga,2024/2025,Spain,domestic_league,4,2024-09-01T20:00:00+00:00,Real Madrid,Betis,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-01-real-madrid-betis
+LaLiga,2024/2025,Spain,domestic_league,4,2024-09-01T20:00:00+00:00,Sevilla,Girona,,,0,2,finished,false,datahub-football-data,laliga-2024-2025-2024-09-01-sevilla-girona
+LaLiga,2024/2025,Spain,domestic_league,4,2024-09-13T20:00:00+00:00,Betis,Leganes,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-13-betis-leganes
+LaLiga,2024/2025,Spain,domestic_league,5,2024-09-14T20:00:00+00:00,Espanol,Alaves,,,3,2,finished,false,datahub-football-data,laliga-2024-2025-2024-09-14-espanol-alaves
+LaLiga,2024/2025,Spain,domestic_league,5,2024-09-14T20:00:00+00:00,Mallorca,Villarreal,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-09-14-mallorca-villarreal
+LaLiga,2024/2025,Spain,domestic_league,5,2024-09-14T20:00:00+00:00,Sevilla,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-14-sevilla-getafe
+LaLiga,2024/2025,Spain,domestic_league,5,2024-09-14T20:00:00+00:00,Sociedad,Real Madrid,,,0,2,finished,false,datahub-football-data,laliga-2024-2025-2024-09-14-sociedad-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,5,2024-09-15T20:00:00+00:00,Ath Madrid,Valencia,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-15-ath-madrid-valencia
+LaLiga,2024/2025,Spain,domestic_league,5,2024-09-15T20:00:00+00:00,Celta,Valladolid,,,3,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-15-celta-valladolid
+LaLiga,2024/2025,Spain,domestic_league,5,2024-09-15T20:00:00+00:00,Girona,Barcelona,,,1,4,finished,false,datahub-football-data,laliga-2024-2025-2024-09-15-girona-barcelona
+LaLiga,2024/2025,Spain,domestic_league,5,2024-09-15T20:00:00+00:00,Las Palmas,Ath Bilbao,,,2,3,finished,false,datahub-football-data,laliga-2024-2025-2024-09-15-las-palmas-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,5,2024-09-16T20:00:00+00:00,Vallecano,Osasuna,,,3,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-16-vallecano-osasuna
+LaLiga,2024/2025,Spain,domestic_league,5,2024-09-17T20:00:00+00:00,Mallorca,Sociedad,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-17-mallorca-sociedad
+LaLiga,2024/2025,Spain,domestic_league,6,2024-09-18T20:00:00+00:00,Betis,Getafe,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-18-betis-getafe
+LaLiga,2024/2025,Spain,domestic_league,6,2024-09-19T20:00:00+00:00,Leganes,Ath Bilbao,,,0,2,finished,false,datahub-football-data,laliga-2024-2025-2024-09-19-leganes-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,6,2024-09-20T20:00:00+00:00,Alaves,Sevilla,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-20-alaves-sevilla
+LaLiga,2024/2025,Spain,domestic_league,6,2024-09-21T20:00:00+00:00,Osasuna,Las Palmas,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-21-osasuna-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,6,2024-09-21T20:00:00+00:00,Real Madrid,Espanol,,,4,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-21-real-madrid-espanol
+LaLiga,2024/2025,Spain,domestic_league,6,2024-09-21T20:00:00+00:00,Valencia,Girona,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-21-valencia-girona
+LaLiga,2024/2025,Spain,domestic_league,6,2024-09-21T20:00:00+00:00,Valladolid,Sociedad,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-21-valladolid-sociedad
+LaLiga,2024/2025,Spain,domestic_league,6,2024-09-22T20:00:00+00:00,Ath Bilbao,Celta,,,3,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-22-ath-bilbao-celta
+LaLiga,2024/2025,Spain,domestic_league,6,2024-09-22T20:00:00+00:00,Getafe,Leganes,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-22-getafe-leganes
+LaLiga,2024/2025,Spain,domestic_league,6,2024-09-22T20:00:00+00:00,Vallecano,Ath Madrid,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-22-vallecano-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,7,2024-09-22T20:00:00+00:00,Villarreal,Barcelona,,,1,5,finished,false,datahub-football-data,laliga-2024-2025-2024-09-22-villarreal-barcelona
+LaLiga,2024/2025,Spain,domestic_league,7,2024-09-23T20:00:00+00:00,Betis,Mallorca,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-09-23-betis-mallorca
+LaLiga,2024/2025,Spain,domestic_league,7,2024-09-24T20:00:00+00:00,Real Madrid,Alaves,,,3,2,finished,false,datahub-football-data,laliga-2024-2025-2024-09-24-real-madrid-alaves
+LaLiga,2024/2025,Spain,domestic_league,7,2024-09-24T20:00:00+00:00,Sevilla,Valladolid,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-24-sevilla-valladolid
+LaLiga,2024/2025,Spain,domestic_league,7,2024-09-24T20:00:00+00:00,Valencia,Osasuna,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-24-valencia-osasuna
+LaLiga,2024/2025,Spain,domestic_league,7,2024-09-25T20:00:00+00:00,Barcelona,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-25-barcelona-getafe
+LaLiga,2024/2025,Spain,domestic_league,7,2024-09-25T20:00:00+00:00,Girona,Vallecano,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-25-girona-vallecano
+LaLiga,2024/2025,Spain,domestic_league,7,2024-09-26T20:00:00+00:00,Celta,Ath Madrid,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-26-celta-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,7,2024-09-26T20:00:00+00:00,Espanol,Villarreal,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-09-26-espanol-villarreal
+LaLiga,2024/2025,Spain,domestic_league,7,2024-09-26T20:00:00+00:00,Las Palmas,Betis,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-26-las-palmas-betis
+LaLiga,2024/2025,Spain,domestic_league,8,2024-09-27T20:00:00+00:00,Valladolid,Mallorca,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-09-27-valladolid-mallorca
+LaLiga,2024/2025,Spain,domestic_league,8,2024-09-28T20:00:00+00:00,Getafe,Alaves,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-28-getafe-alaves
+LaLiga,2024/2025,Spain,domestic_league,8,2024-09-28T20:00:00+00:00,Osasuna,Barcelona,,,4,2,finished,false,datahub-football-data,laliga-2024-2025-2024-09-28-osasuna-barcelona
+LaLiga,2024/2025,Spain,domestic_league,8,2024-09-28T20:00:00+00:00,Sociedad,Valencia,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-28-sociedad-valencia
+LaLiga,2024/2025,Spain,domestic_league,8,2024-09-28T20:00:00+00:00,Vallecano,Leganes,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-28-vallecano-leganes
+LaLiga,2024/2025,Spain,domestic_league,8,2024-09-29T20:00:00+00:00,Ath Bilbao,Sevilla,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-29-ath-bilbao-sevilla
+LaLiga,2024/2025,Spain,domestic_league,8,2024-09-29T20:00:00+00:00,Ath Madrid,Real Madrid,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-29-ath-madrid-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,8,2024-09-29T20:00:00+00:00,Betis,Espanol,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-09-29-betis-espanol
+LaLiga,2024/2025,Spain,domestic_league,8,2024-09-29T20:00:00+00:00,Celta,Girona,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-29-celta-girona
+LaLiga,2024/2025,Spain,domestic_league,8,2024-09-30T20:00:00+00:00,Villarreal,Las Palmas,,,3,1,finished,false,datahub-football-data,laliga-2024-2025-2024-09-30-villarreal-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,9,2024-10-04T20:00:00+00:00,Leganes,Valencia,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2024-10-04-leganes-valencia
+LaLiga,2024/2025,Spain,domestic_league,9,2024-10-05T20:00:00+00:00,Espanol,Mallorca,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-10-05-espanol-mallorca
+LaLiga,2024/2025,Spain,domestic_league,9,2024-10-05T20:00:00+00:00,Getafe,Osasuna,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-10-05-getafe-osasuna
+LaLiga,2024/2025,Spain,domestic_league,9,2024-10-05T20:00:00+00:00,Las Palmas,Celta,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2024-10-05-las-palmas-celta
+LaLiga,2024/2025,Spain,domestic_league,9,2024-10-05T20:00:00+00:00,Real Madrid,Villarreal,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2024-10-05-real-madrid-villarreal
+LaLiga,2024/2025,Spain,domestic_league,9,2024-10-05T20:00:00+00:00,Valladolid,Vallecano,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-10-05-valladolid-vallecano
+LaLiga,2024/2025,Spain,domestic_league,9,2024-10-06T20:00:00+00:00,Alaves,Barcelona,,,0,3,finished,false,datahub-football-data,laliga-2024-2025-2024-10-06-alaves-barcelona
+LaLiga,2024/2025,Spain,domestic_league,9,2024-10-06T20:00:00+00:00,Girona,Ath Bilbao,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-10-06-girona-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,9,2024-10-06T20:00:00+00:00,Sevilla,Betis,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-10-06-sevilla-betis
+LaLiga,2024/2025,Spain,domestic_league,9,2024-10-06T20:00:00+00:00,Sociedad,Ath Madrid,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-10-06-sociedad-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,10,2024-10-18T20:00:00+00:00,Alaves,Valladolid,,,2,3,finished,false,datahub-football-data,laliga-2024-2025-2024-10-18-alaves-valladolid
+LaLiga,2024/2025,Spain,domestic_league,10,2024-10-19T20:00:00+00:00,Ath Bilbao,Espanol,,,4,1,finished,false,datahub-football-data,laliga-2024-2025-2024-10-19-ath-bilbao-espanol
+LaLiga,2024/2025,Spain,domestic_league,10,2024-10-19T20:00:00+00:00,Celta,Real Madrid,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-10-19-celta-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,10,2024-10-19T20:00:00+00:00,Girona,Sociedad,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2024-10-19-girona-sociedad
+LaLiga,2024/2025,Spain,domestic_league,10,2024-10-19T20:00:00+00:00,Osasuna,Betis,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-10-19-osasuna-betis
+LaLiga,2024/2025,Spain,domestic_league,10,2024-10-20T20:00:00+00:00,Ath Madrid,Leganes,,,3,1,finished,false,datahub-football-data,laliga-2024-2025-2024-10-20-ath-madrid-leganes
+LaLiga,2024/2025,Spain,domestic_league,10,2024-10-20T20:00:00+00:00,Barcelona,Sevilla,,,5,1,finished,false,datahub-football-data,laliga-2024-2025-2024-10-20-barcelona-sevilla
+LaLiga,2024/2025,Spain,domestic_league,10,2024-10-20T20:00:00+00:00,Mallorca,Vallecano,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-10-20-mallorca-vallecano
+LaLiga,2024/2025,Spain,domestic_league,10,2024-10-20T20:00:00+00:00,Villarreal,Getafe,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-10-20-villarreal-getafe
+LaLiga,2024/2025,Spain,domestic_league,10,2024-10-21T20:00:00+00:00,Valencia,Las Palmas,,,2,3,finished,false,datahub-football-data,laliga-2024-2025-2024-10-21-valencia-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,11,2024-10-25T20:00:00+00:00,Espanol,Sevilla,,,0,2,finished,false,datahub-football-data,laliga-2024-2025-2024-10-25-espanol-sevilla
+LaLiga,2024/2025,Spain,domestic_league,11,2024-10-26T20:00:00+00:00,Las Palmas,Girona,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-10-26-las-palmas-girona
+LaLiga,2024/2025,Spain,domestic_league,11,2024-10-26T20:00:00+00:00,Real Madrid,Barcelona,,,0,4,finished,false,datahub-football-data,laliga-2024-2025-2024-10-26-real-madrid-barcelona
+LaLiga,2024/2025,Spain,domestic_league,11,2024-10-26T20:00:00+00:00,Valladolid,Villarreal,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-10-26-valladolid-villarreal
+LaLiga,2024/2025,Spain,domestic_league,11,2024-10-26T20:00:00+00:00,Vallecano,Alaves,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-10-26-vallecano-alaves
+LaLiga,2024/2025,Spain,domestic_league,11,2024-10-27T20:00:00+00:00,Betis,Ath Madrid,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-10-27-betis-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,11,2024-10-27T20:00:00+00:00,Getafe,Valencia,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-10-27-getafe-valencia
+LaLiga,2024/2025,Spain,domestic_league,11,2024-10-27T20:00:00+00:00,Leganes,Celta,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2024-10-27-leganes-celta
+LaLiga,2024/2025,Spain,domestic_league,11,2024-10-27T20:00:00+00:00,Sociedad,Osasuna,,,0,2,finished,false,datahub-football-data,laliga-2024-2025-2024-10-27-sociedad-osasuna
+LaLiga,2024/2025,Spain,domestic_league,11,2024-10-28T20:00:00+00:00,Mallorca,Ath Bilbao,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2024-10-28-mallorca-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,12,2024-11-01T20:00:00+00:00,Alaves,Mallorca,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-11-01-alaves-mallorca
+LaLiga,2024/2025,Spain,domestic_league,12,2024-11-02T20:00:00+00:00,Girona,Leganes,,,4,3,finished,false,datahub-football-data,laliga-2024-2025-2024-11-02-girona-leganes
+LaLiga,2024/2025,Spain,domestic_league,12,2024-11-02T20:00:00+00:00,Osasuna,Valladolid,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-11-02-osasuna-valladolid
+LaLiga,2024/2025,Spain,domestic_league,12,2024-11-03T20:00:00+00:00,Ath Bilbao,Betis,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-11-03-ath-bilbao-betis
+LaLiga,2024/2025,Spain,domestic_league,12,2024-11-03T20:00:00+00:00,Ath Madrid,Las Palmas,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2024-11-03-ath-madrid-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,12,2024-11-03T20:00:00+00:00,Barcelona,Espanol,,,3,1,finished,false,datahub-football-data,laliga-2024-2025-2024-11-03-barcelona-espanol
+LaLiga,2024/2025,Spain,domestic_league,12,2024-11-03T20:00:00+00:00,Sevilla,Sociedad,,,0,2,finished,false,datahub-football-data,laliga-2024-2025-2024-11-03-sevilla-sociedad
+LaLiga,2024/2025,Spain,domestic_league,12,2024-11-04T20:00:00+00:00,Celta,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-11-04-celta-getafe
+LaLiga,2024/2025,Spain,domestic_league,12,2024-11-08T20:00:00+00:00,Vallecano,Las Palmas,,,1,3,finished,false,datahub-football-data,laliga-2024-2025-2024-11-08-vallecano-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,12,2024-11-09T20:00:00+00:00,Leganes,Sevilla,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-11-09-leganes-sevilla
+LaLiga,2024/2025,Spain,domestic_league,13,2024-11-09T20:00:00+00:00,Real Madrid,Osasuna,,,4,0,finished,false,datahub-football-data,laliga-2024-2025-2024-11-09-real-madrid-osasuna
+LaLiga,2024/2025,Spain,domestic_league,13,2024-11-09T20:00:00+00:00,Villarreal,Alaves,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2024-11-09-villarreal-alaves
+LaLiga,2024/2025,Spain,domestic_league,13,2024-11-10T20:00:00+00:00,Betis,Celta,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2024-11-10-betis-celta
+LaLiga,2024/2025,Spain,domestic_league,13,2024-11-10T20:00:00+00:00,Getafe,Girona,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2024-11-10-getafe-girona
+LaLiga,2024/2025,Spain,domestic_league,13,2024-11-10T20:00:00+00:00,Mallorca,Ath Madrid,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2024-11-10-mallorca-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,13,2024-11-10T20:00:00+00:00,Sociedad,Barcelona,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-11-10-sociedad-barcelona
+LaLiga,2024/2025,Spain,domestic_league,13,2024-11-10T20:00:00+00:00,Valladolid,Ath Bilbao,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-11-10-valladolid-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,13,2024-11-22T20:00:00+00:00,Getafe,Valladolid,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2024-11-22-getafe-valladolid
+LaLiga,2024/2025,Spain,domestic_league,13,2024-11-23T20:00:00+00:00,Ath Madrid,Alaves,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-11-23-ath-madrid-alaves
+LaLiga,2024/2025,Spain,domestic_league,13,2024-11-23T20:00:00+00:00,Celta,Barcelona,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2024-11-23-celta-barcelona
+LaLiga,2024/2025,Spain,domestic_league,14,2024-11-23T20:00:00+00:00,Girona,Espanol,,,4,1,finished,false,datahub-football-data,laliga-2024-2025-2024-11-23-girona-espanol
+LaLiga,2024/2025,Spain,domestic_league,14,2024-11-23T20:00:00+00:00,Las Palmas,Mallorca,,,2,3,finished,false,datahub-football-data,laliga-2024-2025-2024-11-23-las-palmas-mallorca
+LaLiga,2024/2025,Spain,domestic_league,14,2024-11-23T20:00:00+00:00,Valencia,Betis,,,4,2,finished,false,datahub-football-data,laliga-2024-2025-2024-11-23-valencia-betis
+LaLiga,2024/2025,Spain,domestic_league,14,2024-11-24T20:00:00+00:00,Ath Bilbao,Sociedad,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-11-24-ath-bilbao-sociedad
+LaLiga,2024/2025,Spain,domestic_league,14,2024-11-24T20:00:00+00:00,Leganes,Real Madrid,,,0,3,finished,false,datahub-football-data,laliga-2024-2025-2024-11-24-leganes-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,14,2024-11-24T20:00:00+00:00,Osasuna,Villarreal,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2024-11-24-osasuna-villarreal
+LaLiga,2024/2025,Spain,domestic_league,14,2024-11-24T20:00:00+00:00,Sevilla,Vallecano,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-11-24-sevilla-vallecano
+LaLiga,2024/2025,Spain,domestic_league,14,2024-11-29T20:00:00+00:00,Mallorca,Valencia,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-11-29-mallorca-valencia
+LaLiga,2024/2025,Spain,domestic_league,14,2024-11-30T20:00:00+00:00,Alaves,Leganes,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-11-30-alaves-leganes
+LaLiga,2024/2025,Spain,domestic_league,14,2024-11-30T20:00:00+00:00,Barcelona,Las Palmas,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-11-30-barcelona-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,15,2024-11-30T20:00:00+00:00,Espanol,Celta,,,3,1,finished,false,datahub-football-data,laliga-2024-2025-2024-11-30-espanol-celta
+LaLiga,2024/2025,Spain,domestic_league,15,2024-11-30T20:00:00+00:00,Valladolid,Ath Madrid,,,0,5,finished,false,datahub-football-data,laliga-2024-2025-2024-11-30-valladolid-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,15,2024-12-01T20:00:00+00:00,Real Madrid,Getafe,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2024-12-01-real-madrid-getafe
+LaLiga,2024/2025,Spain,domestic_league,15,2024-12-01T20:00:00+00:00,Sociedad,Betis,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2024-12-01-sociedad-betis
+LaLiga,2024/2025,Spain,domestic_league,15,2024-12-01T20:00:00+00:00,Vallecano,Ath Bilbao,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-12-01-vallecano-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,15,2024-12-01T20:00:00+00:00,Villarreal,Girona,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2024-12-01-villarreal-girona
+LaLiga,2024/2025,Spain,domestic_league,15,2024-12-02T20:00:00+00:00,Sevilla,Osasuna,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-12-02-sevilla-osasuna
+LaLiga,2024/2025,Spain,domestic_league,15,2024-12-03T20:00:00+00:00,Mallorca,Barcelona,,,1,5,finished,false,datahub-football-data,laliga-2024-2025-2024-12-03-mallorca-barcelona
+LaLiga,2024/2025,Spain,domestic_league,15,2024-12-04T20:00:00+00:00,Ath Bilbao,Real Madrid,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-12-04-ath-bilbao-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,15,2024-12-06T20:00:00+00:00,Celta,Mallorca,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2024-12-06-celta-mallorca
+LaLiga,2024/2025,Spain,domestic_league,16,2024-12-07T20:00:00+00:00,Betis,Barcelona,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2024-12-07-betis-barcelona
+LaLiga,2024/2025,Spain,domestic_league,16,2024-12-07T20:00:00+00:00,Girona,Real Madrid,,,0,3,finished,false,datahub-football-data,laliga-2024-2025-2024-12-07-girona-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,16,2024-12-07T20:00:00+00:00,Las Palmas,Valladolid,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-12-07-las-palmas-valladolid
+LaLiga,2024/2025,Spain,domestic_league,16,2024-12-07T20:00:00+00:00,Valencia,Vallecano,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2024-12-07-valencia-vallecano
+LaLiga,2024/2025,Spain,domestic_league,16,2024-12-08T20:00:00+00:00,Ath Bilbao,Villarreal,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2024-12-08-ath-bilbao-villarreal
+LaLiga,2024/2025,Spain,domestic_league,16,2024-12-08T20:00:00+00:00,Ath Madrid,Sevilla,,,4,3,finished,false,datahub-football-data,laliga-2024-2025-2024-12-08-ath-madrid-sevilla
+LaLiga,2024/2025,Spain,domestic_league,16,2024-12-08T20:00:00+00:00,Leganes,Sociedad,,,0,3,finished,false,datahub-football-data,laliga-2024-2025-2024-12-08-leganes-sociedad
+LaLiga,2024/2025,Spain,domestic_league,16,2024-12-08T20:00:00+00:00,Osasuna,Alaves,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2024-12-08-osasuna-alaves
+LaLiga,2024/2025,Spain,domestic_league,16,2024-12-09T20:00:00+00:00,Getafe,Espanol,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-12-09-getafe-espanol
+LaLiga,2024/2025,Spain,domestic_league,16,2024-12-13T20:00:00+00:00,Valladolid,Valencia,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-12-13-valladolid-valencia
+LaLiga,2024/2025,Spain,domestic_league,17,2024-12-14T20:00:00+00:00,Espanol,Osasuna,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2024-12-14-espanol-osasuna
+LaLiga,2024/2025,Spain,domestic_league,17,2024-12-14T20:00:00+00:00,Mallorca,Girona,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2024-12-14-mallorca-girona
+LaLiga,2024/2025,Spain,domestic_league,17,2024-12-14T20:00:00+00:00,Sevilla,Celta,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-12-14-sevilla-celta
+LaLiga,2024/2025,Spain,domestic_league,17,2024-12-14T20:00:00+00:00,Vallecano,Real Madrid,,,3,3,finished,false,datahub-football-data,laliga-2024-2025-2024-12-14-vallecano-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,17,2024-12-15T20:00:00+00:00,Alaves,Ath Bilbao,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-12-15-alaves-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,17,2024-12-15T20:00:00+00:00,Ath Madrid,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-12-15-ath-madrid-getafe
+LaLiga,2024/2025,Spain,domestic_league,17,2024-12-15T20:00:00+00:00,Barcelona,Leganes,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2024-12-15-barcelona-leganes
+LaLiga,2024/2025,Spain,domestic_league,17,2024-12-15T20:00:00+00:00,Sociedad,Las Palmas,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2024-12-15-sociedad-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,17,2024-12-15T20:00:00+00:00,Villarreal,Betis,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-12-15-villarreal-betis
+LaLiga,2024/2025,Spain,domestic_league,17,2024-12-18T20:00:00+00:00,Espanol,Valencia,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-12-18-espanol-valencia
+LaLiga,2024/2025,Spain,domestic_league,18,2024-12-18T20:00:00+00:00,Villarreal,Vallecano,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-12-18-villarreal-vallecano
+LaLiga,2024/2025,Spain,domestic_league,18,2024-12-20T20:00:00+00:00,Girona,Valladolid,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2024-12-20-girona-valladolid
+LaLiga,2024/2025,Spain,domestic_league,18,2024-12-21T20:00:00+00:00,Barcelona,Ath Madrid,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-12-21-barcelona-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,18,2024-12-21T20:00:00+00:00,Celta,Sociedad,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2024-12-21-celta-sociedad
+LaLiga,2024/2025,Spain,domestic_league,18,2024-12-21T20:00:00+00:00,Getafe,Mallorca,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2024-12-21-getafe-mallorca
+LaLiga,2024/2025,Spain,domestic_league,18,2024-12-21T20:00:00+00:00,Osasuna,Ath Bilbao,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2024-12-21-osasuna-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,18,2024-12-22T20:00:00+00:00,Betis,Vallecano,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2024-12-22-betis-vallecano
+LaLiga,2024/2025,Spain,domestic_league,18,2024-12-22T20:00:00+00:00,Las Palmas,Espanol,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2024-12-22-las-palmas-espanol
+LaLiga,2024/2025,Spain,domestic_league,18,2024-12-22T20:00:00+00:00,Leganes,Villarreal,,,2,5,finished,false,datahub-football-data,laliga-2024-2025-2024-12-22-leganes-villarreal
+LaLiga,2024/2025,Spain,domestic_league,18,2024-12-22T20:00:00+00:00,Real Madrid,Sevilla,,,4,2,finished,false,datahub-football-data,laliga-2024-2025-2024-12-22-real-madrid-sevilla
+LaLiga,2024/2025,Spain,domestic_league,19,2024-12-22T20:00:00+00:00,Valencia,Alaves,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2024-12-22-valencia-alaves
+LaLiga,2024/2025,Spain,domestic_league,19,2025-01-03T20:00:00+00:00,Valencia,Real Madrid,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-01-03-valencia-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,19,2025-01-10T20:00:00+00:00,Vallecano,Celta,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-10-vallecano-celta
+LaLiga,2024/2025,Spain,domestic_league,19,2025-01-11T20:00:00+00:00,Alaves,Girona,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-11-alaves-girona
+LaLiga,2024/2025,Spain,domestic_league,19,2025-01-11T20:00:00+00:00,Espanol,Leganes,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-11-espanol-leganes
+LaLiga,2024/2025,Spain,domestic_league,19,2025-01-11T20:00:00+00:00,Sevilla,Valencia,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-11-sevilla-valencia
+LaLiga,2024/2025,Spain,domestic_league,19,2025-01-11T20:00:00+00:00,Valladolid,Betis,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-01-11-valladolid-betis
+LaLiga,2024/2025,Spain,domestic_league,19,2025-01-12T20:00:00+00:00,Ath Madrid,Osasuna,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-01-12-ath-madrid-osasuna
+LaLiga,2024/2025,Spain,domestic_league,19,2025-01-12T20:00:00+00:00,Las Palmas,Getafe,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-01-12-las-palmas-getafe
+LaLiga,2024/2025,Spain,domestic_league,19,2025-01-13T20:00:00+00:00,Sociedad,Villarreal,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-01-13-sociedad-villarreal
+LaLiga,2024/2025,Spain,domestic_league,20,2025-01-17T20:00:00+00:00,Espanol,Valladolid,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-17-espanol-valladolid
+LaLiga,2024/2025,Spain,domestic_league,20,2025-01-18T20:00:00+00:00,Betis,Alaves,,,1,3,finished,false,datahub-football-data,laliga-2024-2025-2025-01-18-betis-alaves
+LaLiga,2024/2025,Spain,domestic_league,20,2025-01-18T20:00:00+00:00,Getafe,Barcelona,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-18-getafe-barcelona
+LaLiga,2024/2025,Spain,domestic_league,20,2025-01-18T20:00:00+00:00,Girona,Sevilla,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-01-18-girona-sevilla
+LaLiga,2024/2025,Spain,domestic_league,20,2025-01-18T20:00:00+00:00,Leganes,Ath Madrid,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-01-18-leganes-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,20,2025-01-19T20:00:00+00:00,Celta,Ath Bilbao,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-01-19-celta-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,20,2025-01-19T20:00:00+00:00,Osasuna,Vallecano,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-19-osasuna-vallecano
+LaLiga,2024/2025,Spain,domestic_league,20,2025-01-19T20:00:00+00:00,Real Madrid,Las Palmas,,,4,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-19-real-madrid-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,20,2025-01-19T20:00:00+00:00,Valencia,Sociedad,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-01-19-valencia-sociedad
+LaLiga,2024/2025,Spain,domestic_league,20,2025-01-20T20:00:00+00:00,Villarreal,Mallorca,,,4,0,finished,false,datahub-football-data,laliga-2024-2025-2025-01-20-villarreal-mallorca
+LaLiga,2024/2025,Spain,domestic_league,21,2025-01-24T20:00:00+00:00,Las Palmas,Osasuna,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-24-las-palmas-osasuna
+LaLiga,2024/2025,Spain,domestic_league,21,2025-01-25T20:00:00+00:00,Ath Madrid,Villarreal,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-25-ath-madrid-villarreal
+LaLiga,2024/2025,Spain,domestic_league,21,2025-01-25T20:00:00+00:00,Mallorca,Betis,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-25-mallorca-betis
+LaLiga,2024/2025,Spain,domestic_league,21,2025-01-25T20:00:00+00:00,Sevilla,Espanol,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-25-sevilla-espanol
+LaLiga,2024/2025,Spain,domestic_league,21,2025-01-25T20:00:00+00:00,Valladolid,Real Madrid,,,0,3,finished,false,datahub-football-data,laliga-2024-2025-2025-01-25-valladolid-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,21,2025-01-26T20:00:00+00:00,Ath Bilbao,Leganes,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2025-01-26-ath-bilbao-leganes
+LaLiga,2024/2025,Spain,domestic_league,21,2025-01-26T20:00:00+00:00,Barcelona,Valencia,,,7,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-26-barcelona-valencia
+LaLiga,2024/2025,Spain,domestic_league,21,2025-01-26T20:00:00+00:00,Sociedad,Getafe,,,0,3,finished,false,datahub-football-data,laliga-2024-2025-2025-01-26-sociedad-getafe
+LaLiga,2024/2025,Spain,domestic_league,21,2025-01-26T20:00:00+00:00,Vallecano,Girona,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-26-vallecano-girona
+LaLiga,2024/2025,Spain,domestic_league,21,2025-01-27T20:00:00+00:00,Alaves,Celta,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-27-alaves-celta
+LaLiga,2024/2025,Spain,domestic_league,22,2025-01-31T20:00:00+00:00,Leganes,Vallecano,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-01-31-leganes-vallecano
+LaLiga,2024/2025,Spain,domestic_league,22,2025-02-01T20:00:00+00:00,Ath Madrid,Mallorca,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2025-02-01-ath-madrid-mallorca
+LaLiga,2024/2025,Spain,domestic_league,22,2025-02-01T20:00:00+00:00,Espanol,Real Madrid,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-02-01-espanol-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,22,2025-02-01T20:00:00+00:00,Getafe,Sevilla,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2025-02-01-getafe-sevilla
+LaLiga,2024/2025,Spain,domestic_league,22,2025-02-01T20:00:00+00:00,Villarreal,Valladolid,,,5,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-01-villarreal-valladolid
+LaLiga,2024/2025,Spain,domestic_league,22,2025-02-02T20:00:00+00:00,Barcelona,Alaves,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-02-02-barcelona-alaves
+LaLiga,2024/2025,Spain,domestic_league,22,2025-02-02T20:00:00+00:00,Betis,Ath Bilbao,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2025-02-02-betis-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,22,2025-02-02T20:00:00+00:00,Osasuna,Sociedad,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-02-osasuna-sociedad
+LaLiga,2024/2025,Spain,domestic_league,22,2025-02-02T20:00:00+00:00,Valencia,Celta,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-02-valencia-celta
+LaLiga,2024/2025,Spain,domestic_league,22,2025-02-03T20:00:00+00:00,Girona,Las Palmas,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-03-girona-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,23,2025-02-07T20:00:00+00:00,Vallecano,Valladolid,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-02-07-vallecano-valladolid
+LaLiga,2024/2025,Spain,domestic_league,23,2025-02-08T20:00:00+00:00,Ath Bilbao,Girona,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2025-02-08-ath-bilbao-girona
+LaLiga,2024/2025,Spain,domestic_league,23,2025-02-08T20:00:00+00:00,Celta,Betis,,,3,2,finished,false,datahub-football-data,laliga-2024-2025-2025-02-08-celta-betis
+LaLiga,2024/2025,Spain,domestic_league,23,2025-02-08T20:00:00+00:00,Las Palmas,Villarreal,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-02-08-las-palmas-villarreal
+LaLiga,2024/2025,Spain,domestic_league,23,2025-02-08T20:00:00+00:00,Real Madrid,Ath Madrid,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-08-real-madrid-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,23,2025-02-09T20:00:00+00:00,Alaves,Getafe,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-09-alaves-getafe
+LaLiga,2024/2025,Spain,domestic_league,23,2025-02-09T20:00:00+00:00,Sevilla,Barcelona,,,1,4,finished,false,datahub-football-data,laliga-2024-2025-2025-02-09-sevilla-barcelona
+LaLiga,2024/2025,Spain,domestic_league,23,2025-02-09T20:00:00+00:00,Sociedad,Espanol,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-09-sociedad-espanol
+LaLiga,2024/2025,Spain,domestic_league,23,2025-02-09T20:00:00+00:00,Valencia,Leganes,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2025-02-09-valencia-leganes
+LaLiga,2024/2025,Spain,domestic_league,23,2025-02-10T20:00:00+00:00,Mallorca,Osasuna,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-10-mallorca-osasuna
+LaLiga,2024/2025,Spain,domestic_league,24,2025-02-14T20:00:00+00:00,Girona,Getafe,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-02-14-girona-getafe
+LaLiga,2024/2025,Spain,domestic_league,24,2025-02-15T20:00:00+00:00,Ath Madrid,Celta,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-15-ath-madrid-celta
+LaLiga,2024/2025,Spain,domestic_league,24,2025-02-15T20:00:00+00:00,Leganes,Alaves,,,3,3,finished,false,datahub-football-data,laliga-2024-2025-2025-02-15-leganes-alaves
+LaLiga,2024/2025,Spain,domestic_league,24,2025-02-15T20:00:00+00:00,Osasuna,Real Madrid,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-15-osasuna-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,24,2025-02-15T20:00:00+00:00,Villarreal,Valencia,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-15-villarreal-valencia
+LaLiga,2024/2025,Spain,domestic_league,24,2025-02-16T20:00:00+00:00,Betis,Sociedad,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2025-02-16-betis-sociedad
+LaLiga,2024/2025,Spain,domestic_league,24,2025-02-16T20:00:00+00:00,Espanol,Ath Bilbao,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-16-espanol-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,24,2025-02-16T20:00:00+00:00,Mallorca,Las Palmas,,,3,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-16-mallorca-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,24,2025-02-16T20:00:00+00:00,Valladolid,Sevilla,,,0,4,finished,false,datahub-football-data,laliga-2024-2025-2025-02-16-valladolid-sevilla
+LaLiga,2024/2025,Spain,domestic_league,24,2025-02-17T20:00:00+00:00,Barcelona,Vallecano,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-02-17-barcelona-vallecano
+LaLiga,2024/2025,Spain,domestic_league,25,2025-02-21T20:00:00+00:00,Celta,Osasuna,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-02-21-celta-osasuna
+LaLiga,2024/2025,Spain,domestic_league,25,2025-02-22T20:00:00+00:00,Alaves,Espanol,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-22-alaves-espanol
+LaLiga,2024/2025,Spain,domestic_league,25,2025-02-22T20:00:00+00:00,Las Palmas,Barcelona,,,0,2,finished,false,datahub-football-data,laliga-2024-2025-2025-02-22-las-palmas-barcelona
+LaLiga,2024/2025,Spain,domestic_league,25,2025-02-22T20:00:00+00:00,Valencia,Ath Madrid,,,0,3,finished,false,datahub-football-data,laliga-2024-2025-2025-02-22-valencia-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,25,2025-02-22T20:00:00+00:00,Vallecano,Villarreal,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-22-vallecano-villarreal
+LaLiga,2024/2025,Spain,domestic_league,25,2025-02-23T20:00:00+00:00,Ath Bilbao,Valladolid,,,7,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-23-ath-bilbao-valladolid
+LaLiga,2024/2025,Spain,domestic_league,25,2025-02-23T20:00:00+00:00,Getafe,Betis,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-02-23-getafe-betis
+LaLiga,2024/2025,Spain,domestic_league,25,2025-02-23T20:00:00+00:00,Real Madrid,Girona,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2025-02-23-real-madrid-girona
+LaLiga,2024/2025,Spain,domestic_league,25,2025-02-23T20:00:00+00:00,Sociedad,Leganes,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2025-02-23-sociedad-leganes
+LaLiga,2024/2025,Spain,domestic_league,25,2025-02-24T20:00:00+00:00,Sevilla,Mallorca,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-24-sevilla-mallorca
+LaLiga,2024/2025,Spain,domestic_league,26,2025-02-28T20:00:00+00:00,Valladolid,Las Palmas,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-02-28-valladolid-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,26,2025-03-01T20:00:00+00:00,Ath Madrid,Ath Bilbao,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-03-01-ath-madrid-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,26,2025-03-01T20:00:00+00:00,Betis,Real Madrid,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-01-betis-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,26,2025-03-01T20:00:00+00:00,Girona,Celta,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2025-03-01-girona-celta
+LaLiga,2024/2025,Spain,domestic_league,26,2025-03-01T20:00:00+00:00,Vallecano,Sevilla,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-01-vallecano-sevilla
+LaLiga,2024/2025,Spain,domestic_league,26,2025-03-02T20:00:00+00:00,Barcelona,Sociedad,,,4,0,finished,false,datahub-football-data,laliga-2024-2025-2025-03-02-barcelona-sociedad
+LaLiga,2024/2025,Spain,domestic_league,26,2025-03-02T20:00:00+00:00,Leganes,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-03-02-leganes-getafe
+LaLiga,2024/2025,Spain,domestic_league,26,2025-03-02T20:00:00+00:00,Mallorca,Alaves,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-02-mallorca-alaves
+LaLiga,2024/2025,Spain,domestic_league,26,2025-03-02T20:00:00+00:00,Osasuna,Valencia,,,3,3,finished,false,datahub-football-data,laliga-2024-2025-2025-03-02-osasuna-valencia
+LaLiga,2024/2025,Spain,domestic_league,26,2025-03-08T20:00:00+00:00,Alaves,Villarreal,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-03-08-alaves-villarreal
+LaLiga,2024/2025,Spain,domestic_league,27,2025-03-08T20:00:00+00:00,Celta,Leganes,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-08-celta-leganes
+LaLiga,2024/2025,Spain,domestic_league,27,2025-03-08T20:00:00+00:00,Valencia,Valladolid,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-08-valencia-valladolid
+LaLiga,2024/2025,Spain,domestic_league,27,2025-03-09T20:00:00+00:00,Ath Bilbao,Mallorca,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-09-ath-bilbao-mallorca
+LaLiga,2024/2025,Spain,domestic_league,27,2025-03-09T20:00:00+00:00,Betis,Las Palmas,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-03-09-betis-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,27,2025-03-09T20:00:00+00:00,Getafe,Ath Madrid,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-09-getafe-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,27,2025-03-09T20:00:00+00:00,Real Madrid,Vallecano,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-09-real-madrid-vallecano
+LaLiga,2024/2025,Spain,domestic_league,27,2025-03-09T20:00:00+00:00,Sociedad,Sevilla,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-09-sociedad-sevilla
+LaLiga,2024/2025,Spain,domestic_league,27,2025-03-10T20:00:00+00:00,Espanol,Girona,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-10-espanol-girona
+LaLiga,2024/2025,Spain,domestic_league,27,2025-03-14T20:00:00+00:00,Las Palmas,Alaves,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2025-03-14-las-palmas-alaves
+LaLiga,2024/2025,Spain,domestic_league,27,2025-03-15T20:00:00+00:00,Girona,Valencia,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-15-girona-valencia
+LaLiga,2024/2025,Spain,domestic_league,28,2025-03-15T20:00:00+00:00,Mallorca,Espanol,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-15-mallorca-espanol
+LaLiga,2024/2025,Spain,domestic_league,28,2025-03-15T20:00:00+00:00,Valladolid,Celta,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-15-valladolid-celta
+LaLiga,2024/2025,Spain,domestic_league,28,2025-03-15T20:00:00+00:00,Villarreal,Real Madrid,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-03-15-villarreal-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,28,2025-03-16T20:00:00+00:00,Ath Madrid,Barcelona,,,2,4,finished,false,datahub-football-data,laliga-2024-2025-2025-03-16-ath-madrid-barcelona
+LaLiga,2024/2025,Spain,domestic_league,28,2025-03-16T20:00:00+00:00,Leganes,Betis,,,2,3,finished,false,datahub-football-data,laliga-2024-2025-2025-03-16-leganes-betis
+LaLiga,2024/2025,Spain,domestic_league,28,2025-03-16T20:00:00+00:00,Osasuna,Getafe,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-03-16-osasuna-getafe
+LaLiga,2024/2025,Spain,domestic_league,28,2025-03-16T20:00:00+00:00,Sevilla,Ath Bilbao,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-16-sevilla-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,28,2025-03-16T20:00:00+00:00,Vallecano,Sociedad,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2025-03-16-vallecano-sociedad
+LaLiga,2024/2025,Spain,domestic_league,28,2025-03-27T20:00:00+00:00,Barcelona,Osasuna,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2025-03-27-barcelona-osasuna
+LaLiga,2024/2025,Spain,domestic_league,28,2025-03-29T20:00:00+00:00,Alaves,Vallecano,,,0,2,finished,false,datahub-football-data,laliga-2024-2025-2025-03-29-alaves-vallecano
+LaLiga,2024/2025,Spain,domestic_league,29,2025-03-29T20:00:00+00:00,Espanol,Ath Madrid,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-29-espanol-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,29,2025-03-29T20:00:00+00:00,Real Madrid,Leganes,,,3,2,finished,false,datahub-football-data,laliga-2024-2025-2025-03-29-real-madrid-leganes
+LaLiga,2024/2025,Spain,domestic_league,29,2025-03-29T20:00:00+00:00,Sociedad,Valladolid,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-29-sociedad-valladolid
+LaLiga,2024/2025,Spain,domestic_league,29,2025-03-30T20:00:00+00:00,Ath Bilbao,Osasuna,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2025-03-30-ath-bilbao-osasuna
+LaLiga,2024/2025,Spain,domestic_league,29,2025-03-30T20:00:00+00:00,Barcelona,Girona,,,4,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-30-barcelona-girona
+LaLiga,2024/2025,Spain,domestic_league,29,2025-03-30T20:00:00+00:00,Betis,Sevilla,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-30-betis-sevilla
+LaLiga,2024/2025,Spain,domestic_league,29,2025-03-30T20:00:00+00:00,Getafe,Villarreal,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-03-30-getafe-villarreal
+LaLiga,2024/2025,Spain,domestic_league,29,2025-03-30T20:00:00+00:00,Valencia,Mallorca,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-03-30-valencia-mallorca
+LaLiga,2024/2025,Spain,domestic_league,29,2025-03-31T20:00:00+00:00,Celta,Las Palmas,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-03-31-celta-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,29,2025-04-04T20:00:00+00:00,Vallecano,Espanol,,,0,4,finished,false,datahub-football-data,laliga-2024-2025-2025-04-04-vallecano-espanol
+LaLiga,2024/2025,Spain,domestic_league,30,2025-04-05T20:00:00+00:00,Barcelona,Betis,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-04-05-barcelona-betis
+LaLiga,2024/2025,Spain,domestic_league,30,2025-04-05T20:00:00+00:00,Girona,Alaves,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-04-05-girona-alaves
+LaLiga,2024/2025,Spain,domestic_league,30,2025-04-05T20:00:00+00:00,Mallorca,Celta,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-04-05-mallorca-celta
+LaLiga,2024/2025,Spain,domestic_league,30,2025-04-05T20:00:00+00:00,Real Madrid,Valencia,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-04-05-real-madrid-valencia
+LaLiga,2024/2025,Spain,domestic_league,30,2025-04-06T20:00:00+00:00,Las Palmas,Sociedad,,,1,3,finished,false,datahub-football-data,laliga-2024-2025-2025-04-06-las-palmas-sociedad
+LaLiga,2024/2025,Spain,domestic_league,30,2025-04-06T20:00:00+00:00,Sevilla,Ath Madrid,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-04-06-sevilla-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,30,2025-04-06T20:00:00+00:00,Valladolid,Getafe,,,0,4,finished,false,datahub-football-data,laliga-2024-2025-2025-04-06-valladolid-getafe
+LaLiga,2024/2025,Spain,domestic_league,30,2025-04-06T20:00:00+00:00,Villarreal,Ath Bilbao,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2025-04-06-villarreal-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,30,2025-04-07T20:00:00+00:00,Leganes,Osasuna,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-04-07-leganes-osasuna
+LaLiga,2024/2025,Spain,domestic_league,30,2025-04-11T20:00:00+00:00,Valencia,Sevilla,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-04-11-valencia-sevilla
+LaLiga,2024/2025,Spain,domestic_league,31,2025-04-12T20:00:00+00:00,Celta,Espanol,,,0,2,finished,false,datahub-football-data,laliga-2024-2025-2025-04-12-celta-espanol
+LaLiga,2024/2025,Spain,domestic_league,31,2025-04-12T20:00:00+00:00,Getafe,Las Palmas,,,1,3,finished,false,datahub-football-data,laliga-2024-2025-2025-04-12-getafe-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,31,2025-04-12T20:00:00+00:00,Leganes,Barcelona,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-04-12-leganes-barcelona
+LaLiga,2024/2025,Spain,domestic_league,31,2025-04-12T20:00:00+00:00,Sociedad,Mallorca,,,0,2,finished,false,datahub-football-data,laliga-2024-2025-2025-04-12-sociedad-mallorca
+LaLiga,2024/2025,Spain,domestic_league,31,2025-04-13T20:00:00+00:00,Alaves,Real Madrid,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-04-13-alaves-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,31,2025-04-13T20:00:00+00:00,Ath Bilbao,Vallecano,,,3,1,finished,false,datahub-football-data,laliga-2024-2025-2025-04-13-ath-bilbao-vallecano
+LaLiga,2024/2025,Spain,domestic_league,31,2025-04-13T20:00:00+00:00,Betis,Villarreal,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-04-13-betis-villarreal
+LaLiga,2024/2025,Spain,domestic_league,31,2025-04-13T20:00:00+00:00,Osasuna,Girona,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-04-13-osasuna-girona
+LaLiga,2024/2025,Spain,domestic_league,31,2025-04-14T20:00:00+00:00,Ath Madrid,Valladolid,,,4,2,finished,false,datahub-football-data,laliga-2024-2025-2025-04-14-ath-madrid-valladolid
+LaLiga,2024/2025,Spain,domestic_league,31,2025-04-18T20:00:00+00:00,Espanol,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-04-18-espanol-getafe
+LaLiga,2024/2025,Spain,domestic_league,32,2025-04-19T20:00:00+00:00,Barcelona,Celta,,,4,3,finished,false,datahub-football-data,laliga-2024-2025-2025-04-19-barcelona-celta
+LaLiga,2024/2025,Spain,domestic_league,32,2025-04-19T20:00:00+00:00,Las Palmas,Ath Madrid,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-04-19-las-palmas-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,32,2025-04-19T20:00:00+00:00,Mallorca,Leganes,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2025-04-19-mallorca-leganes
+LaLiga,2024/2025,Spain,domestic_league,32,2025-04-19T20:00:00+00:00,Vallecano,Valencia,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-04-19-vallecano-valencia
+LaLiga,2024/2025,Spain,domestic_league,32,2025-04-20T20:00:00+00:00,Real Madrid,Ath Bilbao,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-04-20-real-madrid-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,32,2025-04-20T20:00:00+00:00,Sevilla,Alaves,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-04-20-sevilla-alaves
+LaLiga,2024/2025,Spain,domestic_league,32,2025-04-20T20:00:00+00:00,Valladolid,Osasuna,,,2,3,finished,false,datahub-football-data,laliga-2024-2025-2025-04-20-valladolid-osasuna
+LaLiga,2024/2025,Spain,domestic_league,32,2025-04-20T20:00:00+00:00,Villarreal,Sociedad,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2025-04-20-villarreal-sociedad
+LaLiga,2024/2025,Spain,domestic_league,32,2025-04-21T20:00:00+00:00,Girona,Betis,,,1,3,finished,false,datahub-football-data,laliga-2024-2025-2025-04-21-girona-betis
+LaLiga,2024/2025,Spain,domestic_league,32,2025-04-22T20:00:00+00:00,Barcelona,Mallorca,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-04-22-barcelona-mallorca
+LaLiga,2024/2025,Spain,domestic_league,33,2025-04-22T20:00:00+00:00,Valencia,Espanol,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-04-22-valencia-espanol
+LaLiga,2024/2025,Spain,domestic_league,33,2025-04-23T20:00:00+00:00,Alaves,Sociedad,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-04-23-alaves-sociedad
+LaLiga,2024/2025,Spain,domestic_league,33,2025-04-23T20:00:00+00:00,Ath Bilbao,Las Palmas,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-04-23-ath-bilbao-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,33,2025-04-23T20:00:00+00:00,Celta,Villarreal,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2025-04-23-celta-villarreal
+LaLiga,2024/2025,Spain,domestic_league,33,2025-04-23T20:00:00+00:00,Getafe,Real Madrid,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-04-23-getafe-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,33,2025-04-24T20:00:00+00:00,Ath Madrid,Vallecano,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2025-04-24-ath-madrid-vallecano
+LaLiga,2024/2025,Spain,domestic_league,33,2025-04-24T20:00:00+00:00,Betis,Valladolid,,,5,1,finished,false,datahub-football-data,laliga-2024-2025-2025-04-24-betis-valladolid
+LaLiga,2024/2025,Spain,domestic_league,33,2025-04-24T20:00:00+00:00,Leganes,Girona,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-04-24-leganes-girona
+LaLiga,2024/2025,Spain,domestic_league,33,2025-04-24T20:00:00+00:00,Osasuna,Sevilla,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-04-24-osasuna-sevilla
+LaLiga,2024/2025,Spain,domestic_league,33,2025-04-27T20:00:00+00:00,Villarreal,Espanol,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-04-27-villarreal-espanol
+LaLiga,2024/2025,Spain,domestic_league,34,2025-05-02T20:00:00+00:00,Vallecano,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-02-vallecano-getafe
+LaLiga,2024/2025,Spain,domestic_league,34,2025-05-03T20:00:00+00:00,Alaves,Ath Madrid,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-03-alaves-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,34,2025-05-03T20:00:00+00:00,Las Palmas,Valencia,,,2,3,finished,false,datahub-football-data,laliga-2024-2025-2025-05-03-las-palmas-valencia
+LaLiga,2024/2025,Spain,domestic_league,34,2025-05-03T20:00:00+00:00,Valladolid,Barcelona,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-03-valladolid-barcelona
+LaLiga,2024/2025,Spain,domestic_league,34,2025-05-03T20:00:00+00:00,Villarreal,Osasuna,,,4,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-03-villarreal-osasuna
+LaLiga,2024/2025,Spain,domestic_league,34,2025-05-04T20:00:00+00:00,Espanol,Betis,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-04-espanol-betis
+LaLiga,2024/2025,Spain,domestic_league,34,2025-05-04T20:00:00+00:00,Real Madrid,Celta,,,3,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-04-real-madrid-celta
+LaLiga,2024/2025,Spain,domestic_league,34,2025-05-04T20:00:00+00:00,Sevilla,Leganes,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-04-sevilla-leganes
+LaLiga,2024/2025,Spain,domestic_league,34,2025-05-04T20:00:00+00:00,Sociedad,Ath Bilbao,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-04-sociedad-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,34,2025-05-05T20:00:00+00:00,Girona,Mallorca,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-05-girona-mallorca
+LaLiga,2024/2025,Spain,domestic_league,35,2025-05-09T20:00:00+00:00,Las Palmas,Vallecano,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-05-09-las-palmas-vallecano
+LaLiga,2024/2025,Spain,domestic_league,35,2025-05-10T20:00:00+00:00,Ath Madrid,Sociedad,,,4,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-10-ath-madrid-sociedad
+LaLiga,2024/2025,Spain,domestic_league,35,2025-05-10T20:00:00+00:00,Celta,Sevilla,,,3,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-10-celta-sevilla
+LaLiga,2024/2025,Spain,domestic_league,35,2025-05-10T20:00:00+00:00,Girona,Villarreal,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-05-10-girona-villarreal
+LaLiga,2024/2025,Spain,domestic_league,35,2025-05-10T20:00:00+00:00,Mallorca,Valladolid,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-05-10-mallorca-valladolid
+LaLiga,2024/2025,Spain,domestic_league,35,2025-05-10T20:00:00+00:00,Valencia,Getafe,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-10-valencia-getafe
+LaLiga,2024/2025,Spain,domestic_league,35,2025-05-11T20:00:00+00:00,Ath Bilbao,Alaves,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-11-ath-bilbao-alaves
+LaLiga,2024/2025,Spain,domestic_league,35,2025-05-11T20:00:00+00:00,Barcelona,Real Madrid,,,4,3,finished,false,datahub-football-data,laliga-2024-2025-2025-05-11-barcelona-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,35,2025-05-11T20:00:00+00:00,Betis,Osasuna,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-05-11-betis-osasuna
+LaLiga,2024/2025,Spain,domestic_league,35,2025-05-11T20:00:00+00:00,Leganes,Espanol,,,3,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-11-leganes-espanol
+LaLiga,2024/2025,Spain,domestic_league,36,2025-05-13T20:00:00+00:00,Sevilla,Las Palmas,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-13-sevilla-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,36,2025-05-13T20:00:00+00:00,Sociedad,Celta,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-05-13-sociedad-celta
+LaLiga,2024/2025,Spain,domestic_league,36,2025-05-13T20:00:00+00:00,Valladolid,Girona,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-05-13-valladolid-girona
+LaLiga,2024/2025,Spain,domestic_league,36,2025-05-14T20:00:00+00:00,Alaves,Valencia,,,1,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-14-alaves-valencia
+LaLiga,2024/2025,Spain,domestic_league,36,2025-05-14T20:00:00+00:00,Real Madrid,Mallorca,,,2,1,finished,false,datahub-football-data,laliga-2024-2025-2025-05-14-real-madrid-mallorca
+LaLiga,2024/2025,Spain,domestic_league,36,2025-05-14T20:00:00+00:00,Villarreal,Leganes,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-14-villarreal-leganes
+LaLiga,2024/2025,Spain,domestic_league,36,2025-05-15T20:00:00+00:00,Espanol,Barcelona,,,0,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-15-espanol-barcelona
+LaLiga,2024/2025,Spain,domestic_league,36,2025-05-15T20:00:00+00:00,Getafe,Ath Bilbao,,,0,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-15-getafe-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,36,2025-05-15T20:00:00+00:00,Osasuna,Ath Madrid,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-15-osasuna-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,36,2025-05-15T20:00:00+00:00,Vallecano,Betis,,,2,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-15-vallecano-betis
+LaLiga,2024/2025,Spain,domestic_league,37,2025-05-18T20:00:00+00:00,Ath Madrid,Betis,,,4,1,finished,false,datahub-football-data,laliga-2024-2025-2025-05-18-ath-madrid-betis
+LaLiga,2024/2025,Spain,domestic_league,37,2025-05-18T20:00:00+00:00,Barcelona,Villarreal,,,2,3,finished,false,datahub-football-data,laliga-2024-2025-2025-05-18-barcelona-villarreal
+LaLiga,2024/2025,Spain,domestic_league,37,2025-05-18T20:00:00+00:00,Celta,Vallecano,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-18-celta-vallecano
+LaLiga,2024/2025,Spain,domestic_league,37,2025-05-18T20:00:00+00:00,Las Palmas,Leganes,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-05-18-las-palmas-leganes
+LaLiga,2024/2025,Spain,domestic_league,37,2025-05-18T20:00:00+00:00,Mallorca,Getafe,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-18-mallorca-getafe
+LaLiga,2024/2025,Spain,domestic_league,37,2025-05-18T20:00:00+00:00,Osasuna,Espanol,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-18-osasuna-espanol
+LaLiga,2024/2025,Spain,domestic_league,37,2025-05-18T20:00:00+00:00,Sevilla,Real Madrid,,,0,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-18-sevilla-real-madrid
+LaLiga,2024/2025,Spain,domestic_league,37,2025-05-18T20:00:00+00:00,Sociedad,Girona,,,3,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-18-sociedad-girona
+LaLiga,2024/2025,Spain,domestic_league,37,2025-05-18T20:00:00+00:00,Valencia,Ath Bilbao,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-05-18-valencia-ath-bilbao
+LaLiga,2024/2025,Spain,domestic_league,37,2025-05-18T20:00:00+00:00,Valladolid,Alaves,,,0,1,finished,false,datahub-football-data,laliga-2024-2025-2025-05-18-valladolid-alaves
+LaLiga,2024/2025,Spain,domestic_league,38,2025-05-23T20:00:00+00:00,Betis,Valencia,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-05-23-betis-valencia
+LaLiga,2024/2025,Spain,domestic_league,38,2025-05-24T20:00:00+00:00,Alaves,Osasuna,,,1,1,finished,false,datahub-football-data,laliga-2024-2025-2025-05-24-alaves-osasuna
+LaLiga,2024/2025,Spain,domestic_league,38,2025-05-24T20:00:00+00:00,Espanol,Las Palmas,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-24-espanol-las-palmas
+LaLiga,2024/2025,Spain,domestic_league,38,2025-05-24T20:00:00+00:00,Getafe,Celta,,,1,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-24-getafe-celta
+LaLiga,2024/2025,Spain,domestic_league,38,2025-05-24T20:00:00+00:00,Leganes,Valladolid,,,3,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-24-leganes-valladolid
+LaLiga,2024/2025,Spain,domestic_league,38,2025-05-24T20:00:00+00:00,Real Madrid,Sociedad,,,2,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-24-real-madrid-sociedad
+LaLiga,2024/2025,Spain,domestic_league,38,2025-05-24T20:00:00+00:00,Vallecano,Mallorca,,,0,0,finished,false,datahub-football-data,laliga-2024-2025-2025-05-24-vallecano-mallorca
+LaLiga,2024/2025,Spain,domestic_league,38,2025-05-25T20:00:00+00:00,Ath Bilbao,Barcelona,,,0,3,finished,false,datahub-football-data,laliga-2024-2025-2025-05-25-ath-bilbao-barcelona
+LaLiga,2024/2025,Spain,domestic_league,38,2025-05-25T20:00:00+00:00,Girona,Ath Madrid,,,0,4,finished,false,datahub-football-data,laliga-2024-2025-2025-05-25-girona-ath-madrid
+LaLiga,2024/2025,Spain,domestic_league,38,2025-05-25T20:00:00+00:00,Villarreal,Sevilla,,,4,2,finished,false,datahub-football-data,laliga-2024-2025-2025-05-25-villarreal-sevilla
+LaLiga,2025/2026,Spain,domestic_league,1,2025-08-15T20:00:00+00:00,Girona,Vallecano,,,1,3,finished,false,datahub-football-data,laliga-2025-2026-2025-08-15-girona-vallecano
+LaLiga,2025/2026,Spain,domestic_league,1,2025-08-15T20:00:00+00:00,Villarreal,Oviedo,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-08-15-villarreal-oviedo
+LaLiga,2025/2026,Spain,domestic_league,1,2025-08-16T20:00:00+00:00,Alaves,Levante,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-08-16-alaves-levante
+LaLiga,2025/2026,Spain,domestic_league,1,2025-08-16T20:00:00+00:00,Mallorca,Barcelona,,,0,3,finished,false,datahub-football-data,laliga-2025-2026-2025-08-16-mallorca-barcelona
+LaLiga,2025/2026,Spain,domestic_league,1,2025-08-16T20:00:00+00:00,Valencia,Sociedad,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-08-16-valencia-sociedad
+LaLiga,2025/2026,Spain,domestic_league,1,2025-08-17T20:00:00+00:00,Ath Bilbao,Sevilla,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2025-08-17-ath-bilbao-sevilla
+LaLiga,2025/2026,Spain,domestic_league,1,2025-08-17T20:00:00+00:00,Celta,Getafe,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2025-08-17-celta-getafe
+LaLiga,2025/2026,Spain,domestic_league,1,2025-08-17T20:00:00+00:00,Espanol,Ath Madrid,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-08-17-espanol-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,1,2025-08-18T20:00:00+00:00,Elche,Betis,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-08-18-elche-betis
+LaLiga,2025/2026,Spain,domestic_league,1,2025-08-19T20:00:00+00:00,Real Madrid,Osasuna,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-08-19-real-madrid-osasuna
+LaLiga,2025/2026,Spain,domestic_league,2,2025-08-22T20:00:00+00:00,Betis,Alaves,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-08-22-betis-alaves
+LaLiga,2025/2026,Spain,domestic_league,2,2025-08-23T20:00:00+00:00,Ath Madrid,Elche,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-08-23-ath-madrid-elche
+LaLiga,2025/2026,Spain,domestic_league,2,2025-08-23T20:00:00+00:00,Levante,Barcelona,,,2,3,finished,false,datahub-football-data,laliga-2025-2026-2025-08-23-levante-barcelona
+LaLiga,2025/2026,Spain,domestic_league,2,2025-08-23T20:00:00+00:00,Mallorca,Celta,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-08-23-mallorca-celta
+LaLiga,2025/2026,Spain,domestic_league,2,2025-08-24T20:00:00+00:00,Osasuna,Valencia,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-08-24-osasuna-valencia
+LaLiga,2025/2026,Spain,domestic_league,2,2025-08-24T20:00:00+00:00,Oviedo,Real Madrid,,,0,3,finished,false,datahub-football-data,laliga-2025-2026-2025-08-24-oviedo-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,2,2025-08-24T20:00:00+00:00,Sociedad,Espanol,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2025-08-24-sociedad-espanol
+LaLiga,2025/2026,Spain,domestic_league,2,2025-08-24T20:00:00+00:00,Villarreal,Girona,,,5,0,finished,false,datahub-football-data,laliga-2025-2026-2025-08-24-villarreal-girona
+LaLiga,2025/2026,Spain,domestic_league,2,2025-08-25T20:00:00+00:00,Ath Bilbao,Vallecano,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-08-25-ath-bilbao-vallecano
+LaLiga,2025/2026,Spain,domestic_league,2,2025-08-25T20:00:00+00:00,Sevilla,Getafe,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2025-08-25-sevilla-getafe
+LaLiga,2025/2026,Spain,domestic_league,3,2025-08-27T20:00:00+00:00,Celta,Betis,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-08-27-celta-betis
+LaLiga,2025/2026,Spain,domestic_league,3,2025-08-29T20:00:00+00:00,Elche,Levante,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-08-29-elche-levante
+LaLiga,2025/2026,Spain,domestic_league,3,2025-08-29T20:00:00+00:00,Valencia,Getafe,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2025-08-29-valencia-getafe
+LaLiga,2025/2026,Spain,domestic_league,3,2025-08-30T20:00:00+00:00,Alaves,Ath Madrid,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-08-30-alaves-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,3,2025-08-30T20:00:00+00:00,Girona,Sevilla,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2025-08-30-girona-sevilla
+LaLiga,2025/2026,Spain,domestic_league,3,2025-08-30T20:00:00+00:00,Oviedo,Sociedad,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-08-30-oviedo-sociedad
+LaLiga,2025/2026,Spain,domestic_league,3,2025-08-30T20:00:00+00:00,Real Madrid,Mallorca,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-08-30-real-madrid-mallorca
+LaLiga,2025/2026,Spain,domestic_league,3,2025-08-31T20:00:00+00:00,Betis,Ath Bilbao,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2025-08-31-betis-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,3,2025-08-31T20:00:00+00:00,Celta,Villarreal,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-08-31-celta-villarreal
+LaLiga,2025/2026,Spain,domestic_league,3,2025-08-31T20:00:00+00:00,Espanol,Osasuna,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-08-31-espanol-osasuna
+LaLiga,2025/2026,Spain,domestic_league,4,2025-08-31T20:00:00+00:00,Vallecano,Barcelona,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-08-31-vallecano-barcelona
+LaLiga,2025/2026,Spain,domestic_league,4,2025-09-12T20:00:00+00:00,Sevilla,Elche,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2025-09-12-sevilla-elche
+LaLiga,2025/2026,Spain,domestic_league,4,2025-09-13T20:00:00+00:00,Ath Bilbao,Alaves,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2025-09-13-ath-bilbao-alaves
+LaLiga,2025/2026,Spain,domestic_league,4,2025-09-13T20:00:00+00:00,Ath Madrid,Villarreal,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-09-13-ath-madrid-villarreal
+LaLiga,2025/2026,Spain,domestic_league,4,2025-09-13T20:00:00+00:00,Getafe,Oviedo,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-09-13-getafe-oviedo
+LaLiga,2025/2026,Spain,domestic_league,4,2025-09-13T20:00:00+00:00,Sociedad,Real Madrid,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2025-09-13-sociedad-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,4,2025-09-14T20:00:00+00:00,Barcelona,Valencia,,,6,0,finished,false,datahub-football-data,laliga-2025-2026-2025-09-14-barcelona-valencia
+LaLiga,2025/2026,Spain,domestic_league,4,2025-09-14T20:00:00+00:00,Celta,Girona,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-09-14-celta-girona
+LaLiga,2025/2026,Spain,domestic_league,4,2025-09-14T20:00:00+00:00,Levante,Betis,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2025-09-14-levante-betis
+LaLiga,2025/2026,Spain,domestic_league,4,2025-09-14T20:00:00+00:00,Osasuna,Vallecano,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-09-14-osasuna-vallecano
+LaLiga,2025/2026,Spain,domestic_league,5,2025-09-15T20:00:00+00:00,Espanol,Mallorca,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2025-09-15-espanol-mallorca
+LaLiga,2025/2026,Spain,domestic_league,5,2025-09-19T20:00:00+00:00,Betis,Sociedad,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2025-09-19-betis-sociedad
+LaLiga,2025/2026,Spain,domestic_league,5,2025-09-20T20:00:00+00:00,Alaves,Sevilla,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2025-09-20-alaves-sevilla
+LaLiga,2025/2026,Spain,domestic_league,5,2025-09-20T20:00:00+00:00,Girona,Levante,,,0,4,finished,false,datahub-football-data,laliga-2025-2026-2025-09-20-girona-levante
+LaLiga,2025/2026,Spain,domestic_league,5,2025-09-20T20:00:00+00:00,Real Madrid,Espanol,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-09-20-real-madrid-espanol
+LaLiga,2025/2026,Spain,domestic_league,5,2025-09-20T20:00:00+00:00,Valencia,Ath Bilbao,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-09-20-valencia-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,5,2025-09-20T20:00:00+00:00,Villarreal,Osasuna,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-09-20-villarreal-osasuna
+LaLiga,2025/2026,Spain,domestic_league,5,2025-09-21T20:00:00+00:00,Barcelona,Getafe,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2025-09-21-barcelona-getafe
+LaLiga,2025/2026,Spain,domestic_league,5,2025-09-21T20:00:00+00:00,Elche,Oviedo,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-09-21-elche-oviedo
+LaLiga,2025/2026,Spain,domestic_league,5,2025-09-21T20:00:00+00:00,Mallorca,Ath Madrid,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-09-21-mallorca-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,6,2025-09-21T20:00:00+00:00,Vallecano,Celta,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-09-21-vallecano-celta
+LaLiga,2025/2026,Spain,domestic_league,6,2025-09-23T20:00:00+00:00,Ath Bilbao,Girona,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-09-23-ath-bilbao-girona
+LaLiga,2025/2026,Spain,domestic_league,6,2025-09-23T20:00:00+00:00,Espanol,Valencia,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2025-09-23-espanol-valencia
+LaLiga,2025/2026,Spain,domestic_league,6,2025-09-23T20:00:00+00:00,Levante,Real Madrid,,,1,4,finished,false,datahub-football-data,laliga-2025-2026-2025-09-23-levante-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,6,2025-09-23T20:00:00+00:00,Sevilla,Villarreal,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2025-09-23-sevilla-villarreal
+LaLiga,2025/2026,Spain,domestic_league,6,2025-09-24T20:00:00+00:00,Ath Madrid,Vallecano,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2025-09-24-ath-madrid-vallecano
+LaLiga,2025/2026,Spain,domestic_league,6,2025-09-24T20:00:00+00:00,Getafe,Alaves,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-09-24-getafe-alaves
+LaLiga,2025/2026,Spain,domestic_league,6,2025-09-24T20:00:00+00:00,Sociedad,Mallorca,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-09-24-sociedad-mallorca
+LaLiga,2025/2026,Spain,domestic_league,6,2025-09-25T20:00:00+00:00,Osasuna,Elche,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-09-25-osasuna-elche
+LaLiga,2025/2026,Spain,domestic_league,6,2025-09-25T20:00:00+00:00,Oviedo,Barcelona,,,1,3,finished,false,datahub-football-data,laliga-2025-2026-2025-09-25-oviedo-barcelona
+LaLiga,2025/2026,Spain,domestic_league,7,2025-09-26T20:00:00+00:00,Girona,Espanol,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2025-09-26-girona-espanol
+LaLiga,2025/2026,Spain,domestic_league,7,2025-09-27T20:00:00+00:00,Ath Madrid,Real Madrid,,,5,2,finished,false,datahub-football-data,laliga-2025-2026-2025-09-27-ath-madrid-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,7,2025-09-27T20:00:00+00:00,Getafe,Levante,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-09-27-getafe-levante
+LaLiga,2025/2026,Spain,domestic_league,7,2025-09-27T20:00:00+00:00,Mallorca,Alaves,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-09-27-mallorca-alaves
+LaLiga,2025/2026,Spain,domestic_league,7,2025-09-27T20:00:00+00:00,Villarreal,Ath Bilbao,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-09-27-villarreal-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,7,2025-09-28T20:00:00+00:00,Barcelona,Sociedad,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-09-28-barcelona-sociedad
+LaLiga,2025/2026,Spain,domestic_league,7,2025-09-28T20:00:00+00:00,Betis,Osasuna,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-09-28-betis-osasuna
+LaLiga,2025/2026,Spain,domestic_league,7,2025-09-28T20:00:00+00:00,Elche,Celta,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-09-28-elche-celta
+LaLiga,2025/2026,Spain,domestic_league,7,2025-09-28T20:00:00+00:00,Vallecano,Sevilla,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2025-09-28-vallecano-sevilla
+LaLiga,2025/2026,Spain,domestic_league,7,2025-09-30T20:00:00+00:00,Valencia,Oviedo,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2025-09-30-valencia-oviedo
+LaLiga,2025/2026,Spain,domestic_league,8,2025-10-03T20:00:00+00:00,Osasuna,Getafe,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-03-osasuna-getafe
+LaLiga,2025/2026,Spain,domestic_league,8,2025-10-04T20:00:00+00:00,Ath Bilbao,Mallorca,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-04-ath-bilbao-mallorca
+LaLiga,2025/2026,Spain,domestic_league,8,2025-10-04T20:00:00+00:00,Girona,Valencia,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-04-girona-valencia
+LaLiga,2025/2026,Spain,domestic_league,8,2025-10-04T20:00:00+00:00,Oviedo,Levante,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2025-10-04-oviedo-levante
+LaLiga,2025/2026,Spain,domestic_league,8,2025-10-04T20:00:00+00:00,Real Madrid,Villarreal,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-04-real-madrid-villarreal
+LaLiga,2025/2026,Spain,domestic_league,8,2025-10-05T20:00:00+00:00,Alaves,Elche,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-05-alaves-elche
+LaLiga,2025/2026,Spain,domestic_league,8,2025-10-05T20:00:00+00:00,Celta,Ath Madrid,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-05-celta-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,8,2025-10-05T20:00:00+00:00,Espanol,Betis,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2025-10-05-espanol-betis
+LaLiga,2025/2026,Spain,domestic_league,8,2025-10-05T20:00:00+00:00,Sevilla,Barcelona,,,4,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-05-sevilla-barcelona
+LaLiga,2025/2026,Spain,domestic_league,8,2025-10-05T20:00:00+00:00,Sociedad,Vallecano,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-05-sociedad-vallecano
+LaLiga,2025/2026,Spain,domestic_league,9,2025-10-17T20:00:00+00:00,Oviedo,Espanol,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2025-10-17-oviedo-espanol
+LaLiga,2025/2026,Spain,domestic_league,9,2025-10-18T20:00:00+00:00,Ath Madrid,Osasuna,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-10-18-ath-madrid-osasuna
+LaLiga,2025/2026,Spain,domestic_league,9,2025-10-18T20:00:00+00:00,Barcelona,Girona,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-18-barcelona-girona
+LaLiga,2025/2026,Spain,domestic_league,9,2025-10-18T20:00:00+00:00,Sevilla,Mallorca,,,1,3,finished,false,datahub-football-data,laliga-2025-2026-2025-10-18-sevilla-mallorca
+LaLiga,2025/2026,Spain,domestic_league,9,2025-10-18T20:00:00+00:00,Villarreal,Betis,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2025-10-18-villarreal-betis
+LaLiga,2025/2026,Spain,domestic_league,9,2025-10-19T20:00:00+00:00,Celta,Sociedad,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-19-celta-sociedad
+LaLiga,2025/2026,Spain,domestic_league,9,2025-10-19T20:00:00+00:00,Elche,Ath Bilbao,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2025-10-19-elche-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,9,2025-10-19T20:00:00+00:00,Getafe,Real Madrid,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-19-getafe-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,9,2025-10-19T20:00:00+00:00,Levante,Vallecano,,,0,3,finished,false,datahub-football-data,laliga-2025-2026-2025-10-19-levante-vallecano
+LaLiga,2025/2026,Spain,domestic_league,9,2025-10-20T20:00:00+00:00,Alaves,Valencia,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2025-10-20-alaves-valencia
+LaLiga,2025/2026,Spain,domestic_league,10,2025-10-24T20:00:00+00:00,Sociedad,Sevilla,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-24-sociedad-sevilla
+LaLiga,2025/2026,Spain,domestic_league,10,2025-10-25T20:00:00+00:00,Ath Bilbao,Getafe,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-25-ath-bilbao-getafe
+LaLiga,2025/2026,Spain,domestic_league,10,2025-10-25T20:00:00+00:00,Espanol,Elche,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-10-25-espanol-elche
+LaLiga,2025/2026,Spain,domestic_league,10,2025-10-25T20:00:00+00:00,Girona,Oviedo,,,3,3,finished,false,datahub-football-data,laliga-2025-2026-2025-10-25-girona-oviedo
+LaLiga,2025/2026,Spain,domestic_league,10,2025-10-25T20:00:00+00:00,Valencia,Villarreal,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2025-10-25-valencia-villarreal
+LaLiga,2025/2026,Spain,domestic_league,10,2025-10-26T20:00:00+00:00,Mallorca,Levante,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-26-mallorca-levante
+LaLiga,2025/2026,Spain,domestic_league,10,2025-10-26T20:00:00+00:00,Osasuna,Celta,,,2,3,finished,false,datahub-football-data,laliga-2025-2026-2025-10-26-osasuna-celta
+LaLiga,2025/2026,Spain,domestic_league,10,2025-10-26T20:00:00+00:00,Real Madrid,Barcelona,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-26-real-madrid-barcelona
+LaLiga,2025/2026,Spain,domestic_league,10,2025-10-26T20:00:00+00:00,Vallecano,Alaves,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-10-26-vallecano-alaves
+LaLiga,2025/2026,Spain,domestic_league,10,2025-10-27T20:00:00+00:00,Betis,Ath Madrid,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2025-10-27-betis-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,11,2025-10-31T20:00:00+00:00,Getafe,Girona,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-10-31-getafe-girona
+LaLiga,2025/2026,Spain,domestic_league,11,2025-11-01T20:00:00+00:00,Ath Madrid,Sevilla,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-01-ath-madrid-sevilla
+LaLiga,2025/2026,Spain,domestic_league,11,2025-11-01T20:00:00+00:00,Real Madrid,Valencia,,,4,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-01-real-madrid-valencia
+LaLiga,2025/2026,Spain,domestic_league,11,2025-11-01T20:00:00+00:00,Sociedad,Ath Bilbao,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2025-11-01-sociedad-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,11,2025-11-01T20:00:00+00:00,Villarreal,Vallecano,,,4,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-01-villarreal-vallecano
+LaLiga,2025/2026,Spain,domestic_league,11,2025-11-02T20:00:00+00:00,Alaves,Espanol,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-11-02-alaves-espanol
+LaLiga,2025/2026,Spain,domestic_league,11,2025-11-02T20:00:00+00:00,Barcelona,Elche,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2025-11-02-barcelona-elche
+LaLiga,2025/2026,Spain,domestic_league,11,2025-11-02T20:00:00+00:00,Betis,Mallorca,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-02-betis-mallorca
+LaLiga,2025/2026,Spain,domestic_league,11,2025-11-02T20:00:00+00:00,Levante,Celta,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2025-11-02-levante-celta
+LaLiga,2025/2026,Spain,domestic_league,11,2025-11-03T20:00:00+00:00,Oviedo,Osasuna,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-03-oviedo-osasuna
+LaLiga,2025/2026,Spain,domestic_league,12,2025-11-07T20:00:00+00:00,Elche,Sociedad,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-11-07-elche-sociedad
+LaLiga,2025/2026,Spain,domestic_league,12,2025-11-08T20:00:00+00:00,Ath Madrid,Levante,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2025-11-08-ath-madrid-levante
+LaLiga,2025/2026,Spain,domestic_league,12,2025-11-08T20:00:00+00:00,Espanol,Villarreal,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2025-11-08-espanol-villarreal
+LaLiga,2025/2026,Spain,domestic_league,12,2025-11-08T20:00:00+00:00,Girona,Alaves,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-08-girona-alaves
+LaLiga,2025/2026,Spain,domestic_league,12,2025-11-08T20:00:00+00:00,Sevilla,Osasuna,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-08-sevilla-osasuna
+LaLiga,2025/2026,Spain,domestic_league,12,2025-11-09T20:00:00+00:00,Ath Bilbao,Oviedo,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-09-ath-bilbao-oviedo
+LaLiga,2025/2026,Spain,domestic_league,12,2025-11-09T20:00:00+00:00,Celta,Barcelona,,,2,4,finished,false,datahub-football-data,laliga-2025-2026-2025-11-09-celta-barcelona
+LaLiga,2025/2026,Spain,domestic_league,12,2025-11-09T20:00:00+00:00,Mallorca,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-09-mallorca-getafe
+LaLiga,2025/2026,Spain,domestic_league,12,2025-11-09T20:00:00+00:00,Valencia,Betis,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-11-09-valencia-betis
+LaLiga,2025/2026,Spain,domestic_league,12,2025-11-09T20:00:00+00:00,Vallecano,Real Madrid,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-09-vallecano-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,13,2025-11-21T20:00:00+00:00,Valencia,Levante,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-21-valencia-levante
+LaLiga,2025/2026,Spain,domestic_league,13,2025-11-22T20:00:00+00:00,Alaves,Celta,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2025-11-22-alaves-celta
+LaLiga,2025/2026,Spain,domestic_league,13,2025-11-22T20:00:00+00:00,Barcelona,Ath Bilbao,,,4,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-22-barcelona-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,13,2025-11-22T20:00:00+00:00,Osasuna,Sociedad,,,1,3,finished,false,datahub-football-data,laliga-2025-2026-2025-11-22-osasuna-sociedad
+LaLiga,2025/2026,Spain,domestic_league,13,2025-11-22T20:00:00+00:00,Villarreal,Mallorca,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-11-22-villarreal-mallorca
+LaLiga,2025/2026,Spain,domestic_league,13,2025-11-23T20:00:00+00:00,Betis,Girona,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-11-23-betis-girona
+LaLiga,2025/2026,Spain,domestic_league,13,2025-11-23T20:00:00+00:00,Elche,Real Madrid,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2025-11-23-elche-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,13,2025-11-23T20:00:00+00:00,Getafe,Ath Madrid,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2025-11-23-getafe-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,13,2025-11-23T20:00:00+00:00,Oviedo,Vallecano,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-23-oviedo-vallecano
+LaLiga,2025/2026,Spain,domestic_league,13,2025-11-24T20:00:00+00:00,Espanol,Sevilla,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-11-24-espanol-sevilla
+LaLiga,2025/2026,Spain,domestic_league,14,2025-11-28T20:00:00+00:00,Getafe,Elche,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-28-getafe-elche
+LaLiga,2025/2026,Spain,domestic_league,14,2025-11-29T20:00:00+00:00,Ath Madrid,Oviedo,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-11-29-ath-madrid-oviedo
+LaLiga,2025/2026,Spain,domestic_league,14,2025-11-29T20:00:00+00:00,Barcelona,Alaves,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2025-11-29-barcelona-alaves
+LaLiga,2025/2026,Spain,domestic_league,14,2025-11-29T20:00:00+00:00,Levante,Ath Bilbao,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2025-11-29-levante-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,14,2025-11-29T20:00:00+00:00,Mallorca,Osasuna,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2025-11-29-mallorca-osasuna
+LaLiga,2025/2026,Spain,domestic_league,14,2025-11-30T20:00:00+00:00,Celta,Espanol,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2025-11-30-celta-espanol
+LaLiga,2025/2026,Spain,domestic_league,14,2025-11-30T20:00:00+00:00,Girona,Real Madrid,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-11-30-girona-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,14,2025-11-30T20:00:00+00:00,Sevilla,Betis,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2025-11-30-sevilla-betis
+LaLiga,2025/2026,Spain,domestic_league,14,2025-11-30T20:00:00+00:00,Sociedad,Villarreal,,,2,3,finished,false,datahub-football-data,laliga-2025-2026-2025-11-30-sociedad-villarreal
+LaLiga,2025/2026,Spain,domestic_league,14,2025-12-01T20:00:00+00:00,Vallecano,Valencia,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-12-01-vallecano-valencia
+LaLiga,2025/2026,Spain,domestic_league,15,2025-12-02T20:00:00+00:00,Barcelona,Ath Madrid,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2025-12-02-barcelona-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,15,2025-12-03T20:00:00+00:00,Ath Bilbao,Real Madrid,,,0,3,finished,false,datahub-football-data,laliga-2025-2026-2025-12-03-ath-bilbao-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,15,2025-12-05T20:00:00+00:00,Oviedo,Mallorca,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-05-oviedo-mallorca
+LaLiga,2025/2026,Spain,domestic_league,15,2025-12-06T20:00:00+00:00,Alaves,Sociedad,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-06-alaves-sociedad
+LaLiga,2025/2026,Spain,domestic_league,15,2025-12-06T20:00:00+00:00,Ath Bilbao,Ath Madrid,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-06-ath-bilbao-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,15,2025-12-06T20:00:00+00:00,Betis,Barcelona,,,3,5,finished,false,datahub-football-data,laliga-2025-2026-2025-12-06-betis-barcelona
+LaLiga,2025/2026,Spain,domestic_league,15,2025-12-06T20:00:00+00:00,Villarreal,Getafe,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-06-villarreal-getafe
+LaLiga,2025/2026,Spain,domestic_league,15,2025-12-07T20:00:00+00:00,Elche,Girona,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-07-elche-girona
+LaLiga,2025/2026,Spain,domestic_league,15,2025-12-07T20:00:00+00:00,Espanol,Vallecano,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-07-espanol-vallecano
+LaLiga,2025/2026,Spain,domestic_league,15,2025-12-07T20:00:00+00:00,Real Madrid,Celta,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2025-12-07-real-madrid-celta
+LaLiga,2025/2026,Spain,domestic_league,16,2025-12-07T20:00:00+00:00,Valencia,Sevilla,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-12-07-valencia-sevilla
+LaLiga,2025/2026,Spain,domestic_league,16,2025-12-08T20:00:00+00:00,Osasuna,Levante,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-08-osasuna-levante
+LaLiga,2025/2026,Spain,domestic_league,16,2025-12-12T20:00:00+00:00,Sociedad,Girona,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2025-12-12-sociedad-girona
+LaLiga,2025/2026,Spain,domestic_league,16,2025-12-13T20:00:00+00:00,Ath Madrid,Valencia,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2025-12-13-ath-madrid-valencia
+LaLiga,2025/2026,Spain,domestic_league,16,2025-12-13T20:00:00+00:00,Barcelona,Osasuna,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-13-barcelona-osasuna
+LaLiga,2025/2026,Spain,domestic_league,16,2025-12-13T20:00:00+00:00,Getafe,Espanol,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2025-12-13-getafe-espanol
+LaLiga,2025/2026,Spain,domestic_league,16,2025-12-13T20:00:00+00:00,Mallorca,Elche,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2025-12-13-mallorca-elche
+LaLiga,2025/2026,Spain,domestic_league,16,2025-12-14T20:00:00+00:00,Alaves,Real Madrid,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2025-12-14-alaves-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,16,2025-12-14T20:00:00+00:00,Celta,Ath Bilbao,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-14-celta-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,16,2025-12-14T20:00:00+00:00,Sevilla,Oviedo,,,4,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-14-sevilla-oviedo
+LaLiga,2025/2026,Spain,domestic_league,17,2025-12-15T20:00:00+00:00,Vallecano,Betis,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-15-vallecano-betis
+LaLiga,2025/2026,Spain,domestic_league,17,2025-12-19T20:00:00+00:00,Valencia,Mallorca,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-12-19-valencia-mallorca
+LaLiga,2025/2026,Spain,domestic_league,17,2025-12-20T20:00:00+00:00,Levante,Sociedad,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2025-12-20-levante-sociedad
+LaLiga,2025/2026,Spain,domestic_league,17,2025-12-20T20:00:00+00:00,Osasuna,Alaves,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-20-osasuna-alaves
+LaLiga,2025/2026,Spain,domestic_league,17,2025-12-20T20:00:00+00:00,Oviedo,Celta,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-20-oviedo-celta
+LaLiga,2025/2026,Spain,domestic_league,17,2025-12-20T20:00:00+00:00,Real Madrid,Sevilla,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-20-real-madrid-sevilla
+LaLiga,2025/2026,Spain,domestic_league,17,2025-12-21T20:00:00+00:00,Betis,Getafe,,,4,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-21-betis-getafe
+LaLiga,2025/2026,Spain,domestic_league,17,2025-12-21T20:00:00+00:00,Elche,Vallecano,,,4,0,finished,false,datahub-football-data,laliga-2025-2026-2025-12-21-elche-vallecano
+LaLiga,2025/2026,Spain,domestic_league,17,2025-12-21T20:00:00+00:00,Girona,Ath Madrid,,,0,3,finished,false,datahub-football-data,laliga-2025-2026-2025-12-21-girona-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,17,2025-12-21T20:00:00+00:00,Villarreal,Barcelona,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2025-12-21-villarreal-barcelona
+LaLiga,2025/2026,Spain,domestic_league,18,2025-12-22T20:00:00+00:00,Ath Bilbao,Espanol,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2025-12-22-ath-bilbao-espanol
+LaLiga,2025/2026,Spain,domestic_league,18,2026-01-02T20:00:00+00:00,Vallecano,Getafe,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-02-vallecano-getafe
+LaLiga,2025/2026,Spain,domestic_league,18,2026-01-03T20:00:00+00:00,Celta,Valencia,,,4,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-03-celta-valencia
+LaLiga,2025/2026,Spain,domestic_league,18,2026-01-03T20:00:00+00:00,Elche,Villarreal,,,1,3,finished,false,datahub-football-data,laliga-2025-2026-2026-01-03-elche-villarreal
+LaLiga,2025/2026,Spain,domestic_league,18,2026-01-03T20:00:00+00:00,Espanol,Barcelona,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2026-01-03-espanol-barcelona
+LaLiga,2025/2026,Spain,domestic_league,18,2026-01-03T20:00:00+00:00,Osasuna,Ath Bilbao,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-03-osasuna-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,18,2026-01-04T20:00:00+00:00,Alaves,Oviedo,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-04-alaves-oviedo
+LaLiga,2025/2026,Spain,domestic_league,18,2026-01-04T20:00:00+00:00,Mallorca,Girona,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-01-04-mallorca-girona
+LaLiga,2025/2026,Spain,domestic_league,18,2026-01-04T20:00:00+00:00,Real Madrid,Betis,,,5,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-04-real-madrid-betis
+LaLiga,2025/2026,Spain,domestic_league,18,2026-01-04T20:00:00+00:00,Sevilla,Levante,,,0,3,finished,false,datahub-football-data,laliga-2025-2026-2026-01-04-sevilla-levante
+LaLiga,2025/2026,Spain,domestic_league,19,2026-01-04T20:00:00+00:00,Sociedad,Ath Madrid,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-04-sociedad-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,19,2026-01-09T20:00:00+00:00,Getafe,Sociedad,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-01-09-getafe-sociedad
+LaLiga,2025/2026,Spain,domestic_league,19,2026-01-10T20:00:00+00:00,Girona,Osasuna,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-01-10-girona-osasuna
+LaLiga,2025/2026,Spain,domestic_league,19,2026-01-10T20:00:00+00:00,Oviedo,Betis,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-10-oviedo-betis
+LaLiga,2025/2026,Spain,domestic_league,19,2026-01-10T20:00:00+00:00,Valencia,Elche,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-10-valencia-elche
+LaLiga,2025/2026,Spain,domestic_league,19,2026-01-10T20:00:00+00:00,Villarreal,Alaves,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-10-villarreal-alaves
+LaLiga,2025/2026,Spain,domestic_league,19,2026-01-11T20:00:00+00:00,Levante,Espanol,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-11-levante-espanol
+LaLiga,2025/2026,Spain,domestic_league,19,2026-01-11T20:00:00+00:00,Vallecano,Mallorca,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-11-vallecano-mallorca
+LaLiga,2025/2026,Spain,domestic_league,19,2026-01-12T20:00:00+00:00,Sevilla,Celta,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-12-sevilla-celta
+LaLiga,2025/2026,Spain,domestic_league,19,2026-01-16T20:00:00+00:00,Espanol,Girona,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2026-01-16-espanol-girona
+LaLiga,2025/2026,Spain,domestic_league,20,2026-01-17T20:00:00+00:00,Betis,Villarreal,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2026-01-17-betis-villarreal
+LaLiga,2025/2026,Spain,domestic_league,20,2026-01-17T20:00:00+00:00,Mallorca,Ath Bilbao,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2026-01-17-mallorca-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,20,2026-01-17T20:00:00+00:00,Osasuna,Oviedo,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2026-01-17-osasuna-oviedo
+LaLiga,2025/2026,Spain,domestic_league,20,2026-01-17T20:00:00+00:00,Real Madrid,Levante,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2026-01-17-real-madrid-levante
+LaLiga,2025/2026,Spain,domestic_league,20,2026-01-18T20:00:00+00:00,Ath Madrid,Alaves,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-01-18-ath-madrid-alaves
+LaLiga,2025/2026,Spain,domestic_league,20,2026-01-18T20:00:00+00:00,Celta,Vallecano,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2026-01-18-celta-vallecano
+LaLiga,2025/2026,Spain,domestic_league,20,2026-01-18T20:00:00+00:00,Getafe,Valencia,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-18-getafe-valencia
+LaLiga,2025/2026,Spain,domestic_league,20,2026-01-18T20:00:00+00:00,Sociedad,Barcelona,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-18-sociedad-barcelona
+LaLiga,2025/2026,Spain,domestic_league,20,2026-01-19T20:00:00+00:00,Elche,Sevilla,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2026-01-19-elche-sevilla
+LaLiga,2025/2026,Spain,domestic_league,20,2026-01-23T20:00:00+00:00,Levante,Elche,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2026-01-23-levante-elche
+LaLiga,2025/2026,Spain,domestic_league,21,2026-01-24T20:00:00+00:00,Sevilla,Ath Bilbao,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-24-sevilla-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,21,2026-01-24T20:00:00+00:00,Valencia,Espanol,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2026-01-24-valencia-espanol
+LaLiga,2025/2026,Spain,domestic_league,21,2026-01-24T20:00:00+00:00,Vallecano,Osasuna,,,1,3,finished,false,datahub-football-data,laliga-2025-2026-2026-01-24-vallecano-osasuna
+LaLiga,2025/2026,Spain,domestic_league,21,2026-01-24T20:00:00+00:00,Villarreal,Real Madrid,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2026-01-24-villarreal-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,21,2026-01-25T20:00:00+00:00,Alaves,Betis,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-25-alaves-betis
+LaLiga,2025/2026,Spain,domestic_league,21,2026-01-25T20:00:00+00:00,Ath Madrid,Mallorca,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2026-01-25-ath-madrid-mallorca
+LaLiga,2025/2026,Spain,domestic_league,21,2026-01-25T20:00:00+00:00,Barcelona,Oviedo,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2026-01-25-barcelona-oviedo
+LaLiga,2025/2026,Spain,domestic_league,21,2026-01-25T20:00:00+00:00,Sociedad,Celta,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-25-sociedad-celta
+LaLiga,2025/2026,Spain,domestic_league,21,2026-01-26T20:00:00+00:00,Girona,Getafe,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-01-26-girona-getafe
+LaLiga,2025/2026,Spain,domestic_league,21,2026-01-30T20:00:00+00:00,Espanol,Alaves,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-01-30-espanol-alaves
+LaLiga,2025/2026,Spain,domestic_league,22,2026-01-31T20:00:00+00:00,Elche,Barcelona,,,1,3,finished,false,datahub-football-data,laliga-2025-2026-2026-01-31-elche-barcelona
+LaLiga,2025/2026,Spain,domestic_league,22,2026-01-31T20:00:00+00:00,Levante,Ath Madrid,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2026-01-31-levante-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,22,2026-01-31T20:00:00+00:00,Osasuna,Villarreal,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2026-01-31-osasuna-villarreal
+LaLiga,2025/2026,Spain,domestic_league,22,2026-01-31T20:00:00+00:00,Oviedo,Girona,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-01-31-oviedo-girona
+LaLiga,2025/2026,Spain,domestic_league,22,2026-02-01T20:00:00+00:00,Ath Bilbao,Sociedad,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-01-ath-bilbao-sociedad
+LaLiga,2025/2026,Spain,domestic_league,22,2026-02-01T20:00:00+00:00,Betis,Valencia,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-01-betis-valencia
+LaLiga,2025/2026,Spain,domestic_league,22,2026-02-01T20:00:00+00:00,Getafe,Celta,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2026-02-01-getafe-celta
+LaLiga,2025/2026,Spain,domestic_league,22,2026-02-01T20:00:00+00:00,Real Madrid,Vallecano,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-01-real-madrid-vallecano
+LaLiga,2025/2026,Spain,domestic_league,22,2026-02-02T20:00:00+00:00,Mallorca,Sevilla,,,4,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-02-mallorca-sevilla
+LaLiga,2025/2026,Spain,domestic_league,22,2026-02-06T20:00:00+00:00,Celta,Osasuna,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-02-06-celta-osasuna
+LaLiga,2025/2026,Spain,domestic_league,23,2026-02-07T20:00:00+00:00,Barcelona,Mallorca,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2026-02-07-barcelona-mallorca
+LaLiga,2025/2026,Spain,domestic_league,23,2026-02-07T20:00:00+00:00,Sociedad,Elche,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-07-sociedad-elche
+LaLiga,2025/2026,Spain,domestic_league,23,2026-02-08T20:00:00+00:00,Alaves,Getafe,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2026-02-08-alaves-getafe
+LaLiga,2025/2026,Spain,domestic_league,23,2026-02-08T20:00:00+00:00,Ath Bilbao,Levante,,,4,2,finished,false,datahub-football-data,laliga-2025-2026-2026-02-08-ath-bilbao-levante
+LaLiga,2025/2026,Spain,domestic_league,23,2026-02-08T20:00:00+00:00,Ath Madrid,Betis,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-08-ath-madrid-betis
+LaLiga,2025/2026,Spain,domestic_league,23,2026-02-08T20:00:00+00:00,Sevilla,Girona,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-08-sevilla-girona
+LaLiga,2025/2026,Spain,domestic_league,23,2026-02-08T20:00:00+00:00,Valencia,Real Madrid,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2026-02-08-valencia-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,23,2026-02-09T20:00:00+00:00,Villarreal,Espanol,,,4,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-09-villarreal-espanol
+LaLiga,2025/2026,Spain,domestic_league,23,2026-02-13T20:00:00+00:00,Elche,Osasuna,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2026-02-13-elche-osasuna
+LaLiga,2025/2026,Spain,domestic_league,23,2026-02-14T20:00:00+00:00,Espanol,Celta,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2026-02-14-espanol-celta
+LaLiga,2025/2026,Spain,domestic_league,24,2026-02-14T20:00:00+00:00,Getafe,Villarreal,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-14-getafe-villarreal
+LaLiga,2025/2026,Spain,domestic_league,24,2026-02-14T20:00:00+00:00,Real Madrid,Sociedad,,,4,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-14-real-madrid-sociedad
+LaLiga,2025/2026,Spain,domestic_league,24,2026-02-14T20:00:00+00:00,Sevilla,Alaves,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-14-sevilla-alaves
+LaLiga,2025/2026,Spain,domestic_league,24,2026-02-15T20:00:00+00:00,Levante,Valencia,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2026-02-15-levante-valencia
+LaLiga,2025/2026,Spain,domestic_league,24,2026-02-15T20:00:00+00:00,Mallorca,Betis,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-02-15-mallorca-betis
+LaLiga,2025/2026,Spain,domestic_league,24,2026-02-15T20:00:00+00:00,Oviedo,Ath Bilbao,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-02-15-oviedo-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,24,2026-02-15T20:00:00+00:00,Vallecano,Ath Madrid,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2026-02-15-vallecano-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,24,2026-02-16T20:00:00+00:00,Girona,Barcelona,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-16-girona-barcelona
+LaLiga,2025/2026,Spain,domestic_league,24,2026-02-18T20:00:00+00:00,Levante,Villarreal,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-18-levante-villarreal
+LaLiga,2025/2026,Spain,domestic_league,24,2026-02-20T20:00:00+00:00,Ath Bilbao,Elche,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-20-ath-bilbao-elche
+LaLiga,2025/2026,Spain,domestic_league,25,2026-02-21T20:00:00+00:00,Ath Madrid,Espanol,,,4,2,finished,false,datahub-football-data,laliga-2025-2026-2026-02-21-ath-madrid-espanol
+LaLiga,2025/2026,Spain,domestic_league,25,2026-02-21T20:00:00+00:00,Betis,Vallecano,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-21-betis-vallecano
+LaLiga,2025/2026,Spain,domestic_league,25,2026-02-21T20:00:00+00:00,Osasuna,Real Madrid,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-21-osasuna-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,25,2026-02-21T20:00:00+00:00,Sociedad,Oviedo,,,3,3,finished,false,datahub-football-data,laliga-2025-2026-2026-02-21-sociedad-oviedo
+LaLiga,2025/2026,Spain,domestic_league,25,2026-02-22T20:00:00+00:00,Barcelona,Levante,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2026-02-22-barcelona-levante
+LaLiga,2025/2026,Spain,domestic_league,25,2026-02-22T20:00:00+00:00,Celta,Mallorca,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2026-02-22-celta-mallorca
+LaLiga,2025/2026,Spain,domestic_league,25,2026-02-22T20:00:00+00:00,Getafe,Sevilla,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-22-getafe-sevilla
+LaLiga,2025/2026,Spain,domestic_league,25,2026-02-22T20:00:00+00:00,Villarreal,Valencia,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-22-villarreal-valencia
+LaLiga,2025/2026,Spain,domestic_league,25,2026-02-23T20:00:00+00:00,Alaves,Girona,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2026-02-23-alaves-girona
+LaLiga,2025/2026,Spain,domestic_league,25,2026-02-27T20:00:00+00:00,Levante,Alaves,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2026-02-27-levante-alaves
+LaLiga,2025/2026,Spain,domestic_league,26,2026-02-28T20:00:00+00:00,Barcelona,Villarreal,,,4,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-28-barcelona-villarreal
+LaLiga,2025/2026,Spain,domestic_league,26,2026-02-28T20:00:00+00:00,Mallorca,Sociedad,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-28-mallorca-sociedad
+LaLiga,2025/2026,Spain,domestic_league,26,2026-02-28T20:00:00+00:00,Oviedo,Ath Madrid,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-28-oviedo-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,26,2026-02-28T20:00:00+00:00,Vallecano,Ath Bilbao,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-02-28-vallecano-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,26,2026-03-01T20:00:00+00:00,Betis,Sevilla,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2026-03-01-betis-sevilla
+LaLiga,2025/2026,Spain,domestic_league,26,2026-03-01T20:00:00+00:00,Elche,Espanol,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2026-03-01-elche-espanol
+LaLiga,2025/2026,Spain,domestic_league,26,2026-03-01T20:00:00+00:00,Girona,Celta,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-03-01-girona-celta
+LaLiga,2025/2026,Spain,domestic_league,26,2026-03-01T20:00:00+00:00,Valencia,Osasuna,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-03-01-valencia-osasuna
+LaLiga,2025/2026,Spain,domestic_league,26,2026-03-02T20:00:00+00:00,Real Madrid,Getafe,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-02-real-madrid-getafe
+LaLiga,2025/2026,Spain,domestic_league,26,2026-03-04T20:00:00+00:00,Vallecano,Oviedo,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2026-03-04-vallecano-oviedo
+LaLiga,2025/2026,Spain,domestic_league,27,2026-03-06T20:00:00+00:00,Celta,Real Madrid,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-03-06-celta-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,27,2026-03-07T20:00:00+00:00,Ath Bilbao,Barcelona,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-07-ath-bilbao-barcelona
+LaLiga,2025/2026,Spain,domestic_league,27,2026-03-07T20:00:00+00:00,Ath Madrid,Sociedad,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2026-03-07-ath-madrid-sociedad
+LaLiga,2025/2026,Spain,domestic_league,27,2026-03-07T20:00:00+00:00,Levante,Girona,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-07-levante-girona
+LaLiga,2025/2026,Spain,domestic_league,27,2026-03-07T20:00:00+00:00,Osasuna,Mallorca,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2026-03-07-osasuna-mallorca
+LaLiga,2025/2026,Spain,domestic_league,27,2026-03-08T20:00:00+00:00,Getafe,Betis,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2026-03-08-getafe-betis
+LaLiga,2025/2026,Spain,domestic_league,27,2026-03-08T20:00:00+00:00,Sevilla,Vallecano,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-08-sevilla-vallecano
+LaLiga,2025/2026,Spain,domestic_league,27,2026-03-08T20:00:00+00:00,Valencia,Alaves,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2026-03-08-valencia-alaves
+LaLiga,2025/2026,Spain,domestic_league,27,2026-03-08T20:00:00+00:00,Villarreal,Elche,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-08-villarreal-elche
+LaLiga,2025/2026,Spain,domestic_league,27,2026-03-09T20:00:00+00:00,Espanol,Oviedo,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-09-espanol-oviedo
+LaLiga,2025/2026,Spain,domestic_league,28,2026-03-13T20:00:00+00:00,Alaves,Villarreal,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-13-alaves-villarreal
+LaLiga,2025/2026,Spain,domestic_league,28,2026-03-14T20:00:00+00:00,Ath Madrid,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-03-14-ath-madrid-getafe
+LaLiga,2025/2026,Spain,domestic_league,28,2026-03-14T20:00:00+00:00,Girona,Ath Bilbao,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2026-03-14-girona-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,28,2026-03-14T20:00:00+00:00,Oviedo,Valencia,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-03-14-oviedo-valencia
+LaLiga,2025/2026,Spain,domestic_league,28,2026-03-14T20:00:00+00:00,Real Madrid,Elche,,,4,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-14-real-madrid-elche
+LaLiga,2025/2026,Spain,domestic_league,28,2026-03-15T20:00:00+00:00,Barcelona,Sevilla,,,5,2,finished,false,datahub-football-data,laliga-2025-2026-2026-03-15-barcelona-sevilla
+LaLiga,2025/2026,Spain,domestic_league,28,2026-03-15T20:00:00+00:00,Betis,Celta,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-15-betis-celta
+LaLiga,2025/2026,Spain,domestic_league,28,2026-03-15T20:00:00+00:00,Mallorca,Espanol,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-15-mallorca-espanol
+LaLiga,2025/2026,Spain,domestic_league,28,2026-03-15T20:00:00+00:00,Sociedad,Osasuna,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-15-sociedad-osasuna
+LaLiga,2025/2026,Spain,domestic_league,28,2026-03-16T20:00:00+00:00,Vallecano,Levante,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-16-vallecano-levante
+LaLiga,2025/2026,Spain,domestic_league,29,2026-03-20T20:00:00+00:00,Villarreal,Sociedad,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-20-villarreal-sociedad
+LaLiga,2025/2026,Spain,domestic_league,29,2026-03-21T20:00:00+00:00,Elche,Mallorca,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-21-elche-mallorca
+LaLiga,2025/2026,Spain,domestic_league,29,2026-03-21T20:00:00+00:00,Espanol,Getafe,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-03-21-espanol-getafe
+LaLiga,2025/2026,Spain,domestic_league,29,2026-03-21T20:00:00+00:00,Levante,Oviedo,,,4,2,finished,false,datahub-football-data,laliga-2025-2026-2026-03-21-levante-oviedo
+LaLiga,2025/2026,Spain,domestic_league,29,2026-03-21T20:00:00+00:00,Osasuna,Girona,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-03-21-osasuna-girona
+LaLiga,2025/2026,Spain,domestic_league,29,2026-03-21T20:00:00+00:00,Sevilla,Valencia,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2026-03-21-sevilla-valencia
+LaLiga,2025/2026,Spain,domestic_league,29,2026-03-22T20:00:00+00:00,Ath Bilbao,Betis,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-03-22-ath-bilbao-betis
+LaLiga,2025/2026,Spain,domestic_league,29,2026-03-22T20:00:00+00:00,Barcelona,Vallecano,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-03-22-barcelona-vallecano
+LaLiga,2025/2026,Spain,domestic_league,29,2026-03-22T20:00:00+00:00,Celta,Alaves,,,3,4,finished,false,datahub-football-data,laliga-2025-2026-2026-03-22-celta-alaves
+LaLiga,2025/2026,Spain,domestic_league,29,2026-03-22T20:00:00+00:00,Real Madrid,Ath Madrid,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2026-03-22-real-madrid-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,30,2026-04-03T20:00:00+00:00,Vallecano,Elche,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-03-vallecano-elche
+LaLiga,2025/2026,Spain,domestic_league,30,2026-04-04T20:00:00+00:00,Ath Madrid,Barcelona,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-04-04-ath-madrid-barcelona
+LaLiga,2025/2026,Spain,domestic_league,30,2026-04-04T20:00:00+00:00,Betis,Espanol,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-04-betis-espanol
+LaLiga,2025/2026,Spain,domestic_league,30,2026-04-04T20:00:00+00:00,Mallorca,Real Madrid,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-04-mallorca-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,30,2026-04-04T20:00:00+00:00,Sociedad,Levante,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-04-sociedad-levante
+LaLiga,2025/2026,Spain,domestic_league,30,2026-04-05T20:00:00+00:00,Alaves,Osasuna,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2026-04-05-alaves-osasuna
+LaLiga,2025/2026,Spain,domestic_league,30,2026-04-05T20:00:00+00:00,Getafe,Ath Bilbao,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-05-getafe-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,30,2026-04-05T20:00:00+00:00,Oviedo,Sevilla,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-05-oviedo-sevilla
+LaLiga,2025/2026,Spain,domestic_league,30,2026-04-05T20:00:00+00:00,Valencia,Celta,,,2,3,finished,false,datahub-football-data,laliga-2025-2026-2026-04-05-valencia-celta
+LaLiga,2025/2026,Spain,domestic_league,30,2026-04-06T20:00:00+00:00,Girona,Villarreal,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-06-girona-villarreal
+LaLiga,2025/2026,Spain,domestic_league,31,2026-04-10T20:00:00+00:00,Real Madrid,Girona,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-10-real-madrid-girona
+LaLiga,2025/2026,Spain,domestic_league,31,2026-04-11T20:00:00+00:00,Barcelona,Espanol,,,4,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-11-barcelona-espanol
+LaLiga,2025/2026,Spain,domestic_league,31,2026-04-11T20:00:00+00:00,Elche,Valencia,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-11-elche-valencia
+LaLiga,2025/2026,Spain,domestic_league,31,2026-04-11T20:00:00+00:00,Sevilla,Ath Madrid,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-11-sevilla-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,31,2026-04-11T20:00:00+00:00,Sociedad,Alaves,,,3,3,finished,false,datahub-football-data,laliga-2025-2026-2026-04-11-sociedad-alaves
+LaLiga,2025/2026,Spain,domestic_league,31,2026-04-12T20:00:00+00:00,Ath Bilbao,Villarreal,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-04-12-ath-bilbao-villarreal
+LaLiga,2025/2026,Spain,domestic_league,31,2026-04-12T20:00:00+00:00,Celta,Oviedo,,,0,3,finished,false,datahub-football-data,laliga-2025-2026-2026-04-12-celta-oviedo
+LaLiga,2025/2026,Spain,domestic_league,31,2026-04-12T20:00:00+00:00,Mallorca,Vallecano,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-12-mallorca-vallecano
+LaLiga,2025/2026,Spain,domestic_league,31,2026-04-12T20:00:00+00:00,Osasuna,Betis,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-12-osasuna-betis
+LaLiga,2025/2026,Spain,domestic_league,31,2026-04-13T20:00:00+00:00,Levante,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-13-levante-getafe
+LaLiga,2025/2026,Spain,domestic_league,32,2026-04-21T20:00:00+00:00,Ath Bilbao,Osasuna,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-21-ath-bilbao-osasuna
+LaLiga,2025/2026,Spain,domestic_league,32,2026-04-21T20:00:00+00:00,Girona,Betis,,,2,3,finished,false,datahub-football-data,laliga-2025-2026-2026-04-21-girona-betis
+LaLiga,2025/2026,Spain,domestic_league,32,2026-04-21T20:00:00+00:00,Mallorca,Valencia,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-21-mallorca-valencia
+LaLiga,2025/2026,Spain,domestic_league,32,2026-04-21T20:00:00+00:00,Real Madrid,Alaves,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-21-real-madrid-alaves
+LaLiga,2025/2026,Spain,domestic_league,32,2026-04-22T20:00:00+00:00,Barcelona,Celta,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-22-barcelona-celta
+LaLiga,2025/2026,Spain,domestic_league,32,2026-04-22T20:00:00+00:00,Elche,Ath Madrid,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2026-04-22-elche-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,32,2026-04-22T20:00:00+00:00,Sociedad,Getafe,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-22-sociedad-getafe
+LaLiga,2025/2026,Spain,domestic_league,32,2026-04-23T20:00:00+00:00,Levante,Sevilla,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-23-levante-sevilla
+LaLiga,2025/2026,Spain,domestic_league,32,2026-04-23T20:00:00+00:00,Oviedo,Villarreal,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-23-oviedo-villarreal
+LaLiga,2025/2026,Spain,domestic_league,32,2026-04-23T20:00:00+00:00,Vallecano,Espanol,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-23-vallecano-espanol
+LaLiga,2025/2026,Spain,domestic_league,33,2026-04-24T20:00:00+00:00,Betis,Real Madrid,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-24-betis-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,33,2026-04-25T20:00:00+00:00,Alaves,Mallorca,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-25-alaves-mallorca
+LaLiga,2025/2026,Spain,domestic_league,33,2026-04-25T20:00:00+00:00,Ath Madrid,Ath Bilbao,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2026-04-25-ath-madrid-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,33,2026-04-25T20:00:00+00:00,Getafe,Barcelona,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2026-04-25-getafe-barcelona
+LaLiga,2025/2026,Spain,domestic_league,33,2026-04-25T20:00:00+00:00,Valencia,Girona,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-25-valencia-girona
+LaLiga,2025/2026,Spain,domestic_league,33,2026-04-26T20:00:00+00:00,Osasuna,Sevilla,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-26-osasuna-sevilla
+LaLiga,2025/2026,Spain,domestic_league,33,2026-04-26T20:00:00+00:00,Oviedo,Elche,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-04-26-oviedo-elche
+LaLiga,2025/2026,Spain,domestic_league,33,2026-04-26T20:00:00+00:00,Vallecano,Sociedad,,,3,3,finished,false,datahub-football-data,laliga-2025-2026-2026-04-26-vallecano-sociedad
+LaLiga,2025/2026,Spain,domestic_league,33,2026-04-26T20:00:00+00:00,Villarreal,Celta,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-04-26-villarreal-celta
+LaLiga,2025/2026,Spain,domestic_league,33,2026-04-27T20:00:00+00:00,Espanol,Levante,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2026-04-27-espanol-levante
+LaLiga,2025/2026,Spain,domestic_league,34,2026-05-01T20:00:00+00:00,Girona,Mallorca,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-01-girona-mallorca
+LaLiga,2025/2026,Spain,domestic_league,34,2026-05-02T20:00:00+00:00,Alaves,Ath Bilbao,,,2,4,finished,false,datahub-football-data,laliga-2025-2026-2026-05-02-alaves-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,34,2026-05-02T20:00:00+00:00,Osasuna,Barcelona,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-05-02-osasuna-barcelona
+LaLiga,2025/2026,Spain,domestic_league,34,2026-05-02T20:00:00+00:00,Valencia,Ath Madrid,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2026-05-02-valencia-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,34,2026-05-02T20:00:00+00:00,Villarreal,Levante,,,5,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-02-villarreal-levante
+LaLiga,2025/2026,Spain,domestic_league,34,2026-05-03T20:00:00+00:00,Betis,Oviedo,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-03-betis-oviedo
+LaLiga,2025/2026,Spain,domestic_league,34,2026-05-03T20:00:00+00:00,Celta,Elche,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-03-celta-elche
+LaLiga,2025/2026,Spain,domestic_league,34,2026-05-03T20:00:00+00:00,Espanol,Real Madrid,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2026-05-03-espanol-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,34,2026-05-03T20:00:00+00:00,Getafe,Vallecano,,,0,2,finished,false,datahub-football-data,laliga-2025-2026-2026-05-03-getafe-vallecano
+LaLiga,2025/2026,Spain,domestic_league,34,2026-05-04T20:00:00+00:00,Sevilla,Sociedad,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-04-sevilla-sociedad
+LaLiga,2025/2026,Spain,domestic_league,35,2026-05-08T20:00:00+00:00,Levante,Osasuna,,,3,2,finished,false,datahub-football-data,laliga-2025-2026-2026-05-08-levante-osasuna
+LaLiga,2025/2026,Spain,domestic_league,35,2026-05-09T20:00:00+00:00,Ath Madrid,Celta,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-09-ath-madrid-celta
+LaLiga,2025/2026,Spain,domestic_league,35,2026-05-09T20:00:00+00:00,Elche,Alaves,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-09-elche-alaves
+LaLiga,2025/2026,Spain,domestic_league,35,2026-05-09T20:00:00+00:00,Sevilla,Espanol,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-09-sevilla-espanol
+LaLiga,2025/2026,Spain,domestic_league,35,2026-05-09T20:00:00+00:00,Sociedad,Betis,,,2,2,finished,false,datahub-football-data,laliga-2025-2026-2026-05-09-sociedad-betis
+LaLiga,2025/2026,Spain,domestic_league,35,2026-05-10T20:00:00+00:00,Ath Bilbao,Valencia,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-10-ath-bilbao-valencia
+LaLiga,2025/2026,Spain,domestic_league,35,2026-05-10T20:00:00+00:00,Barcelona,Real Madrid,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-10-barcelona-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,35,2026-05-10T20:00:00+00:00,Mallorca,Villarreal,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-10-mallorca-villarreal
+LaLiga,2025/2026,Spain,domestic_league,35,2026-05-10T20:00:00+00:00,Oviedo,Getafe,,,0,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-10-oviedo-getafe
+LaLiga,2025/2026,Spain,domestic_league,35,2026-05-11T20:00:00+00:00,Vallecano,Girona,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-11-vallecano-girona
+LaLiga,2025/2026,Spain,domestic_league,36,2026-05-12T20:00:00+00:00,Betis,Elche,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-12-betis-elche
+LaLiga,2025/2026,Spain,domestic_league,36,2026-05-12T20:00:00+00:00,Celta,Levante,,,2,3,finished,false,datahub-football-data,laliga-2025-2026-2026-05-12-celta-levante
+LaLiga,2025/2026,Spain,domestic_league,36,2026-05-12T20:00:00+00:00,Osasuna,Ath Madrid,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-05-12-osasuna-ath-madrid
+LaLiga,2025/2026,Spain,domestic_league,36,2026-05-13T20:00:00+00:00,Alaves,Barcelona,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-13-alaves-barcelona
+LaLiga,2025/2026,Spain,domestic_league,36,2026-05-13T20:00:00+00:00,Espanol,Ath Bilbao,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-13-espanol-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,36,2026-05-13T20:00:00+00:00,Getafe,Mallorca,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-13-getafe-mallorca
+LaLiga,2025/2026,Spain,domestic_league,36,2026-05-13T20:00:00+00:00,Villarreal,Sevilla,,,2,3,finished,false,datahub-football-data,laliga-2025-2026-2026-05-13-villarreal-sevilla
+LaLiga,2025/2026,Spain,domestic_league,36,2026-05-14T20:00:00+00:00,Girona,Sociedad,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-14-girona-sociedad
+LaLiga,2025/2026,Spain,domestic_league,36,2026-05-14T20:00:00+00:00,Real Madrid,Oviedo,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-14-real-madrid-oviedo
+LaLiga,2025/2026,Spain,domestic_league,36,2026-05-14T20:00:00+00:00,Valencia,Vallecano,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-14-valencia-vallecano
+LaLiga,2025/2026,Spain,domestic_league,37,2026-05-17T20:00:00+00:00,Ath Bilbao,Celta,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-17-ath-bilbao-celta
+LaLiga,2025/2026,Spain,domestic_league,37,2026-05-17T20:00:00+00:00,Ath Madrid,Girona,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-17-ath-madrid-girona
+LaLiga,2025/2026,Spain,domestic_league,37,2026-05-17T20:00:00+00:00,Barcelona,Betis,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-17-barcelona-betis
+LaLiga,2025/2026,Spain,domestic_league,37,2026-05-17T20:00:00+00:00,Elche,Getafe,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-17-elche-getafe
+LaLiga,2025/2026,Spain,domestic_league,37,2026-05-17T20:00:00+00:00,Levante,Mallorca,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-17-levante-mallorca
+LaLiga,2025/2026,Spain,domestic_league,37,2026-05-17T20:00:00+00:00,Osasuna,Espanol,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-05-17-osasuna-espanol
+LaLiga,2025/2026,Spain,domestic_league,37,2026-05-17T20:00:00+00:00,Oviedo,Alaves,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-17-oviedo-alaves
+LaLiga,2025/2026,Spain,domestic_league,37,2026-05-17T20:00:00+00:00,Sevilla,Real Madrid,,,0,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-17-sevilla-real-madrid
+LaLiga,2025/2026,Spain,domestic_league,37,2026-05-17T20:00:00+00:00,Sociedad,Valencia,,,3,4,finished,false,datahub-football-data,laliga-2025-2026-2026-05-17-sociedad-valencia
+LaLiga,2025/2026,Spain,domestic_league,37,2026-05-17T20:00:00+00:00,Vallecano,Villarreal,,,2,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-17-vallecano-villarreal
+LaLiga,2025/2026,Spain,domestic_league,38,2026-05-23T20:00:00+00:00,Alaves,Vallecano,,,1,2,finished,false,datahub-football-data,laliga-2025-2026-2026-05-23-alaves-vallecano
+LaLiga,2025/2026,Spain,domestic_league,38,2026-05-23T20:00:00+00:00,Betis,Levante,,,2,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-23-betis-levante
+LaLiga,2025/2026,Spain,domestic_league,38,2026-05-23T20:00:00+00:00,Celta,Sevilla,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-23-celta-sevilla
+LaLiga,2025/2026,Spain,domestic_league,38,2026-05-23T20:00:00+00:00,Espanol,Sociedad,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-23-espanol-sociedad
+LaLiga,2025/2026,Spain,domestic_league,38,2026-05-23T20:00:00+00:00,Getafe,Osasuna,,,1,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-23-getafe-osasuna
+LaLiga,2025/2026,Spain,domestic_league,38,2026-05-23T20:00:00+00:00,Girona,Elche,,,1,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-23-girona-elche
+LaLiga,2025/2026,Spain,domestic_league,38,2026-05-23T20:00:00+00:00,Mallorca,Oviedo,,,3,0,finished,false,datahub-football-data,laliga-2025-2026-2026-05-23-mallorca-oviedo
+LaLiga,2025/2026,Spain,domestic_league,38,2026-05-23T20:00:00+00:00,Real Madrid,Ath Bilbao,,,4,2,finished,false,datahub-football-data,laliga-2025-2026-2026-05-23-real-madrid-ath-bilbao
+LaLiga,2025/2026,Spain,domestic_league,38,2026-05-23T20:00:00+00:00,Valencia,Barcelona,,,3,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-23-valencia-barcelona
+LaLiga,2025/2026,Spain,domestic_league,38,2026-05-24T20:00:00+00:00,Villarreal,Ath Madrid,,,5,1,finished,false,datahub-football-data,laliga-2025-2026-2026-05-24-villarreal-ath-madrid
