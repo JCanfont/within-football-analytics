@@ -162,7 +162,7 @@ export function ForebetPage() {
     }
     const nextNotified = new Set(notifiedForecastIds);
     for (const item of nextItems) {
-      if (!watchedMatchIds.includes(item.match_id) || nextNotified.has(item.match_id) || !isThirtyMinuteWarningWindow(item)) {
+      if (!watchedMatchIds.includes(item.match_id) || nextNotified.has(item.match_id) || !isLiveMatch(item) || !isThirtyMinuteWarningWindow(item)) {
         continue;
       }
       const forecastState = evaluateForecastState(item);
@@ -465,10 +465,10 @@ function ForebetRangeRow({
   showRanges: boolean;
 }) {
   const range = item.score_range;
-  const forecastState = evaluateForecastState(item);
+  const forecastState = isLiveMatch(item) ? evaluateForecastState(item) : null;
   return (
     <>
-      <tr className={forecastState.status === "impossible" ? "forecast-impossible-row" : undefined}>
+      <tr className={forecastState?.status === "impossible" ? "forecast-impossible-row" : undefined}>
         <td>{formatDateOnly(item.match_date)}</td>
         <td>
           <strong>{item.home_team}</strong> vs <strong>{item.away_team}</strong>
@@ -483,7 +483,11 @@ function ForebetRangeRow({
         </td>
         <td>{item.forebet_prediction ?? "Sin captura"}</td>
         <td>
-          <span className={`forecast-status ${forecastState.status}`}>{forecastState.label}</span>
+          {forecastState ? (
+            <span className={`forecast-status ${forecastState.status}`}>{forecastState.label}</span>
+          ) : (
+            <span className="table-subtext">{isFinished(item) ? "Finalizado" : "Pendiente de inicio"}</span>
+          )}
           <span className="table-subtext">
             {formatCurrentScore(item)}
             {forecastAlerts && isWatched ? " · aviso min 60" : ""}
@@ -639,6 +643,11 @@ function evaluateForecastState(item: ForebetRangeItem): { status: "possible" | "
   return { status: "pending", label: "Sin regla" };
 }
 
+function isLiveMatch(item: ForebetRangeItem) {
+  const normalizedStatus = item.status.toLowerCase();
+  return ["live", "in_play", "playing", "1h", "2h", "ht"].some((status) => normalizedStatus.includes(status));
+}
+
 function splitPredictedScore(value?: string | null) {
   const match = value?.match(/(\d+)\s*-\s*(\d+)/);
   if (!match) {
@@ -676,8 +685,7 @@ function formatUnknown(value: unknown) {
 }
 
 function hasMatchStarted(item: ForebetRangeItem) {
-  const normalizedStatus = item.status.toLowerCase();
-  if (["live", "in_play", "playing", "1h", "2h", "ht"].some((status) => normalizedStatus.includes(status))) {
+  if (isLiveMatch(item)) {
     return true;
   }
   const matchStart = new Date(item.match_date).getTime();

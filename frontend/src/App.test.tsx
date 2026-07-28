@@ -639,7 +639,8 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "Avisar inicio" }));
     expect(screen.getByRole("button", { name: "Aviso activo" })).toBeInTheDocument();
     expect(screen.getByText("1 partidos con aviso")).toBeInTheDocument();
-    expect(screen.getByText("Aun posible")).toBeInTheDocument();
+    expect(screen.queryByText("Aun posible")).not.toBeInTheDocument();
+    expect(screen.getByText("Pendiente de inicio")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Pronostico vivo" }));
 
     mockedApi.loadForebetDate.mockClear();
