@@ -120,9 +120,6 @@ export function buildSpokenSummary(insight: MatchInsightData | null): string {
     if (hasValue(profile.goal_volume_bucket)) {
       parts.push(`volumen de goles ${profile.goal_volume_bucket}`);
     }
-    if (hasValue(profile.under_over_profile) && profile.under_over_profile !== "sin_senal") {
-      parts.push(`perfil ${profile.under_over_profile}`);
-    }
     if (hasValue(profile.late_goal_signal) && !isMissingGoalMinuteSignal(profile.late_goal_signal)) {
       parts.push(profile.late_goal_signal);
     }

@@ -297,6 +297,7 @@ describe("voiceAssistant utilities", () => {
     expect(summary).toContain("varianza de goles por partido 4");
     expect(summary).toContain("desviación típica 2");
     expect(summary).toContain("en este cruce directo hay 1 partidos under 2.5 y 1 partidos over 2.5");
+    expect(summary).not.toContain("perfil under_2_5");
     expect(summary.indexOf("He encontrado")).toBeLessThan(summary.indexOf("81.84 sobre 100"));
   });
 
