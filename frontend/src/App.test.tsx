@@ -595,6 +595,11 @@ describe("App", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Partidos en directo", level: 1 })).toBeInTheDocument();
     });
+    expect(screen.getAllByText(/1 partidos seleccionados/).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "Actualizar" }));
+    await waitFor(() => {
+      expect(mockedApi.loadForebetDate).toHaveBeenCalledWith("2026-07-28", false);
+    });
     expect(screen.getByText("Getafe vs Celta")).toBeInTheDocument();
     expect(screen.getByText("0-1")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Getafe tiros a puerta"), { target: { value: "1" } });

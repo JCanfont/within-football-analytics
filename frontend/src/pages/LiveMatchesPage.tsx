@@ -1,5 +1,5 @@
 import { Activity, RefreshCw, Save } from "lucide-react";
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useMemo, useState } from "react";
 import { loadForebetDate } from "../services/api";
 import type { ForebetRangeItem } from "../types/api";
 
@@ -29,7 +29,7 @@ export function LiveMatchesPage() {
   const [matches, setMatches] = useState<ForebetRangeItem[]>([]);
   const [parameters, setParameters] = useState<Record<number, LiveMatchParameters>>(readLiveParameters);
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(() => initialLiveMessage());
 
   const watchedIds = useMemo(() => readWatchedForebetMatchIds(), []);
   const selectedMatches = matches.filter((match) => watchedIds.includes(match.match_id));
@@ -68,10 +68,6 @@ export function LiveMatchesPage() {
       .finally(() => setIsLoading(false));
   }
 
-  useEffect(() => {
-    refreshMatches();
-  }, []);
-
   return (
     <section className="live-matches-page">
       <header className="page-header">
@@ -95,7 +91,7 @@ export function LiveMatchesPage() {
         <div className="panel-heading">
           <div>
             <h2>Partidos seleccionados en Forebet</h2>
-            <p>{message ?? "Se muestran los partidos marcados con aviso en la pantalla Forebet."}</p>
+            <p>{message}</p>
           </div>
           <Activity size={20} aria-hidden="true" />
         </div>
@@ -110,6 +106,8 @@ export function LiveMatchesPage() {
               />
             ))}
           </div>
+        ) : watchedIds.length ? (
+          <div className="detail-state">Hay {watchedIds.length} partidos seleccionados. Pulsa Actualizar para traerlos desde Forebet sin bloquear la entrada a esta pantalla.</div>
         ) : (
           <div className="detail-state">Selecciona partidos en Forebet con el boton Avisar inicio para que aparezcan aqui.</div>
         )}
@@ -257,6 +255,14 @@ function readWatchedForebetMatchIds() {
   } catch {
     return [];
   }
+}
+
+function initialLiveMessage() {
+  const watchedCount = readWatchedForebetMatchIds().length;
+  if (!watchedCount) {
+    return "Se muestran los partidos marcados con aviso en la pantalla Forebet.";
+  }
+  return `${watchedCount} partidos seleccionados. Pulsa Actualizar para cargar datos live cuando lo necesites.`;
 }
 
 function readLiveParameters() {
