@@ -275,7 +275,7 @@ function TeamDetailScreen({ matches, onBack, players, team }: { matches: MatchLi
         </div>
         <button className="filter-show" type="button" onClick={onBack}>
           <ArrowLeft size={16} aria-hidden="true" />
-          Volver a equipos
+          Atrás
         </button>
       </header>
 

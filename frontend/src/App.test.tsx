@@ -629,7 +629,7 @@ describe("App", () => {
     expect(screen.getByText("Osasuna")).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: /Getafe/ })[0]);
     expect(screen.getByRole("heading", { name: "Getafe", level: 1 })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Volver a equipos" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Atrás" })).toBeInTheDocument();
     expect(screen.getByText("Posicion calculada")).toBeInTheDocument();
     expect(screen.getByText("Racha under")).toBeInTheDocument();
     expect(screen.getByText("Racha over")).toBeInTheDocument();
