@@ -234,3 +234,14 @@ class StatisticalConfig(TimestampMixin, Base):
     key: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
     value: Mapped[dict] = mapped_column(JSON, nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
+
+
+class UserFavorite(TimestampMixin, Base):
+    __tablename__ = "user_favorite"
+    __table_args__ = (UniqueConstraint("user_key", "entity_type", "entity_id", name="uq_user_favorite_entity"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_key: Mapped[str] = mapped_column(String(120), nullable=False, index=True, default="default")
+    entity_type: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    entity_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(180), nullable=False)

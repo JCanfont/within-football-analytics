@@ -943,6 +943,67 @@ td {
   font-weight: 800;
 }
 
+.favorites-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.favorites-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.favorites-controls select {
+  min-width: min(320px, 100%);
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+  background: #f9fbfc;
+  color: #18212f;
+  font: inherit;
+}
+
+.favorites-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.favorite-chip,
+.favorites-empty {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 8px 0 10px;
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.favorite-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #617083;
+  cursor: pointer;
+}
+
+.favorite-chip button:hover {
+  background: #eef3f6;
+  color: #18212f;
+}
+
 .settings-page {
   display: grid;
   gap: 22px;

@@ -42,6 +42,25 @@ class StadiumRead(BaseModel):
     capacity: int | None = None
 
 
+class FavoriteCreate(BaseModel):
+    entity_type: str = "team"
+    entity_id: int
+    label: str
+    user_key: str = "default"
+
+
+class FavoriteRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    user_key: str
+    entity_type: str
+    entity_id: int
+    label: str
+    created_at: datetime
+    updated_at: datetime
+
+
 class MatchListItem(BaseModel):
     id: int
     match_date: datetime

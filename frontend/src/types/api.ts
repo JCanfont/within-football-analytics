@@ -28,6 +28,16 @@ export type Stadium = {
   capacity?: number | null;
 };
 
+export type Favorite = {
+  id: number;
+  user_key: string;
+  entity_type: "team" | "competition" | "player" | "match" | string;
+  entity_id: number;
+  label: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type MatchListItem = {
   id: number;
   match_date: string;

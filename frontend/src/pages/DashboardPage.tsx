@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, List, Target } from "lucide-react";
+import { Activity, AlertTriangle, List, Star, X, Target } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { UnderSignalsChart } from "../charts/UnderSignalsChart";
 import { EmptyState } from "../components/EmptyState";
@@ -12,6 +12,8 @@ import { useBackendHealth } from "../hooks/useBackendHealth";
 import { useDashboardData } from "../hooks/useDashboardData";
 import { useLiveTracking } from "../hooks/useLiveTracking";
 import { useMatchInsight } from "../hooks/useMatchInsight";
+import { deleteFavorite, fetchFavorites, saveFavorite } from "../services/api";
+import type { Favorite } from "../types/api";
 import { classifyUnderOver, emptyMatchFilters, filterMatches, findLatestMatchForTeamPair, isTeamPairMatch, teamsFromMatches } from "../utils/matchFilters";
 import { buildSpokenSummary } from "../utils/voiceAssistant";
 
@@ -24,6 +26,8 @@ export function DashboardPage() {
   const [outputMode, setOutputMode] = useState<AnalysisOutputMode>("screen");
   const [pendingSpeechMatchId, setPendingSpeechMatchId] = useState<number | null>(null);
   const [isMatchListOpen, setIsMatchListOpen] = useState(false);
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [favoriteTeamId, setFavoriteTeamId] = useState("");
   const filteredMatches = useMemo(() => filterMatches(matches, filters), [matches, filters]);
   const pairMatches = useMemo(() => {
     if (filters.homeTeam === "all" || filters.awayTeam === "all") {
@@ -58,6 +62,10 @@ export function DashboardPage() {
     [matches],
   );
   const teams = useMemo(() => teamsFromMatches(matches), [matches]);
+  const teamOptions = useMemo(() => {
+    const byName = new Map((data?.teams ?? []).map((team) => [team.name, team]));
+    return teams.map((teamName) => byName.get(teamName) ?? { id: teamNameToFallbackId(teamName), name: teamName });
+  }, [data?.teams, teams]);
 
   function analyzeSelectedPair() {
     const match = findLatestMatchForTeamPair(matches, filters.homeTeam, filters.awayTeam);
@@ -96,6 +104,31 @@ export function DashboardPage() {
     }
   }
 
+  function loadFavorites() {
+    fetchFavorites("team")
+      .then(setFavorites)
+      .catch(() => setFavorites([]));
+  }
+
+  function addFavoriteTeam() {
+    const team = teamOptions.find((item) => String(item.id) === favoriteTeamId);
+    if (!team) {
+      return;
+    }
+    saveFavorite({ entity_type: "team", entity_id: team.id, label: team.name })
+      .then((favorite) => {
+        setFavorites((current) => [...current.filter((item) => item.id !== favorite.id && item.entity_id !== favorite.entity_id), favorite]);
+        setFavoriteTeamId("");
+      })
+      .catch(loadFavorites);
+  }
+
+  function removeFavoriteTeam(favoriteId: number) {
+    deleteFavorite(favoriteId)
+      .then(() => setFavorites((current) => current.filter((item) => item.id !== favoriteId)))
+      .catch(loadFavorites);
+  }
+
   function speakAnalysis(text: string) {
     if (!("speechSynthesis" in window)) {
       return;
@@ -114,6 +147,10 @@ export function DashboardPage() {
     return () => {
       window.history.scrollRestoration = previousScrollRestoration;
     };
+  }, []);
+
+  useEffect(() => {
+    loadFavorites();
   }, []);
 
   useEffect(() => {
@@ -181,6 +218,43 @@ export function DashboardPage() {
         onToggleMatch={liveTracking.toggleMatch}
         onUpdateSettings={liveTracking.updateSettings}
       />
+
+      <section className="panel favorites-panel" aria-label="Favoritos">
+        <div className="panel-heading">
+          <div>
+            <h2>Favoritos</h2>
+            <p>Equipos guardados de forma persistente para futuras vistas.</p>
+          </div>
+        </div>
+        <div className="favorites-controls">
+          <select aria-label="Equipo favorito" value={favoriteTeamId} onChange={(event) => setFavoriteTeamId(event.target.value)}>
+            <option value="">Selecciona equipo</option>
+            {teamOptions.map((team) => (
+              <option key={`${team.id}-${team.name}`} value={team.id}>
+                {team.name}
+              </option>
+            ))}
+          </select>
+          <button className="filter-show" type="button" onClick={addFavoriteTeam} disabled={!favoriteTeamId}>
+            <Star size={16} aria-hidden="true" />
+            Guardar favorito
+          </button>
+        </div>
+        <div className="favorites-list">
+          {favorites.length > 0 ? (
+            favorites.map((favorite) => (
+              <span className="favorite-chip" key={favorite.id}>
+                {favorite.label}
+                <button type="button" onClick={() => removeFavoriteTeam(favorite.id)} title={`Quitar ${favorite.label}`}>
+                  <X size={14} aria-hidden="true" />
+                </button>
+              </span>
+            ))
+          ) : (
+            <span className="favorites-empty">Todavia no hay equipos favoritos.</span>
+          )}
+        </div>
+      </section>
 
       <MatchFilters
         filters={filters}
@@ -251,4 +325,8 @@ export function DashboardPage() {
       </section>
     </section>
   );
+}
+
+function teamNameToFallbackId(teamName: string) {
+  return Array.from(teamName).reduce((sum, char) => sum + char.charCodeAt(0), 0);
 }

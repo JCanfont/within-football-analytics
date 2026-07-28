@@ -21,6 +21,7 @@ from app.models.extended import (
     StatisticalConfig,
     TeamFormSnapshot,
     TeamGoalTiming,
+    UserFavorite,
 )
 
 __all__ = [
@@ -44,4 +45,5 @@ __all__ = [
     "TeamAlias",
     "TeamFormSnapshot",
     "TeamGoalTiming",
+    "UserFavorite",
 ]

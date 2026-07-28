@@ -111,6 +111,24 @@ def test_match_analytics_uses_saved_weights() -> None:
     app.dependency_overrides.clear()
 
 
+def test_team_favorites_can_be_saved_listed_and_deleted() -> None:
+    client = _client_with_seed_data()
+    team_id = next(team["id"] for team in client.get("/api/teams").json() if team["name"] == "Getafe")
+
+    created = client.post("/api/favorites", json={"entity_type": "team", "entity_id": team_id, "label": "Getafe"})
+    favorites = client.get("/api/favorites?entity_type=team")
+    deleted = client.delete(f"/api/favorites/{created.json()['id']}")
+
+    assert created.status_code == 200
+    assert created.json()["label"] == "Getafe"
+    assert favorites.status_code == 200
+    assert favorites.json()[0]["entity_id"] == team_id
+    assert deleted.status_code == 200
+    assert deleted.json()["label"] == "Getafe"
+    assert client.get("/api/favorites?entity_type=team").json() == []
+    app.dependency_overrides.clear()
+
+
 def test_live_tracking_can_follow_all_or_selected_match() -> None:
     client = _client_with_seed_data()
     match_id = client.get("/api/matches").json()[0]["id"]

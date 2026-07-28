@@ -3,6 +3,7 @@ import type {
   Competition,
   Alert,
   DashboardData,
+  Favorite,
   ForebetDateLoadResult,
   ForebetRangeItem,
   GoalTiming,
@@ -91,6 +92,22 @@ export async function fetchMatchGoalMoments(matchId: number): Promise<GoalMoment
 
 export async function fetchForebetRanges(): Promise<ForebetRangeItem[]> {
   const response = await api.get<ForebetRangeItem[]>("/api/analytics/forebet-ranges?limit=2000");
+  return response.data;
+}
+
+export async function fetchFavorites(entityType?: string): Promise<Favorite[]> {
+  const params = entityType ? `?entity_type=${encodeURIComponent(entityType)}` : "";
+  const response = await api.get<Favorite[]>(`/api/favorites${params}`);
+  return response.data;
+}
+
+export async function saveFavorite(payload: { entity_type: string; entity_id: number; label: string; user_key?: string }): Promise<Favorite> {
+  const response = await api.post<Favorite>("/api/favorites", payload);
+  return response.data;
+}
+
+export async function deleteFavorite(favoriteId: number): Promise<Favorite> {
+  const response = await api.delete<Favorite>(`/api/favorites/${favoriteId}`);
   return response.data;
 }
 

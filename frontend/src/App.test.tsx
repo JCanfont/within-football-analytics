@@ -345,6 +345,25 @@ describe("App", () => {
         updated_at: "2026-08-14T09:00:00+00:00",
       },
     ]);
+    mockedApi.fetchFavorites.mockResolvedValue([]);
+    mockedApi.saveFavorite.mockImplementation(async (payload) => ({
+      id: 1,
+      user_key: payload.user_key ?? "default",
+      entity_type: payload.entity_type,
+      entity_id: payload.entity_id,
+      label: payload.label,
+      created_at: "2026-08-14T09:00:00+00:00",
+      updated_at: "2026-08-14T09:00:00+00:00",
+    }));
+    mockedApi.deleteFavorite.mockResolvedValue({
+      id: 1,
+      user_key: "default",
+      entity_type: "team",
+      entity_id: 1,
+      label: "Getafe",
+      created_at: "2026-08-14T09:00:00+00:00",
+      updated_at: "2026-08-14T09:00:00+00:00",
+    });
     mockedApi.generateMatchAlerts.mockResolvedValue([
       {
         id: 2,
@@ -474,6 +493,21 @@ describe("App", () => {
     expect(screen.getByText("Enfrentamientos directos")).toBeInTheDocument();
     expect(screen.getByText("Cruce seleccionado: 2 enfrentamientos directos")).toBeInTheDocument();
     expect(screen.getByText("Solo enfrentamientos directos")).toBeInTheDocument();
+  }, 30000);
+
+  it("saves favorite teams from the dashboard", async () => {
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Equipo favorito")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Equipo favorito"), { target: { value: "1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar favorito" }));
+
+    await waitFor(() => {
+      expect(mockedApi.saveFavorite).toHaveBeenCalledWith({ entity_type: "team", entity_id: 1, label: "Getafe" });
+    });
   }, 30000);
 
   it("shows an updating backend status when maintenance flag is active", async () => {
