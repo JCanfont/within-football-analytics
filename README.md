@@ -141,7 +141,7 @@ Las alertas se presentan como senales explicables y asociaciones historicas, no 
 
 Esta fase anade peticiones por voz en el dashboard:
 
-- Panel `Pide un partido hablando`.
+- Panel `Nombra a voz un partido`.
 - Reconocimiento de voz con la API del navegador cuando este disponible.
 - Busqueda local del partido por nombres de equipos importados.
 - Seleccion automatica del partido encontrado.

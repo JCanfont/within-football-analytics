@@ -510,7 +510,7 @@ describe("App", () => {
       expect(screen.getByRole("button", { name: "Analizar cruce" })).not.toBeDisabled();
     });
     fireEvent.click(screen.getByRole("button", { name: "Analizar cruce" }));
-    expect(screen.getByText("Pide un partido hablando")).toBeInTheDocument();
+    expect(screen.getByText("Nombra a voz un partido")).toBeInTheDocument();
     expect(screen.getByText("Seguimiento en directo")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Escuchar" })).not.toBeDisabled();
     fireEvent.change(screen.getByLabelText("Peticion de partido por texto"), { target: { value: "Getafe contra Osasuna" } });
@@ -589,6 +589,8 @@ describe("App", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Partidos", level: 1 })).toBeInTheDocument();
     });
+    expect(screen.getByText("Hora")).toBeInTheDocument();
+    expect(screen.getByText("19:30")).toBeInTheDocument();
     expect(screen.getByText("Getafe")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Competiciones" }));

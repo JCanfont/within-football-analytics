@@ -28,7 +28,7 @@ export function VoiceAssistantPanel({ matches, isLoadingMatches, selectedInsight
     <section className="panel voice-panel" aria-label="Asistente de voz">
       <div className="voice-copy">
         <p className="eyebrow">Voice assistant</p>
-        <h2>Pide un partido hablando</h2>
+        <h2>Nombra a voz un partido</h2>
         <p>{statusMessage}</p>
         {voice.transcript ? <span>Escuchado: {voice.transcript}</span> : null}
         {voice.pendingOptions.length > 0 ? (

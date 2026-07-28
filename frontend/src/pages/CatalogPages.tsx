@@ -48,6 +48,7 @@ export function MatchesPage() {
             <thead>
               <tr>
                 <th>Fecha</th>
+                <th>Hora</th>
                 <th>Liga</th>
                 <th>Temporada</th>
                 <th>Partido</th>
@@ -58,6 +59,7 @@ export function MatchesPage() {
               {visibleMatches.map((match) => (
                 <tr key={match.id}>
                   <td>{formatDate(match.match_date)}</td>
+                  <td>{formatTime(match.match_date)}</td>
                   <td>{match.competition}</td>
                   <td>{formatSeason(match.season)}</td>
                   <td>
@@ -206,6 +208,11 @@ function TeamGrid({ teams }: { teams: Team[] }) {
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(value));
+}
+
+function formatTime(value: string) {
+  const match = value.match(/T(\d{2}):(\d{2})/);
+  return match ? `${match[1]}:${match[2]}` : "--:--";
 }
 
 function formatSeason(value: string) {
