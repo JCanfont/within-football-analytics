@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Competition, GoalMoment, Match, Season, Team, TeamGoalTiming
 from app.schemas.api import ForebetDateLoadResult, ForebetRangeItem, GoalMomentRead, GoalTimingContext, GoalTimingRead, GoalTimingSeriesRow, MatchAnalytics, PlayerStadiumAnalytics, StadiumPlayerAnalytics
-from app.services.analytics_queries import build_match_analytics, player_stadium_analytics, stadium_players_analytics
+from app.services.analytics_queries import build_match_analytics, latest_forebet_prediction, player_stadium_analytics, stadium_players_analytics
 from app.services.forebet_importer import ForebetSourcePrediction, import_forebet_jornada
 
 
@@ -111,7 +111,7 @@ def get_forebet_ranges(db: Session = Depends(get_db), limit: int = 2000) -> list
 
 
 @router.post("/forebet/load-date", response_model=ForebetDateLoadResult)
-def load_forebet_date(target_date: date, db: Session = Depends(get_db)) -> ForebetDateLoadResult:
+def load_forebet_date(target_date: date, include_ranges: bool = False, db: Session = Depends(get_db)) -> ForebetDateLoadResult:
     forebet_outcome = import_forebet_jornada(db, target_date)
     matches = list(
         db.scalars(
@@ -120,13 +120,21 @@ def load_forebet_date(target_date: date, db: Session = Depends(get_db)) -> Foreb
             .order_by(Match.match_date, Match.id)
         ).all()
     )
-    items = [_forebet_range_item(db, match) for match in matches]
+    items = [_forebet_range_item(db, match) if include_ranges else _forebet_basic_item(db, match) for match in matches]
     if not items and forebet_outcome.predictions:
-        items = [_forebet_source_item(index, prediction) for index, prediction in enumerate(forebet_outcome.predictions, start=1)]
+        items = [
+            _forebet_source_item(index, prediction, include_ranges)
+            for index, prediction in enumerate(forebet_outcome.predictions, start=1)
+        ]
     if items:
+        action_message = (
+            "y se ha calculado el rango de resultado para toda la jornada cargada"
+            if include_ranges
+            else "y quedan preparados para calcular rangos cuando lo solicites"
+        )
         message = (
             f"Se han encontrado {len(items)} partidos para la fecha {target_date.isoformat()} "
-            "y se ha calculado el rango de resultado para toda la jornada cargada. "
+            f"{action_message}. "
             f"Forebet: {forebet_outcome.message}"
         )
         status = "ok" if forebet_outcome.status in {"ok", "reader_fallback", "storage_unavailable", "blocked", "request_failed", "no_forebet_matches"} else forebet_outcome.status
@@ -259,7 +267,28 @@ def _forebet_range_item(db: Session, match: Match) -> ForebetRangeItem:
     )
 
 
-def _forebet_source_item(index: int, prediction: ForebetSourcePrediction) -> ForebetRangeItem:
+def _forebet_basic_item(db: Session, match: Match) -> ForebetRangeItem:
+    competition = db.get(Competition, match.competition_id)
+    season = db.get(Season, match.season_id)
+    home = db.get(Team, match.home_team_id)
+    away = db.get(Team, match.away_team_id)
+    latest = latest_forebet_prediction(db, match.id)
+    return ForebetRangeItem(
+        match_id=match.id,
+        match_date=match.match_date,
+        competition=competition.name if competition else str(match.competition_id),
+        season=season.name if season else str(match.season_id),
+        home_team=home.name if home else str(match.home_team_id),
+        away_team=away.name if away else str(match.away_team_id),
+        status=match.status,
+        forebet_prediction=latest.prediction if latest else None,
+        expected_goals=latest.expected_goals if latest else None,
+        score_range=None,
+        reliability="pending_range",
+    )
+
+
+def _forebet_source_item(index: int, prediction: ForebetSourcePrediction, include_range: bool) -> ForebetRangeItem:
     start_year = prediction.match_date.year if prediction.match_date.month >= 7 else prediction.match_date.year - 1
     return ForebetRangeItem(
         match_id=-index,
@@ -271,8 +300,8 @@ def _forebet_source_item(index: int, prediction: ForebetSourcePrediction) -> For
         status="scheduled",
         forebet_prediction=prediction.prediction,
         expected_goals=prediction.expected_goals,
-        score_range=_forebet_source_score_range(prediction),
-        reliability="forebet_external",
+        score_range=_forebet_source_score_range(prediction) if include_range else None,
+        reliability="forebet_external" if include_range else "pending_range",
     )
 
 

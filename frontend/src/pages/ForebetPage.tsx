@@ -12,26 +12,40 @@ export function ForebetPage() {
   const [loadMessage, setLoadMessage] = useState<string | null>(null);
   const [forebetLoad, setForebetLoad] = useState<ForebetDateLoadResult | null>(null);
   const [expandedMatchId, setExpandedMatchId] = useState<number | null>(null);
+  const [hasCalculatedRanges, setHasCalculatedRanges] = useState(false);
+  const [loadingMode, setLoadingMode] = useState<"matches" | "ranges">("matches");
 
   function loadDate() {
     if (!targetDate) {
       setError("Selecciona una fecha para cargar la jornada Forebet.");
       return;
     }
-    loadDateFor(targetDate);
+    loadDateFor(targetDate, false);
   }
 
-  function loadDateFor(selectedDate: string) {
+  function calculateRanges() {
+    if (!targetDate || items.length === 0) {
+      return;
+    }
+    loadDateFor(targetDate, true);
+  }
+
+  function loadDateFor(selectedDate: string, includeRanges: boolean) {
     setIsLoading(true);
+    setLoadingMode(includeRanges ? "ranges" : "matches");
     setError(null);
     setLoadMessage(null);
     setForebetLoad(null);
     setExpandedMatchId(null);
-    loadForebetDate(selectedDate)
+    if (!includeRanges) {
+      setHasCalculatedRanges(false);
+    }
+    loadForebetDate(selectedDate, includeRanges)
       .then((result) => {
         setItems(result.matches);
         setLoadMessage(result.message);
         setForebetLoad(result);
+        setHasCalculatedRanges(includeRanges);
         setIsLoading(false);
       })
       .catch(() => {
@@ -41,7 +55,7 @@ export function ForebetPage() {
   }
 
   useEffect(() => {
-    loadDateFor(todayInputValue());
+    loadDateFor(todayInputValue(), false);
   }, []);
 
   const filteredItems = useMemo(() => {
@@ -71,14 +85,18 @@ export function ForebetPage() {
               onChange={(event) => {
                 setTargetDate(event.target.value);
                 if (event.target.value) {
-                  loadDateFor(event.target.value);
+                  loadDateFor(event.target.value, false);
                 }
               }}
             />
           </label>
-          <button className="filter-show" type="button" onClick={loadDate}>
+          <button className="filter-show" type="button" onClick={loadDate} disabled={isLoading && loadingMode === "matches"}>
             <CalendarDays size={17} aria-hidden="true" />
             Cargar jornada
+          </button>
+          <button className="filter-show" type="button" onClick={calculateRanges} disabled={isLoading || items.length === 0}>
+            <Calculator size={17} aria-hidden="true" />
+            Calcular rangos
           </button>
         </div>
       </header>
@@ -87,7 +105,7 @@ export function ForebetPage() {
         <div className="panel-heading">
           <div>
             <h2>Jornada del {formatDateLabel(targetDate)}</h2>
-            <p>{isLoading ? "Calculando rangos..." : `${filteredItems.length} partidos de la fecha solicitada`}</p>
+            <p>{isLoading ? loadingLabel(loadingMode) : `${filteredItems.length} partidos de la fecha solicitada`}</p>
           </div>
           <input
             className="forebet-search"
@@ -101,7 +119,7 @@ export function ForebetPage() {
         {error ? <div className="detail-state">{error}</div> : null}
         {loadMessage ? <div className="forebet-load-message">{loadMessage}</div> : null}
         {forebetLoad ? <ForebetLoadSummary result={forebetLoad} /> : null}
-        {isLoading ? <div className="detail-state">Calculando rangos de resultado para los partidos importados...</div> : null}
+        {isLoading ? <div className="detail-state">{loadingDetail(loadingMode)}</div> : null}
         {!isLoading && !error && filteredItems.length > 0 ? (
           <div className="table-wrap">
             <table>
@@ -110,9 +128,10 @@ export function ForebetPage() {
                   <th>Fecha</th>
                   <th>Partido</th>
                   <th>Forebet</th>
-                  <th>Rango</th>
-                  <th>Marcadores posibles</th>
-                  <th>Calculo</th>
+                  <th>Goles esperados</th>
+                  {hasCalculatedRanges ? <th>Rango</th> : null}
+                  {hasCalculatedRanges ? <th>Marcadores posibles</th> : null}
+                  {hasCalculatedRanges ? <th>Calculo</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -122,6 +141,7 @@ export function ForebetPage() {
                     item={item}
                     key={item.match_id}
                     onToggle={() => setExpandedMatchId((current) => (current === item.match_id ? null : item.match_id))}
+                    showRanges={hasCalculatedRanges}
                   />
                 ))}
               </tbody>
@@ -137,6 +157,14 @@ export function ForebetPage() {
       </section>
     </section>
   );
+}
+
+function loadingLabel(mode: "matches" | "ranges") {
+  return mode === "ranges" ? "Calculando rangos..." : "Cargando partidos...";
+}
+
+function loadingDetail(mode: "matches" | "ranges") {
+  return mode === "ranges" ? "Calculando rangos de resultado para los partidos cargados..." : "Adquiriendo partidos de la fecha solicitada...";
 }
 
 function ForebetLoadSummary({ result }: { result: ForebetDateLoadResult }) {
@@ -183,7 +211,17 @@ function formatDateLabel(value: string) {
   return new Intl.DateTimeFormat("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(`${value}T12:00:00`));
 }
 
-function ForebetRangeRow({ isExpanded, item, onToggle }: { isExpanded: boolean; item: ForebetRangeItem; onToggle: () => void }) {
+function ForebetRangeRow({
+  isExpanded,
+  item,
+  onToggle,
+  showRanges,
+}: {
+  isExpanded: boolean;
+  item: ForebetRangeItem;
+  onToggle: () => void;
+  showRanges: boolean;
+}) {
   const range = item.score_range;
   return (
     <>
@@ -194,18 +232,21 @@ function ForebetRangeRow({ isExpanded, item, onToggle }: { isExpanded: boolean; 
           <span className="table-subtext">{item.competition} · {formatSeason(item.season)}</span>
         </td>
         <td>{item.forebet_prediction ?? "Sin captura"}</td>
-        <td>{formatRange(range)}</td>
-        <td>{formatPossibleScores(range)}</td>
-        <td>
-          <button className="row-action" type="button" onClick={onToggle} disabled={!range}>
-            {isExpanded ? <ChevronDown size={15} aria-hidden="true" /> : <ChevronRight size={15} aria-hidden="true" />}
-            Ver
-          </button>
-        </td>
+        <td>{formatUnknown(item.expected_goals)}</td>
+        {showRanges ? <td>{formatRange(range)}</td> : null}
+        {showRanges ? <td>{formatPossibleScores(range)}</td> : null}
+        {showRanges ? (
+          <td>
+            <button className="row-action" type="button" onClick={onToggle} disabled={!range}>
+              {isExpanded ? <ChevronDown size={15} aria-hidden="true" /> : <ChevronRight size={15} aria-hidden="true" />}
+              Ver
+            </button>
+          </td>
+        ) : null}
       </tr>
-      {isExpanded ? (
+      {showRanges && isExpanded ? (
         <tr className="forebet-calculation-row">
-          <td colSpan={6}>
+          <td colSpan={7}>
             <ForebetCalculation range={range} reliability={item.reliability} />
           </td>
         </tr>

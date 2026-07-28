@@ -94,9 +94,9 @@ export async function fetchForebetRanges(): Promise<ForebetRangeItem[]> {
   return response.data;
 }
 
-export async function loadForebetDate(targetDate: string): Promise<ForebetDateLoadResult> {
+export async function loadForebetDate(targetDate: string, includeRanges = false): Promise<ForebetDateLoadResult> {
   const response = await api.post<ForebetDateLoadResult>(
-    `/api/analytics/forebet/load-date?target_date=${encodeURIComponent(targetDate)}`,
+    `/api/analytics/forebet/load-date?target_date=${encodeURIComponent(targetDate)}&include_ranges=${includeRanges}`,
   );
   return response.data;
 }
