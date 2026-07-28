@@ -46,7 +46,7 @@ export function MatchFilters({
           <h3>Filtros de parametros</h3>
         </div>
         <span>
-          {visibleMatches}/{totalMatches}
+          {formatNumber(visibleMatches)}/{formatNumber(totalMatches)}
         </span>
       </div>
       <div className="filters-grid">
@@ -162,4 +162,8 @@ function formatCompetitionType(value: string) {
     unknown: "Sin tipo",
   };
   return labels[value] ?? value;
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("es-ES").format(value);
 }

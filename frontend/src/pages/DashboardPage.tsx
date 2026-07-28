@@ -273,9 +273,14 @@ export function DashboardPage() {
       />
 
       <div className="metrics-grid" aria-label="Dashboard metrics">
-        <MetricCard icon={Activity} label="Partidos visibles" value={isLoading ? "..." : filteredMatches.length.toString()} detail={`${completedMatches} finalizados`} />
-        <MetricCard icon={Target} label="Senales Under" value={isLoading ? "..." : underSignals.toString()} detail={hasDirectSummary || hasPairScope ? "Cruce seleccionado: menos de 2.5" : "Menos de 2.5 goles"} />
-        <MetricCard icon={Target} label="Senales Over" value={isLoading ? "..." : overSignals.toString()} detail={hasDirectSummary || hasPairScope ? "Cruce seleccionado: mas de 2.5" : "Mas de 2.5 goles"} />
+        <MetricCard
+          icon={Activity}
+          label="Partidos visibles"
+          value={isLoading ? "..." : formatNumber(filteredMatches.length)}
+          detail={`${formatNumber(completedMatches)} finalizados de ${formatNumber(matches.length)} cargados`}
+        />
+        <MetricCard icon={Target} label="Senales Under" value={isLoading ? "..." : formatNumber(underSignals)} detail={hasDirectSummary || hasPairScope ? "Cruce seleccionado: menos de 2.5" : "Menos de 2.5 goles"} />
+        <MetricCard icon={Target} label="Senales Over" value={isLoading ? "..." : formatNumber(overSignals)} detail={hasDirectSummary || hasPairScope ? "Cruce seleccionado: mas de 2.5" : "Mas de 2.5 goles"} />
         <MetricCard icon={AlertTriangle} label="Alertas alineacion" value="0" detail="Pendiente fase 8" />
       </div>
 
@@ -289,7 +294,7 @@ export function DashboardPage() {
             {shouldCollapseMatchList ? (
               <button className="panel-toggle" type="button" onClick={() => setIsMatchListOpen((current) => !current)}>
                 <List size={17} aria-hidden="true" />
-                {isMatchListOpen ? "Ocultar lista" : `Mostrar lista (${filteredMatches.length})`}
+                {isMatchListOpen ? "Ocultar lista" : `Mostrar lista (${formatNumber(filteredMatches.length)})`}
               </button>
             ) : null}
           </div>
@@ -329,4 +334,8 @@ export function DashboardPage() {
 
 function teamNameToFallbackId(teamName: string) {
   return Array.from(teamName).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("es-ES").format(value);
 }

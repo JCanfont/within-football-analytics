@@ -403,6 +403,14 @@ td {
   font-weight: 800;
 }
 
+.table-summary {
+  padding: 12px 14px;
+  border-bottom: 1px solid #edf0f4;
+  color: #536174;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .chart-box {
   height: 290px;
   padding: 12px 12px 22px;

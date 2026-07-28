@@ -1,6 +1,8 @@
 import type { MatchListItem } from "../types/api";
 import { displayTeamName } from "../utils/matchFilters";
 
+const MAX_RENDERED_MATCHES = 100;
+
 type MatchTableProps = {
   matches: MatchListItem[];
   totalMatches: number;
@@ -25,13 +27,21 @@ export function MatchTable({ matches, totalMatches, isLoading, selectedMatchId, 
   if (isCollapsed) {
     return (
       <div className="table-state table-state-collapsed">
-        Lista plegada: {matches.length} partidos visibles. Usa los filtros, la voz o el boton de mostrar lista para revisar partidos concretos.
+        Lista plegada: {formatNumber(matches.length)} partidos visibles de {formatNumber(totalMatches)} cargados. Usa los filtros, la voz o el boton de mostrar lista para revisar partidos concretos.
       </div>
     );
   }
 
+  const visibleRows = matches.slice(0, MAX_RENDERED_MATCHES);
+  const isLimited = matches.length > visibleRows.length;
+
   return (
     <div className="table-wrap">
+      <div className="table-summary">
+        {isLimited
+          ? `Mostrando los primeros ${formatNumber(visibleRows.length)} de ${formatNumber(matches.length)} partidos visibles. Usa filtros para acotar la busqueda.`
+          : `Mostrando ${formatNumber(matches.length)} partidos visibles de ${formatNumber(totalMatches)} cargados.`}
+      </div>
       <table>
         <thead>
           <tr>
@@ -45,7 +55,7 @@ export function MatchTable({ matches, totalMatches, isLoading, selectedMatchId, 
           </tr>
         </thead>
         <tbody>
-          {matches.map((match) => (
+          {visibleRows.map((match) => (
             <tr className={selectedMatchId === match.id ? "selected-row" : ""} key={match.id}>
               <td>{formatTime(match.match_date)}</td>
               <td>{match.competition}</td>
@@ -89,4 +99,8 @@ function formatTime(value: string) {
     day: "2-digit",
     month: "2-digit",
   }).format(new Date(value));
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("es-ES").format(value);
 }
