@@ -8,7 +8,7 @@ from app.database import get_db
 from app.models import Competition, GoalMoment, Match, Season, Team, TeamGoalTiming
 from app.schemas.api import ForebetDateLoadResult, ForebetRangeItem, GoalMomentRead, GoalTimingContext, GoalTimingRead, GoalTimingSeriesRow, MatchAnalytics, PlayerStadiumAnalytics, StadiumPlayerAnalytics
 from app.services.analytics_queries import build_match_analytics, player_stadium_analytics, stadium_players_analytics
-from app.services.forebet_importer import import_forebet_jornada
+from app.services.forebet_importer import ForebetSourcePrediction, import_forebet_jornada
 
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
@@ -121,6 +121,8 @@ def load_forebet_date(target_date: date, db: Session = Depends(get_db)) -> Foreb
         ).all()
     )
     items = [_forebet_range_item(db, match) for match in matches]
+    if not items and forebet_outcome.predictions:
+        items = [_forebet_source_item(index, prediction) for index, prediction in enumerate(forebet_outcome.predictions, start=1)]
     if items:
         message = (
             f"Se han encontrado {len(items)} partidos para la fecha {target_date.isoformat()} "
@@ -255,6 +257,35 @@ def _forebet_range_item(db: Session, match: Match) -> ForebetRangeItem:
         score_range=analytics.inputs.get("score_range") if analytics else None,
         reliability=analytics.reliability if analytics else "insufficient",
     )
+
+
+def _forebet_source_item(index: int, prediction: ForebetSourcePrediction) -> ForebetRangeItem:
+    start_year = prediction.match_date.year if prediction.match_date.month >= 7 else prediction.match_date.year - 1
+    return ForebetRangeItem(
+        match_id=-index,
+        match_date=prediction.match_date,
+        competition="Forebet",
+        season=f"{start_year}/{start_year + 1}",
+        home_team=prediction.home_team,
+        away_team=prediction.away_team,
+        status="scheduled",
+        forebet_prediction=prediction.prediction,
+        expected_goals=prediction.expected_goals,
+        score_range=_forebet_source_score_range(prediction),
+        reliability="forebet_external",
+    )
+
+
+def _forebet_source_score_range(prediction: ForebetSourcePrediction) -> dict | None:
+    if not prediction.predicted_score:
+        return None
+    return {
+        "source": "forebet",
+        "summary": prediction.predicted_score,
+        "possible_scores": [prediction.predicted_score],
+        "predicted_score": prediction.predicted_score,
+        "explanation": "Resultado probable leido directamente de Forebet para la fecha solicitada.",
+    }
 
 
 @router.get("/stadium/{stadium_id}/players", response_model=StadiumPlayerAnalytics)

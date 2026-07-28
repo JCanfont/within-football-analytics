@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from difflib import SequenceMatcher
+from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
@@ -18,6 +19,13 @@ from app.utils.normalization import normalize_name
 FOREBET_PREDICTIONS_URL = "https://www.forebet.com/en/football-predictions"
 DATE_RE = re.compile(r"(?P<day>\d{2})/(?P<month>\d{2})/(?P<year>\d{4})\s+(?P<time>\d{1,2}:\d{2})")
 SCORE_RE = re.compile(r"\b(?P<home>\d+)\s*-\s*(?P<away>\d+)\b")
+REQUEST_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
+    ),
+    "Accept-Language": "en-US,en;q=0.9,es;q=0.8",
+}
 
 
 @dataclass
@@ -43,6 +51,7 @@ class ForebetImportOutcome:
     matched: int = 0
     created_matches: int = 0
     unmatched: int = 0
+    predictions: list[ForebetSourcePrediction] = field(default_factory=list)
 
 
 def import_forebet_jornada(db: Session, target_date: date) -> ForebetImportOutcome:
@@ -51,13 +60,7 @@ def import_forebet_jornada(db: Session, target_date: date) -> ForebetImportOutco
         response = requests.get(
             source_url,
             timeout=15,
-            headers={
-                "User-Agent": (
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
-                ),
-                "Accept-Language": "en-US,en;q=0.9,es;q=0.8",
-            },
+            headers=REQUEST_HEADERS,
         )
     except requests.RequestException as exc:
         return ForebetImportOutcome(
@@ -140,6 +143,7 @@ def import_forebet_jornada(db: Session, target_date: date) -> ForebetImportOutco
             matched=matched,
             created_matches=created_matches,
             unmatched=len(predictions) - matched - created_matches,
+            predictions=predictions,
         )
 
     unmatched = len(predictions) - matched - created_matches
@@ -156,6 +160,7 @@ def import_forebet_jornada(db: Session, target_date: date) -> ForebetImportOutco
         matched=matched,
         created_matches=created_matches,
         unmatched=unmatched,
+        predictions=predictions,
     )
 
 
@@ -172,11 +177,48 @@ def _parse_forebet_predictions(html: str, target_date: date) -> list[ForebetSour
     soup = BeautifulSoup(html, "html.parser")
     predictions: list[ForebetSourcePrediction] = []
     for row in soup.select("tr"):
-        cells = [cell.get_text(" ", strip=True) for cell in row.select("th,td") if cell.get_text(" ", strip=True)]
-        item = _prediction_from_cells(cells, target_date)
+        item = _prediction_from_row(row, target_date)
         if item:
             predictions.append(item)
     return predictions
+
+
+def _prediction_from_row(row, target_date: date) -> ForebetSourcePrediction | None:
+    cells = [cell.get_text(" ", strip=True) for cell in row.select("th,td") if cell.get_text(" ", strip=True)]
+    item = _prediction_from_cells(cells, target_date)
+    if item:
+        return item
+
+    match_anchor = next((anchor for anchor in row.select("a") if DATE_RE.search(anchor.get_text(" ", strip=True))), None)
+    if not match_anchor:
+        return None
+    match_text = match_anchor.get_text(" ", strip=True)
+    parsed_date = _parse_forebet_datetime(match_text)
+    if not parsed_date or parsed_date.date() != target_date:
+        return None
+    teams = _teams_from_anchor(match_anchor, match_text)
+    if not teams:
+        teams = _teams_from_detail_page(match_anchor.get("href"))
+    if not teams:
+        return None
+
+    date_index = next((index for index, cell in enumerate(cells) if DATE_RE.search(cell)), -1)
+    rest = cells[date_index + 1 :] if date_index >= 0 else []
+    probabilities = _probabilities_from_text(rest[0] if rest else "")
+    prediction, predicted_score = _prediction_and_score(rest[1] if len(rest) > 1 else "")
+    correct_score = next((match.group(0).replace(" ", "") for cell in rest[2:] for match in [SCORE_RE.search(cell)] if match), None)
+    expected_goals = next((_decimal(cell) for cell in rest[2:] if _decimal(cell) is not None and "." in cell), None)
+    return ForebetSourcePrediction(
+        home_team=teams[0],
+        away_team=teams[1],
+        match_date=parsed_date,
+        prediction=prediction,
+        predicted_score=predicted_score or correct_score,
+        expected_goals=expected_goals,
+        home_probability=probabilities[0] if len(probabilities) > 0 else None,
+        draw_probability=probabilities[1] if len(probabilities) > 1 else None,
+        away_probability=probabilities[2] if len(probabilities) > 2 else None,
+    )
 
 
 def _prediction_from_cells(cells: list[str], target_date: date) -> ForebetSourcePrediction | None:
@@ -208,6 +250,67 @@ def _prediction_from_cells(cells: list[str], target_date: date) -> ForebetSource
         draw_probability=probabilities[1] if len(probabilities) > 1 else None,
         away_probability=probabilities[2] if len(probabilities) > 2 else None,
     )
+
+
+def _teams_from_anchor(anchor, match_text: str) -> tuple[str, str] | None:
+    for attr_name in ("title", "aria-label"):
+        value = anchor.get(attr_name) or ""
+        teams = _split_vs_text(value)
+        if teams:
+            return teams
+    return _split_vs_text(match_text)
+
+
+def _teams_from_detail_page(href: str | None) -> tuple[str, str] | None:
+    if not href:
+        return None
+    url = urljoin(FOREBET_PREDICTIONS_URL, href)
+    try:
+        response = requests.get(url, timeout=5, headers=REQUEST_HEADERS)
+    except requests.RequestException:
+        return None
+    if response.status_code >= 400 or _is_cloudflare_challenge(response.text):
+        return None
+    soup = BeautifulSoup(response.text, "html.parser")
+    candidates = []
+    if soup.title and soup.title.string:
+        candidates.append(soup.title.string)
+    candidates.extend(element.get_text(" ", strip=True) for element in soup.select("h1,h2"))
+    for text in candidates:
+        teams = _split_vs_text(text)
+        if teams:
+            return teams
+    return None
+
+
+def _split_vs_text(value: str) -> tuple[str, str] | None:
+    cleaned = re.sub(r"\s+", " ", value.replace("#", " ")).strip()
+    match = re.search(r"(.+?)\s+(?:VS|vs|v)\s+(.+?)(?:\s+Prediction|\s+Stats|\s+H2H|$)", cleaned)
+    if not match:
+        return None
+    home = match.group(1).strip(" -:")
+    away = match.group(2).strip(" -:")
+    if not home or not away:
+        return None
+    return home, away
+
+
+def _probabilities_from_text(value: str) -> list[Decimal]:
+    values = []
+    for item in value.split():
+        parsed = _decimal(item)
+        if parsed is not None:
+            values.append(parsed)
+    return values[:3]
+
+
+def _prediction_and_score(value: str) -> tuple[str | None, str | None]:
+    parts = value.split()
+    prediction = next((part for part in parts if part in {"1", "X", "2"}), None)
+    score = next((match.group(0).replace(" ", "") for match in [SCORE_RE.search(value)] if match), None)
+    if not score:
+        score = next((part for part in parts if re.fullmatch(r"\d+\s*-\s*\d+", part)), None)
+    return prediction, score
 
 
 def _parse_forebet_datetime(value: str) -> datetime | None:
