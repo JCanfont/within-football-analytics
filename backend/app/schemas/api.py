@@ -379,6 +379,31 @@ class ForebetDateLoadResult(BaseModel):
     matches: list[ForebetRangeItem]
 
 
+class LiveProviderStatus(BaseModel):
+    provider: str
+    status: str
+    message: str
+    configured: bool
+
+
+class LiveMatchSnapshot(BaseModel):
+    match_id: int
+    provider: str
+    status: str
+    message: str
+    minute: int | None = None
+    home_score: int | None = None
+    away_score: int | None = None
+    home_shots_on_target: int | None = None
+    away_shots_on_target: int | None = None
+    home_shots: int | None = None
+    away_shots: int | None = None
+    home_possession: int | None = None
+    away_possession: int | None = None
+    source_url: str | None = None
+    captured_at: datetime
+
+
 class PlayerStadiumAnalytics(BaseModel):
     player_id: int
     player: str

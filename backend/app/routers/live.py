@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.schemas.api import LiveMatchSnapshot, LiveProviderStatus
 from app.schemas.config import LiveTrackingSettings
 from app.services.forebet_importer import import_forebet_jornada
 from app.services.live_tracking_service import (
@@ -13,6 +14,7 @@ from app.services.live_tracking_service import (
     set_match_tracking,
     update_live_tracking_settings,
 )
+from app.services.sofascore_live_provider import fetch_match_snapshot, provider_status
 
 
 router = APIRouter(prefix="/api/live", tags=["live"])
@@ -58,3 +60,16 @@ def tick_forebet_results(target_date: date | None = None, db: Session = Depends(
         "imported": outcome.imported,
         "message": outcome.message,
     }
+
+
+@router.get("/provider-status", response_model=LiveProviderStatus)
+def get_live_provider_status() -> LiveProviderStatus:
+    return provider_status()
+
+
+@router.get("/sofascore/matches/{match_id}/snapshot", response_model=LiveMatchSnapshot)
+def get_sofascore_match_snapshot(match_id: int, db: Session = Depends(get_db)) -> LiveMatchSnapshot:
+    snapshot = fetch_match_snapshot(db, match_id)
+    if not snapshot:
+        raise HTTPException(status_code=404, detail="Match not found")
+    return snapshot

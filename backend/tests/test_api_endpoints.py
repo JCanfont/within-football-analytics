@@ -193,8 +193,10 @@ def test_live_tracking_can_follow_all_or_selected_match() -> None:
     match_id = client.get("/api/matches").json()[0]["id"]
 
     initial = client.get("/api/live/tracking")
+    provider = client.get("/api/live/provider-status")
     global_update = client.put("/api/live/tracking/global", json={"enabled": True})
     match_update = client.put(f"/api/live/tracking/matches/{match_id}", json={"enabled": True})
+    snapshot = client.get(f"/api/live/sofascore/matches/{match_id}/snapshot")
     tuned = client.put(
         "/api/live/tracking",
         json={
@@ -207,6 +209,10 @@ def test_live_tracking_can_follow_all_or_selected_match() -> None:
 
     assert initial.status_code == 200
     assert initial.json()["follow_all_by_default"] is False
+    assert provider.status_code == 200
+    assert provider.json()["provider"] == "sofascore"
+    assert snapshot.status_code == 200
+    assert snapshot.json()["status"] == "provider_not_configured"
     assert global_update.json()["follow_all_by_default"] is True
     assert match_update.json()["tracked_match_ids"] == [match_id]
     assert tuned.json() == {

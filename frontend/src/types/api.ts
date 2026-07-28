@@ -346,6 +346,31 @@ export type ForebetDateLoadResult = {
   matches: ForebetRangeItem[];
 };
 
+export type LiveProviderStatus = {
+  provider: string;
+  status: string;
+  message: string;
+  configured: boolean;
+};
+
+export type LiveMatchSnapshot = {
+  match_id: number;
+  provider: string;
+  status: string;
+  message: string;
+  minute?: number | null;
+  home_score?: number | null;
+  away_score?: number | null;
+  home_shots_on_target?: number | null;
+  away_shots_on_target?: number | null;
+  home_shots?: number | null;
+  away_shots?: number | null;
+  home_possession?: number | null;
+  away_possession?: number | null;
+  source_url?: string | null;
+  captured_at: string;
+};
+
 export type DashboardData = {
   matches: MatchListItem[];
   competitions: Competition[];

@@ -10,6 +10,8 @@ import type {
   GoalTimingContext,
   GoalMoment,
   ImportResult,
+  LiveMatchSnapshot,
+  LiveProviderStatus,
   LiveTrackingSettings,
   MatchAnalytics,
   MatchFeatureSnapshot,
@@ -211,6 +213,16 @@ export async function uploadImportCsv(endpoint: string, file: File): Promise<Imp
 
 export async function fetchLiveTrackingSettings(): Promise<LiveTrackingSettings> {
   const response = await api.get<LiveTrackingSettings>("/api/live/tracking");
+  return response.data;
+}
+
+export async function fetchLiveProviderStatus(): Promise<LiveProviderStatus> {
+  const response = await api.get<LiveProviderStatus>("/api/live/provider-status");
+  return response.data;
+}
+
+export async function fetchLiveMatchSnapshot(matchId: number): Promise<LiveMatchSnapshot> {
+  const response = await api.get<LiveMatchSnapshot>(`/api/live/sofascore/matches/${matchId}/snapshot`);
   return response.data;
 }
 

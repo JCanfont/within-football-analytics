@@ -1,7 +1,7 @@
 import { Activity, RefreshCw, Save } from "lucide-react";
-import { ChangeEvent, useMemo, useState } from "react";
-import { loadForebetDate } from "../services/api";
-import type { ForebetRangeItem } from "../types/api";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { fetchLiveMatchSnapshot, fetchLiveProviderStatus, loadForebetDate } from "../services/api";
+import type { ForebetRangeItem, LiveMatchSnapshot, LiveProviderStatus } from "../types/api";
 
 const FOREBET_WATCH_KEY = "within_forebet_watch";
 const LIVE_PARAMS_KEY = "within_live_match_parameters";
@@ -28,11 +28,26 @@ export function LiveMatchesPage() {
   const [targetDate, setTargetDate] = useState(todayInputValue());
   const [matches, setMatches] = useState<ForebetRangeItem[]>([]);
   const [parameters, setParameters] = useState<Record<number, LiveMatchParameters>>(readLiveParameters);
+  const [snapshots, setSnapshots] = useState<Record<number, LiveMatchSnapshot>>({});
+  const [providerStatus, setProviderStatus] = useState<LiveProviderStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(() => initialLiveMessage());
 
   const watchedIds = useMemo(() => readWatchedForebetMatchIds(), []);
   const selectedMatches = matches.filter((match) => watchedIds.includes(match.match_id));
+
+  useEffect(() => {
+    fetchLiveProviderStatus()
+      .then(setProviderStatus)
+      .catch(() =>
+        setProviderStatus({
+          provider: "sofascore",
+          status: "backend_unavailable",
+          configured: false,
+          message: "No se pudo consultar el estado del proveedor live.",
+        }),
+      );
+  }, []);
 
   function saveParameters(nextParameters: Record<number, LiveMatchParameters>) {
     setParameters(nextParameters);
@@ -61,11 +76,31 @@ export function LiveMatchesPage() {
       .then((result) => {
         setMatches(result.matches);
         setMessage(`${result.matches.length} partidos Forebet revisados; ${readWatchedForebetMatchIds().length} seleccionados para directo.`);
+        refreshSnapshots(result.matches.filter((match) => readWatchedForebetMatchIds().includes(match.match_id)));
       })
       .catch(() => {
         setMessage("No se pudieron cargar los partidos de Forebet.");
       })
       .finally(() => setIsLoading(false));
+  }
+
+  function refreshSnapshots(items: ForebetRangeItem[] = selectedMatches) {
+    for (const match of items) {
+      fetchLiveMatchSnapshot(match.match_id)
+        .then((snapshot) => setSnapshots((current) => ({ ...current, [match.match_id]: snapshot })))
+        .catch(() =>
+          setSnapshots((current) => ({
+            ...current,
+            [match.match_id]: {
+              match_id: match.match_id,
+              provider: "sofascore",
+              status: "request_failed",
+              message: "No se pudo consultar el snapshot live.",
+              captured_at: new Date().toISOString(),
+            },
+          })),
+        );
+    }
   }
 
   return (
@@ -92,6 +127,9 @@ export function LiveMatchesPage() {
           <div>
             <h2>Partidos seleccionados en Forebet</h2>
             <p>{message}</p>
+            <p className={providerStatus?.configured ? "live-provider-status ready" : "live-provider-status pending"}>
+              Sofascore: {providerStatus?.message ?? "Comprobando proveedor live..."}
+            </p>
           </div>
           <Activity size={20} aria-hidden="true" />
         </div>
@@ -102,7 +140,9 @@ export function LiveMatchesPage() {
                 key={match.match_id}
                 match={match}
                 onChange={updateMatchParameter}
+                onRefreshSnapshot={() => refreshSnapshots([match])}
                 parameters={parameters[match.match_id] ?? DEFAULT_PARAMETERS}
+                snapshot={snapshots[match.match_id]}
               />
             ))}
           </div>
@@ -119,11 +159,15 @@ export function LiveMatchesPage() {
 function LiveMatchCard({
   match,
   onChange,
+  onRefreshSnapshot,
   parameters,
+  snapshot,
 }: {
   match: ForebetRangeItem;
   onChange: (matchId: number, field: keyof LiveMatchParameters, value: string) => void;
+  onRefreshSnapshot: () => void;
   parameters: LiveMatchParameters;
+  snapshot?: LiveMatchSnapshot;
 }) {
   const homeSignal = buildPressureSignal(parameters.homeShotsOnTarget, parameters.homeExpectedByMinute, parameters.competitionExpectedByMinute);
   const awaySignal = buildPressureSignal(parameters.awayShotsOnTarget, parameters.awayExpectedByMinute, parameters.competitionExpectedByMinute);
@@ -141,6 +185,27 @@ function LiveMatchCard({
           <span>{formatTime(match.match_date)}</span>
           <strong>{formatScore(match)}</strong>
         </div>
+      </div>
+
+      <div className="live-provider-card">
+        <div>
+          <span>Snapshot Sofascore</span>
+          <strong>{formatSnapshotScore(snapshot)}</strong>
+          <small>{snapshot?.minute != null ? `Minuto ${snapshot.minute}` : snapshot?.status ?? "Pendiente"}</small>
+        </div>
+        <div>
+          <span>Tiros a puerta</span>
+          <strong>{formatPair(snapshot?.home_shots_on_target, snapshot?.away_shots_on_target)}</strong>
+          <small>{snapshot?.message ?? "Pulsa para consultar el proveedor live."}</small>
+        </div>
+        <div>
+          <span>Posesion</span>
+          <strong>{formatPair(snapshot?.home_possession, snapshot?.away_possession, "%")}</strong>
+          <small>{snapshot?.captured_at ? `Capturado ${formatTime(snapshot.captured_at)}` : "Sin captura todavia"}</small>
+        </div>
+        <button className="row-action" type="button" onClick={onRefreshSnapshot}>
+          Actualizar Sofascore
+        </button>
       </div>
 
       <div className="live-parameter-grid">
@@ -279,6 +344,23 @@ function formatScore(match: ForebetRangeItem) {
     return match.status;
   }
   return `${match.home_score}-${match.away_score}`;
+}
+
+function formatSnapshotScore(snapshot?: LiveMatchSnapshot) {
+  if (!snapshot) {
+    return "Sin captura";
+  }
+  if (snapshot.home_score == null || snapshot.away_score == null) {
+    return snapshot.status;
+  }
+  return `${snapshot.home_score}-${snapshot.away_score}`;
+}
+
+function formatPair(home?: number | null, away?: number | null, suffix = "") {
+  if (home == null || away == null) {
+    return "n/d";
+  }
+  return `${home}${suffix} - ${away}${suffix}`;
 }
 
 function formatTime(value: string) {

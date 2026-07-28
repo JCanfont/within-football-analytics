@@ -1256,6 +1256,52 @@ td {
   font-size: 17px;
 }
 
+.live-provider-status {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.live-provider-status.ready {
+  color: #1f7a4d;
+}
+
+.live-provider-status.pending {
+  color: #946200;
+}
+
+.live-provider-card {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: 10px;
+  align-items: stretch;
+  padding: 10px;
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+  background: #f9fbfc;
+}
+
+.live-provider-card > div {
+  display: grid;
+  gap: 4px;
+}
+
+.live-provider-card span,
+.live-provider-card small {
+  color: #617083;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.live-provider-card strong {
+  color: #18212f;
+  font-size: 16px;
+}
+
+.live-provider-card .row-action {
+  align-self: center;
+}
+
 .live-parameter-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2932,6 +2978,7 @@ button.analysis-card:disabled {
     .contra-summary-grid,
     .live-parameter-grid,
     .live-signal-grid,
+    .live-provider-card,
     .under-breakdown-grid,
     .control-grid,
     .voice-analysis-tables,

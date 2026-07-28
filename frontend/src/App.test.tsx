@@ -431,6 +431,19 @@ describe("App", () => {
       refresh_seconds: 60,
       alert_level: "normal",
     });
+    mockedApi.fetchLiveProviderStatus.mockResolvedValue({
+      provider: "sofascore",
+      status: "provider_not_configured",
+      configured: false,
+      message: "Falta configurar SOFASCORE_LIVE_URL_TEMPLATE con un feed autorizado.",
+    });
+    mockedApi.fetchLiveMatchSnapshot.mockResolvedValue({
+      match_id: 50,
+      provider: "sofascore",
+      status: "provider_not_configured",
+      message: "Falta configurar el feed autorizado de Sofascore.",
+      captured_at: "2026-07-28T19:15:00+00:00",
+    });
     mockedApi.setGlobalLiveTracking.mockResolvedValue({
       follow_all_by_default: true,
       tracked_match_ids: [],
@@ -595,13 +608,18 @@ describe("App", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Partidos en directo", level: 1 })).toBeInTheDocument();
     });
+    expect(screen.getByText(/Sofascore:/)).toBeInTheDocument();
     expect(screen.getAllByText(/1 partidos seleccionados/).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: "Actualizar" }));
     await waitFor(() => {
       expect(mockedApi.loadForebetDate).toHaveBeenCalledWith("2026-07-28", false);
     });
+    await waitFor(() => {
+      expect(mockedApi.fetchLiveMatchSnapshot).toHaveBeenCalledWith(50);
+    });
     expect(screen.getByText("Getafe vs Celta")).toBeInTheDocument();
     expect(screen.getByText("0-1")).toBeInTheDocument();
+    expect(screen.getByText("Snapshot Sofascore")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Getafe tiros a puerta"), { target: { value: "1" } });
     expect(screen.getAllByText("Dificultad alta").length).toBeGreaterThan(0);
   }, 30000);
