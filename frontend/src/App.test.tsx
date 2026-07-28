@@ -442,6 +442,8 @@ describe("App", () => {
           home_team: "Getafe",
           away_team: "Celta",
           status: "scheduled",
+          home_score: 0,
+          away_score: 1,
           forebet_prediction: "2",
           expected_goals: "2.90",
           predicted_score: "1-2",
@@ -591,6 +593,8 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "Avisar inicio" }));
     expect(screen.getByRole("button", { name: "Aviso activo" })).toBeInTheDocument();
     expect(screen.getByText("1 partidos con aviso")).toBeInTheDocument();
+    expect(screen.getByText("Aun posible")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Pronostico vivo" }));
 
     mockedApi.loadForebetDate.mockClear();
     fireEvent.click(screen.getByRole("button", { name: "Actualizar ahora" }));

@@ -282,6 +282,8 @@ class ForebetRangeItem(BaseModel):
     home_team: str
     away_team: str
     status: str
+    home_score: int | None = None
+    away_score: int | None = None
     forebet_prediction: str | None = None
     expected_goals: Decimal | float | None = None
     predicted_score: str | None = None

@@ -1334,6 +1334,35 @@ td {
   opacity: 0.62;
 }
 
+.forecast-impossible-row td {
+  background: #fff2f0;
+}
+
+.forecast-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.forecast-status.possible {
+  background: #e8f4ef;
+  color: #245c60;
+}
+
+.forecast-status.impossible {
+  background: #f9d8d2;
+  color: #8a3025;
+}
+
+.forecast-status.pending {
+  background: #edf2f6;
+  color: #536174;
+}
+
 .forebet-empty-date {
   display: grid;
   gap: 6px;

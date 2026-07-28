@@ -256,6 +256,8 @@ export type ForebetRangeItem = {
   home_team: string;
   away_team: string;
   status: string;
+  home_score?: number | null;
+  away_score?: number | null;
   forebet_prediction?: string | null;
   expected_goals?: string | number | null;
   predicted_score?: string | null;
