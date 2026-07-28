@@ -159,6 +159,7 @@ function ForebetLoadSummary({ result }: { result: ForebetDateLoadResult }) {
 function formatExternalStatus(value: string) {
   const labels: Record<string, string> = {
     ok: "conectado",
+    reader_fallback: "lectura externa",
     blocked: "bloqueado por proteccion",
     request_failed: "sin conexion",
     http_error: "error HTTP",

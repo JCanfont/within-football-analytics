@@ -17,7 +17,16 @@ from app.utils.normalization import normalize_name
 
 
 FOREBET_PREDICTIONS_URL = "https://www.forebet.com/en/football-predictions"
+FOREBET_READER_URL = "https://r.jina.ai/http://r.jina.ai/http://https://www.forebet.com/en/football-predictions"
 DATE_RE = re.compile(r"(?P<day>\d{2})/(?P<month>\d{2})/(?P<year>\d{4})\s+(?P<time>\d{1,2}:\d{2})")
+READER_DATE_RE = re.compile(
+    r"(?P<month>\d{2})/(?P<day>\d{2})/(?P<year>\d{4})\s+(?P<hour>\d{1,2}):(?P<minute>\d{2})\s+(?P<ampm>AM|PM)"
+)
+READER_STATS_RE = re.compile(
+    r"^(?P<home_probability>\d{2})(?P<draw_probability>\d{2})(?P<away_probability>\d{2})"
+    r"(?P<prediction>[12X])(?P<home_score>\d+)\s*-\s*(?P<away_score>\d+)"
+    r"(?P<expected_goals>\d+\.\d{2})"
+)
 SCORE_RE = re.compile(r"\b(?P<home>\d+)\s*-\s*(?P<away>\d+)\b")
 REQUEST_HEADERS = {
     "User-Agent": (
@@ -63,13 +72,15 @@ def import_forebet_jornada(db: Session, target_date: date) -> ForebetImportOutco
             headers=REQUEST_HEADERS,
         )
     except requests.RequestException as exc:
-        return ForebetImportOutcome(
-            status="request_failed",
-            message=f"No se pudo conectar con Forebet: {exc}",
-            source_url=source_url,
-        )
+        predictions = _fetch_forebet_reader_predictions(target_date)
+        if predictions:
+            return _store_forebet_predictions(db, target_date, source_url, predictions, "reader_fallback")
+        return ForebetImportOutcome(status="request_failed", message=f"No se pudo conectar con Forebet: {exc}", source_url=source_url)
 
     if _is_cloudflare_challenge(response.text):
+        predictions = _fetch_forebet_reader_predictions(target_date)
+        if predictions:
+            return _store_forebet_predictions(db, target_date, source_url, predictions, "reader_fallback")
         return ForebetImportOutcome(
             status="blocked",
             message=(
@@ -80,13 +91,14 @@ def import_forebet_jornada(db: Session, target_date: date) -> ForebetImportOutco
         )
 
     if response.status_code >= 400:
-        return ForebetImportOutcome(
-            status="http_error",
-            message=f"Forebet respondio con HTTP {response.status_code}.",
-            source_url=source_url,
-        )
+        predictions = _fetch_forebet_reader_predictions(target_date)
+        if predictions:
+            return _store_forebet_predictions(db, target_date, source_url, predictions, "reader_fallback")
+        return ForebetImportOutcome(status="http_error", message=f"Forebet respondio con HTTP {response.status_code}.", source_url=source_url)
 
     predictions = _parse_forebet_predictions(response.text, target_date)
+    if not predictions:
+        predictions = _fetch_forebet_reader_predictions(target_date)
     if not predictions:
         return ForebetImportOutcome(
             status="no_forebet_matches",
@@ -94,6 +106,16 @@ def import_forebet_jornada(db: Session, target_date: date) -> ForebetImportOutco
             source_url=source_url,
         )
 
+    return _store_forebet_predictions(db, target_date, source_url, predictions, "ok")
+
+
+def _store_forebet_predictions(
+    db: Session,
+    target_date: date,
+    source_url: str,
+    predictions: list[ForebetSourcePrediction],
+    fetch_status: str,
+) -> ForebetImportOutcome:
     local_matches = _local_matches_for_date(db, target_date)
     imported = 0
     matched = 0
@@ -148,7 +170,7 @@ def import_forebet_jornada(db: Session, target_date: date) -> ForebetImportOutco
 
     unmatched = len(predictions) - matched - created_matches
     return ForebetImportOutcome(
-        status="ok",
+        status=fetch_status,
         message=(
             f"Forebet devolvio {len(predictions)} partidos. "
             f"Se cruzaron {matched} con partidos cargados, se crearon {created_matches} partidos nuevos "
@@ -168,6 +190,16 @@ def _forebet_url(target_date: date) -> str:
     return f"{FOREBET_PREDICTIONS_URL}?lang=en"
 
 
+def _fetch_forebet_reader_predictions(target_date: date) -> list[ForebetSourcePrediction]:
+    try:
+        response = requests.get(FOREBET_READER_URL, timeout=15, headers=REQUEST_HEADERS)
+    except requests.RequestException:
+        return []
+    if response.status_code >= 400:
+        return []
+    return _parse_forebet_reader_predictions(response.text, target_date)
+
+
 def _is_cloudflare_challenge(html: str) -> bool:
     lowered = html.lower()
     return "just a moment" in lowered and ("cloudflare" in lowered or "cf_chl" in lowered)
@@ -180,6 +212,34 @@ def _parse_forebet_predictions(html: str, target_date: date) -> list[ForebetSour
         item = _prediction_from_row(row, target_date)
         if item:
             predictions.append(item)
+    return predictions
+
+
+def _parse_forebet_reader_predictions(markdown: str, target_date: date) -> list[ForebetSourcePrediction]:
+    lines = [line.strip() for line in markdown.splitlines() if line.strip()]
+    predictions: list[ForebetSourcePrediction] = []
+    for index, line in enumerate(lines):
+        parsed_date = _parse_forebet_reader_datetime(line)
+        if not parsed_date or parsed_date.date() != target_date:
+            continue
+        if index < 2 or index + 1 >= len(lines):
+            continue
+        stats_match = READER_STATS_RE.search(lines[index + 1].replace(" ", ""))
+        if not stats_match:
+            continue
+        predictions.append(
+            ForebetSourcePrediction(
+                home_team=lines[index - 2],
+                away_team=lines[index - 1],
+                match_date=parsed_date,
+                prediction=stats_match.group("prediction"),
+                predicted_score=f"{stats_match.group('home_score')}-{stats_match.group('away_score')}",
+                expected_goals=Decimal(stats_match.group("expected_goals")),
+                home_probability=Decimal(stats_match.group("home_probability")),
+                draw_probability=Decimal(stats_match.group("draw_probability")),
+                away_probability=Decimal(stats_match.group("away_probability")),
+            )
+        )
     return predictions
 
 
@@ -323,6 +383,25 @@ def _parse_forebet_datetime(value: str) -> datetime | None:
         int(match.group("day")),
         int(match.group("time").split(":")[0]),
         int(match.group("time").split(":")[1]),
+        tzinfo=UTC,
+    )
+
+
+def _parse_forebet_reader_datetime(value: str) -> datetime | None:
+    match = READER_DATE_RE.search(value)
+    if not match:
+        return None
+    hour = int(match.group("hour"))
+    if match.group("ampm") == "PM" and hour != 12:
+        hour += 12
+    if match.group("ampm") == "AM" and hour == 12:
+        hour = 0
+    return datetime(
+        int(match.group("year")),
+        int(match.group("month")),
+        int(match.group("day")),
+        hour,
+        int(match.group("minute")),
         tzinfo=UTC,
     )
 

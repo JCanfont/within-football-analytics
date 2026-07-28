@@ -129,7 +129,7 @@ def load_forebet_date(target_date: date, db: Session = Depends(get_db)) -> Foreb
             "y se ha calculado el rango de resultado para toda la jornada cargada. "
             f"Forebet: {forebet_outcome.message}"
         )
-        status = "ok" if forebet_outcome.status in {"ok", "blocked", "request_failed", "no_forebet_matches"} else forebet_outcome.status
+        status = "ok" if forebet_outcome.status in {"ok", "reader_fallback", "blocked", "request_failed", "no_forebet_matches"} else forebet_outcome.status
     else:
         message = (
             f"No hay partidos cargados para la fecha {target_date.isoformat()}. "
