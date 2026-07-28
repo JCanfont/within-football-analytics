@@ -228,9 +228,7 @@ def _parse_forebet_reader_predictions(markdown: str, target_date: date) -> list[
             continue
         match_label, href = _reader_match_reference(raw_lines[index])
         if match_label:
-            teams = _teams_from_reader_detail_page(href) if href else None
-            if not teams:
-                teams = _split_reader_compact_teams(match_label)
+            teams = _split_reader_compact_teams(match_label)
             stats = _reader_stats_from_lines(lines, index + 1)
         else:
             if index < 2:
@@ -339,7 +337,27 @@ def _split_reader_compact_teams(label: str) -> tuple[str, str] | None:
     teams = _split_vs_text(label)
     if teams:
         return teams
-    return None
+    words = label.split()
+    if len(words) < 2:
+        return None
+    split_index = _reader_team_split_index(words)
+    home = " ".join(words[:split_index]).strip()
+    away = " ".join(words[split_index:]).strip()
+    if not home or not away:
+        return None
+    return home, away
+
+
+def _reader_team_split_index(words: list[str]) -> int:
+    if len(words) == 2:
+        return 1
+    if len(words) == 3:
+        return 2 if len(words[0]) <= 4 or words[0].isupper() else 1
+    if len(words) == 4:
+        return 2
+    if len(words) == 5:
+        return 3 if words[0].upper() in {"AC", "AEK", "CA", "CS", "FC", "FK", "GKS", "HB", "IFK", "MSK", "NK", "RB", "SL"} else 3
+    return max(1, len(words) // 2)
 
 
 def _prediction_from_row(row, target_date: date) -> ForebetSourcePrediction | None:
