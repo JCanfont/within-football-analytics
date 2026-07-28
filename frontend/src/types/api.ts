@@ -120,11 +120,16 @@ export type StreakSummary = {
   maximum: number;
   total: number;
   percentage: number;
+  current_owner?: string | null;
+  maximum_owner?: string | null;
+  scope?: string | null;
 };
 
 export type QuestionMatchRow = {
   match_id: number;
   match_date: string;
+  home_team_id?: number | null;
+  away_team_id?: number | null;
   home_team: string;
   away_team: string;
   home_score: number;

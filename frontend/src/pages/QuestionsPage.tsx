@@ -132,12 +132,15 @@ function QuestionAnswer({ answer }: { answer: StatisticalQuestionAnswer }) {
 }
 
 function StreakCard({ streak, title }: { streak: StreakSummary; title: string }) {
+  const currentText = streak.current_owner ? `${streak.current} actual (${streak.current_owner})` : `${streak.current} actual`;
+  const maximumText = streak.maximum_owner ? `Maxima ${streak.maximum} (${streak.maximum_owner})` : `Maxima ${streak.maximum}`;
+
   return (
     <div className="question-streak-card">
       <span>{title}</span>
-      <strong>{streak.current} actual</strong>
+      <strong>{currentText}</strong>
       <small>
-        Maxima {streak.maximum} · Total {streak.total} · {streak.percentage}%
+        {maximumText} · Total {streak.total} · {streak.percentage}%
       </small>
     </div>
   );

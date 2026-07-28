@@ -12,6 +12,8 @@ from app.utils.normalization import normalize_name
 class MatchSignalRow:
     match_id: int
     match_date: str
+    home_team_id: int
+    away_team_id: int
     home_team: str
     away_team: str
     home_score: int
@@ -45,6 +47,9 @@ def answer_statistical_question(db: Session, question: str) -> dict:
             "over_25": _empty_streak(),
             "recent_matches": [],
         }
+
+    if team is None:
+        return _answer_global_team_streaks(question, rows)
 
     under_streak = _streak_summary(rows, "under_2_5")
     over_streak = _streak_summary(rows, "over_2_5")
@@ -138,6 +143,8 @@ def _finished_matches_for_question(db: Session, team_id: int | None) -> list[Mat
             MatchSignalRow(
                 match_id=match.id,
                 match_date=match.match_date.isoformat(),
+                home_team_id=match.home_team_id,
+                away_team_id=match.away_team_id,
                 home_team=home_name,
                 away_team=away_name,
                 home_score=int(match.home_score or 0),
@@ -147,6 +154,69 @@ def _finished_matches_for_question(db: Session, team_id: int | None) -> list[Mat
             )
         )
     return rows
+
+
+def _answer_global_team_streaks(question: str, rows: list[MatchSignalRow]) -> dict:
+    team_rows: dict[int, list[MatchSignalRow]] = {}
+    team_names: dict[int, str] = {}
+    for row in rows:
+        team_rows.setdefault(row.home_team_id, []).append(row)
+        team_rows.setdefault(row.away_team_id, []).append(row)
+        team_names[row.home_team_id] = row.home_team
+        team_names[row.away_team_id] = row.away_team
+
+    under_streak = _best_team_streak(team_rows, team_names, "under_2_5")
+    over_streak = _best_team_streak(team_rows, team_names, "over_2_5")
+    scope = "todos los partidos cargados, agrupados por equipo"
+    answer = (
+        "En todos los partidos cargados no mezclo partidos de equipos y ligas distintas en una sola racha. "
+        f"Buscando por equipo, la mayor racha under 2,5 es de {under_streak['maximum']} partidos"
+        f"{_owner_suffix(under_streak.get('maximum_owner'))}. La mayor racha over 2,5 es de "
+        f"{over_streak['maximum']} partidos{_owner_suffix(over_streak.get('maximum_owner'))}. "
+        f"La muestra usada es de {len(rows)} partidos terminados."
+    )
+    return {
+        "question": question,
+        "answer": answer,
+        "scope": scope,
+        "matched_team": None,
+        "sample_size": len(rows),
+        "under_25": under_streak,
+        "over_25": over_streak,
+        "recent_matches": [row.__dict__ for row in sorted(rows, key=lambda item: item.match_date, reverse=True)[:10]],
+    }
+
+
+def _best_team_streak(team_rows: dict[int, list[MatchSignalRow]], team_names: dict[int, str], signal: str) -> dict:
+    summaries = []
+    for team_id, rows in team_rows.items():
+        ordered_rows = sorted(rows, key=lambda row: (row.match_date, row.match_id))
+        summary = _streak_summary(ordered_rows, signal)
+        summary["team"] = team_names.get(team_id, "Equipo sin nombre")
+        summaries.append(summary)
+
+    if not summaries:
+        return _empty_streak()
+
+    best_maximum = max(summaries, key=lambda item: (item["maximum"], item["total"], item["team"]))
+    best_current = max(summaries, key=lambda item: (item["current"], item["total"], item["team"]))
+    appearances = sum(len(rows) for rows in team_rows.values())
+    total = sum(summary["total"] for summary in summaries)
+    percentage = round(total / appearances * 100, 1) if appearances else 0.0
+    return {
+        "signal": signal,
+        "current": best_current["current"],
+        "maximum": best_maximum["maximum"],
+        "total": total,
+        "percentage": percentage,
+        "current_owner": best_current["team"] if best_current["current"] > 0 else None,
+        "maximum_owner": best_maximum["team"] if best_maximum["maximum"] > 0 else None,
+        "scope": "equipos",
+    }
+
+
+def _owner_suffix(owner: str | None) -> str:
+    return f" ({owner})" if owner else ""
 
 
 def _streak_summary(rows: list[MatchSignalRow], signal: str) -> dict:

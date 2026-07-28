@@ -266,11 +266,16 @@ class StreakSummary(BaseModel):
     maximum: int
     total: int
     percentage: float
+    current_owner: str | None = None
+    maximum_owner: str | None = None
+    scope: str | None = None
 
 
 class QuestionMatchRow(BaseModel):
     match_id: int
     match_date: datetime
+    home_team_id: int | None = None
+    away_team_id: int | None = None
     home_team: str
     away_team: str
     home_score: int

@@ -147,6 +147,29 @@ def test_statistical_question_endpoint_answers_under_over_streaks() -> None:
     app.dependency_overrides.clear()
 
 
+def test_global_statistical_question_groups_streaks_by_team() -> None:
+    client = _client_with_seed_data()
+    results_csv = (
+        "competition,season,country,competition_type,matchday,match_date,home_team,away_team,stadium,city,home_score,away_score,status,is_friendly,source,external_id\n"
+        "LaLiga,2026/2027,Spain,domestic_league,2,2026-08-16T19:30:00+00:00,Getafe,Betis,Coliseum,Getafe,3,0,finished,false,csv,match-api-2\n"
+        "LaLiga,2026/2027,Spain,domestic_league,2,2026-08-17T19:30:00+00:00,Osasuna,Valencia,El Sadar,Pamplona,3,1,finished,false,csv,match-api-3\n"
+        "LaLiga,2026/2027,Spain,domestic_league,3,2026-08-18T19:30:00+00:00,Getafe,Valencia,Coliseum,Getafe,4,0,finished,false,csv,match-api-4\n"
+        "LaLiga,2026/2027,Spain,domestic_league,3,2026-08-19T19:30:00+00:00,Betis,Osasuna,Benito Villamarin,Sevilla,0,0,finished,false,csv,match-api-5\n"
+    )
+
+    client.post("/api/import/results-csv", files={"file": ("extra-results.csv", results_csv, "text/csv")})
+    response = client.post("/api/analytics/questions", json={"question": "Racha under y over 2,5 de todos los partidos"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["scope"] == "todos los partidos cargados, agrupados por equipo"
+    assert body["sample_size"] == 5
+    assert "no mezclo partidos" in body["answer"]
+    assert body["over_25"]["maximum"] == 2
+    assert body["over_25"]["maximum_owner"] in {"Getafe", "Valencia"}
+    app.dependency_overrides.clear()
+
+
 def test_team_favorites_can_be_saved_listed_and_deleted() -> None:
     client = _client_with_seed_data()
     team_id = next(team["id"] for team in client.get("/api/teams").json() if team["name"] == "Getafe")
