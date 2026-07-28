@@ -218,7 +218,7 @@ describe("voiceAssistant utilities", () => {
         status: "ok",
         closed_midtable_index: 81.84,
         reliability: "insufficient",
-        explanation: "La localia se interpreta asi. Analisis provisional.",
+        explanation: "La localia se interpreta asi. Diferencia Getafe -0.29 y Celta 0.29.",
         inputs: {},
         goal_parameter_profile: {
           competition_type: "domestic_league",
@@ -291,14 +291,16 @@ describe("voiceAssistant utilities", () => {
     expect(summary).not.toContain("El resultado con mayor diferencia de goles fue");
     expect(summary).toContain("Osasuna 4, Getafe 2");
     expect(summary).toContain("La localía se interpreta así");
-    expect(summary).toContain("81.84 sobre 100");
+    expect(summary).toContain("ochenta y uno coma ochenta y cuatro sobre 100");
     expect(summary).toContain("en los enfrentamientos directos");
     expect(summary).toContain("2980 goles en 1140 partidos");
     expect(summary).toContain("varianza de goles por partido 4");
     expect(summary).toContain("desviación típica 2");
-    expect(summary).toContain("en este cruce directo hay 1 partidos under 2.5 y 1 partidos over 2.5");
+    expect(summary).toContain("en este cruce directo hay 1 partidos under dos coma cinco y 1 partidos over dos coma cinco");
+    expect(summary).toContain("menos cero coma veintinueve");
+    expect(summary).toContain("cero coma veintinueve");
     expect(summary).not.toContain("perfil under_2_5");
-    expect(summary.indexOf("He encontrado")).toBeLessThan(summary.indexOf("81.84 sobre 100"));
+    expect(summary.indexOf("He encontrado")).toBeLessThan(summary.indexOf("ochenta y uno coma ochenta y cuatro sobre 100"));
   });
 
   it("warns at the beginning when there are fewer than three direct matches", () => {

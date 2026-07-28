@@ -608,5 +608,80 @@ function applySpanishProsody(text: string) {
     [/\bveintitres\b/gi, "veintitrés"],
     [/\bveintiseis\b/gi, "veintiséis"],
   ];
-  return replacements.reduce((current, [pattern, replacement]) => current.replace(pattern, replacement), text);
+  const accentedText = replacements.reduce((current, [pattern, replacement]) => current.replace(pattern, replacement), text);
+  return formatSpokenDecimals(accentedText);
+}
+
+function formatSpokenDecimals(text: string) {
+  return text.replace(/(^|[^\w])(-?\d+)\.(\d+)\b/g, (_match, leading: string, integerPart: string, decimalPart: string) => {
+    const prefix = integerPart.startsWith("-") ? "menos " : "";
+    const absoluteInteger = integerPart.replace("-", "");
+    return `${leading}${prefix}${formatSpokenNumber(Number(absoluteInteger))} coma ${formatSpokenDecimalPart(decimalPart)}`;
+  });
+}
+
+function formatSpokenDecimalPart(value: string) {
+  if (value.length > 1 && value.startsWith("0")) {
+    return value
+      .split("")
+      .map((digit) => formatSpokenNumber(Number(digit)))
+      .join(" ");
+  }
+  return formatSpokenNumber(Number(value));
+}
+
+function formatSpokenNumber(value: number): string {
+  const units: Record<number, string> = {
+    0: "cero",
+    1: "uno",
+    2: "dos",
+    3: "tres",
+    4: "cuatro",
+    5: "cinco",
+    6: "seis",
+    7: "siete",
+    8: "ocho",
+    9: "nueve",
+    10: "diez",
+    11: "once",
+    12: "doce",
+    13: "trece",
+    14: "catorce",
+    15: "quince",
+    16: "dieciséis",
+    17: "diecisiete",
+    18: "dieciocho",
+    19: "diecinueve",
+    20: "veinte",
+    21: "veintiuno",
+    22: "veintidós",
+    23: "veintitrés",
+    24: "veinticuatro",
+    25: "veinticinco",
+    26: "veintiséis",
+    27: "veintisiete",
+    28: "veintiocho",
+    29: "veintinueve",
+  };
+  if (units[value]) {
+    return units[value];
+  }
+  if (value < 100) {
+    const tens = Math.floor(value / 10);
+    const unit = value % 10;
+    const tensLabels: Record<number, string> = {
+      3: "treinta",
+      4: "cuarenta",
+      5: "cincuenta",
+      6: "sesenta",
+      7: "setenta",
+      8: "ochenta",
+      9: "noventa",
+    };
+    return unit === 0 ? tensLabels[tens] : `${tensLabels[tens]} y ${units[unit]}`;
+  }
+  if (value === 100) {
+    return "cien";
+  }
+  return value.toString();
 }
