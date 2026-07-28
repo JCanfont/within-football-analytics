@@ -70,6 +70,9 @@ def test_match_analytics_endpoint_explains_balance_index() -> None:
     assert body["inputs"]["injury_data_status"] == "missing"
     assert body["inputs"]["closed_midtable_index_without_injuries"] == body["closed_midtable_index"]
     assert "favorito" in body["inputs"]["favorite_context"]
+    assert body["inputs"]["score_range"]["is_predictable"] is False
+    assert body["inputs"]["score_range"]["missing_matches"] == 3
+    assert "Faltan 3 partidos para prediccion" in body["inputs"]["score_range"]["summary"]
     assert body["goal_parameter_profile"]["competition_type"] == "domestic_league"
     assert body["goal_parameter_profile"]["under_over_profile"] == "under_2_5"
     assert body["goal_parameter_profile"]["sample_size"] == 60

@@ -75,7 +75,7 @@ def build_match_analytics(db: Session, match_id: int) -> MatchAnalytics | None:
         home_standing,
         away_standing,
     )
-    score_range = _score_range_projection(match, score_home_standing, score_away_standing, score_range_reference_reason)
+    score_range = _score_range_projection(db, match, score_home_standing, score_away_standing, score_range_reference_reason)
 
     inputs = ClosedMidtableInputs(
         home_centrality_distance=centrality_distance(home_relative),
@@ -391,11 +391,35 @@ def _score_range_reference_standings(
     )
 
 
-def _score_range_projection(match: Match, home_standing: StandingsSnapshot, away_standing: StandingsSnapshot, reference_reason: str) -> dict:
-    home_stats = _team_goal_average_inputs(match.home_team.name, home_standing)
-    away_stats = _team_goal_average_inputs(match.away_team.name, away_standing)
-    home_expected = round((home_stats["scored_per_match"] + away_stats["conceded_per_match"]) / 2, 2)
-    away_expected = round((away_stats["scored_per_match"] + home_stats["conceded_per_match"]) / 2, 2)
+def _score_range_projection(db: Session, match: Match, home_standing: StandingsSnapshot, away_standing: StandingsSnapshot, reference_reason: str) -> dict:
+    home_stats = _team_recent_goal_average_inputs(db, match, match.home_team_id, match.home_team.name, home_standing)
+    away_stats = _team_recent_goal_average_inputs(db, match, match.away_team_id, match.away_team.name, away_standing)
+    minimum_sample = 3
+    available_sample = min(home_stats["played"], away_stats["played"])
+    missing_matches = max(minimum_sample - available_sample, 0)
+    if missing_matches > 0:
+        return {
+            "home_team": match.home_team.name,
+            "away_team": match.away_team.name,
+            "home": home_stats,
+            "away": away_stats,
+            "home_expected_goals": None,
+            "away_expected_goals": None,
+            "home_integer_range": None,
+            "away_integer_range": None,
+            "reference_reason": reference_reason,
+            "summary": f"Faltan {missing_matches} partidos para prediccion",
+            "possible_scores": [],
+            "is_predictable": False,
+            "missing_matches": missing_matches,
+            "explanation": (
+                f"No se calcula rango porque hacen falta al menos {minimum_sample} partidos previos por equipo. "
+                f"Ahora hay {home_stats['played']} para {match.home_team.name} y {away_stats['played']} para {match.away_team.name}; "
+                f"faltan {missing_matches} partidos para prediccion."
+            ),
+        }
+    home_expected = home_stats["scored_per_match"]
+    away_expected = away_stats["scored_per_match"]
     home_range = _integer_goal_range(home_expected)
     away_range = _integer_goal_range(away_expected)
     possible_scores = [
@@ -413,11 +437,14 @@ def _score_range_projection(match: Match, home_standing: StandingsSnapshot, away
         "home_integer_range": home_range,
         "away_integer_range": away_range,
         "reference_reason": reference_reason,
+        "is_predictable": True,
+        "sample_rule": "con 3 o 4 partidos se usa la muestra disponible; desde 5 jornadas se usan los ultimos 5 partidos",
         "summary": f"{match.home_team.name} {home_range['min']}-{home_range['max']} goles / {match.away_team.name} {away_range['min']}-{away_range['max']} goles",
         "possible_scores": possible_scores,
         "explanation": (
-            f"Para {match.home_team.name} se cruza su media de goles marcados con la media de goles recibidos de {match.away_team.name}. "
-            f"Para {match.away_team.name} se cruza su media de goles marcados con la media de goles recibidos de {match.home_team.name}. "
+            f"Para {match.home_team.name} se usa goles a favor dividido por {home_stats['sample_matches']} partidos recientes. "
+            f"Para {match.away_team.name} se usa goles a favor dividido por {away_stats['sample_matches']} partidos recientes. "
+            "Cuando hay cinco o mas partidos previos, la media se calcula sobre los ultimos 5. "
             "El promedio resultante se pasa a un rango entero con redondeo inferior y superior."
         ),
     }
@@ -432,6 +459,56 @@ def _team_goal_average_inputs(team_name: str, standing: StandingsSnapshot) -> di
         "goals_against": standing.goals_against,
         "scored_per_match": round(standing.goals_for / played, 2),
         "conceded_per_match": round(standing.goals_against / played, 2),
+    }
+
+
+def _team_recent_goal_average_inputs(db: Session, match: Match, team_id: int, team_name: str, fallback_standing: StandingsSnapshot) -> dict:
+    rows = list(
+        db.scalars(
+            select(Match)
+            .where(
+                Match.competition_id == match.competition_id,
+                Match.match_date < match.match_date,
+                Match.home_score.is_not(None),
+                Match.away_score.is_not(None),
+                (Match.home_team_id == team_id) | (Match.away_team_id == team_id),
+            )
+            .order_by(desc(Match.match_date))
+            .limit(5)
+        ).all()
+    )
+    goals_for = 0
+    goals_against = 0
+    for row in rows:
+        is_home = row.home_team_id == team_id
+        goals_for += row.home_score if is_home else row.away_score
+        goals_against += row.away_score if is_home else row.home_score
+    played = len(rows)
+    sample_matches = min(played, 5)
+    if played == 0 and fallback_standing.played > 0:
+        return {
+            "team": team_name,
+            "played": 0,
+            "sample_matches": 0,
+            "goals_for": 0,
+            "goals_against": 0,
+            "season_played": fallback_standing.played,
+            "season_goals_for": fallback_standing.goals_for,
+            "season_goals_against": fallback_standing.goals_against,
+            "scored_per_match": 0.0,
+            "conceded_per_match": 0.0,
+        }
+    return {
+        "team": team_name,
+        "played": played,
+        "sample_matches": sample_matches,
+        "goals_for": goals_for,
+        "goals_against": goals_against,
+        "season_played": fallback_standing.played,
+        "season_goals_for": fallback_standing.goals_for,
+        "season_goals_against": fallback_standing.goals_against,
+        "scored_per_match": round(goals_for / sample_matches, 2) if sample_matches else 0.0,
+        "conceded_per_match": round(goals_against / sample_matches, 2) if sample_matches else 0.0,
     }
 
 

@@ -24,6 +24,8 @@ export function ForebetPage() {
   const [hasCalculatedRanges, setHasCalculatedRanges] = useState(false);
   const [loadingMode, setLoadingMode] = useState<"matches" | "ranges">("matches");
   const [goalPredictionMode, setGoalPredictionMode] = useState<GoalPredictionMode>("full");
+  const isCalculatingRanges = isLoading && loadingMode === "ranges";
+  const showRangeColumns = hasCalculatedRanges || isCalculatingRanges;
 
   function loadDate() {
     if (!targetDate) {
@@ -49,6 +51,8 @@ export function ForebetPage() {
     setExpandedMatchId(null);
     if (!includeRanges) {
       setHasCalculatedRanges(false);
+    } else {
+      setHasCalculatedRanges(true);
     }
     loadForebetDate(selectedDate, includeRanges)
       .then((result) => {
@@ -144,7 +148,7 @@ export function ForebetPage() {
         {loadMessage ? <div className="forebet-load-message">{loadMessage}</div> : null}
         {forebetLoad ? <ForebetLoadSummary result={forebetLoad} /> : null}
         {isLoading ? <div className="detail-state">{loadingDetail(loadingMode)}</div> : null}
-        {!isLoading && !error && filteredItems.length > 0 ? (
+        {!error && filteredItems.length > 0 ? (
           <div className="table-wrap">
             <table>
               <thead>
@@ -154,9 +158,9 @@ export function ForebetPage() {
                   <th>Forebet</th>
                   <th>Predicción goles</th>
                   <th>Goles esperados</th>
-                  {hasCalculatedRanges ? <th>Rango</th> : null}
-                  {hasCalculatedRanges ? <th>Marcadores posibles</th> : null}
-                  {hasCalculatedRanges ? <th>Calculo</th> : null}
+                  {showRangeColumns ? <th>Rango</th> : null}
+                  {showRangeColumns ? <th>Marcadores posibles</th> : null}
+                  {showRangeColumns ? <th>Calculo</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -167,7 +171,8 @@ export function ForebetPage() {
                     key={item.match_id}
                     onToggle={() => setExpandedMatchId((current) => (current === item.match_id ? null : item.match_id))}
                     predictionMode={goalPredictionMode}
-                    showRanges={hasCalculatedRanges}
+                    showRanges={showRangeColumns}
+                    isCalculatingRanges={isCalculatingRanges}
                   />
                 ))}
               </tbody>
@@ -239,12 +244,14 @@ function formatDateLabel(value: string) {
 
 function ForebetRangeRow({
   isExpanded,
+  isCalculatingRanges,
   item,
   onToggle,
   predictionMode,
   showRanges,
 }: {
   isExpanded: boolean;
+  isCalculatingRanges: boolean;
   item: ForebetRangeItem;
   onToggle: () => void;
   predictionMode: GoalPredictionMode;
@@ -262,11 +269,11 @@ function ForebetRangeRow({
         <td>{item.forebet_prediction ?? "Sin captura"}</td>
         <td>{formatGoalPrediction(item, predictionMode)}</td>
         <td>{formatUnknown(item.expected_goals)}</td>
-        {showRanges ? <td>{formatRange(range)}</td> : null}
-        {showRanges ? <td>{formatPossibleScores(range)}</td> : null}
+        {showRanges ? <td>{isCalculatingRanges ? "Calculando..." : formatRange(range)}</td> : null}
+        {showRanges ? <td>{isCalculatingRanges ? "Calculando..." : formatPossibleScores(range)}</td> : null}
         {showRanges ? (
           <td>
-            <button className="row-action" type="button" onClick={onToggle} disabled={!range}>
+            <button className="row-action" type="button" onClick={onToggle} disabled={!range || isCalculatingRanges}>
               {isExpanded ? <ChevronDown size={15} aria-hidden="true" /> : <ChevronRight size={15} aria-hidden="true" />}
               Ver
             </button>
@@ -325,7 +332,7 @@ function RangeTeam({ expected, label, range, values }: { expected: unknown; labe
           <dd>{formatUnknown(values.goals_against)} / {formatUnknown(values.played)} = {formatUnknown(values.conceded_per_match)}</dd>
         </div>
         <div>
-          <dt>Media cruzada</dt>
+          <dt>Media de rango</dt>
           <dd>{formatUnknown(expected)}</dd>
         </div>
         <div>
@@ -385,7 +392,10 @@ function formatOverUnder(value: string) {
 }
 
 function formatPossibleScores(range?: Record<string, unknown> | null) {
-  return Array.isArray(range?.possible_scores) ? range.possible_scores.map(String).join(" | ") : "Sin rango";
+  if (!Array.isArray(range?.possible_scores)) {
+    return "Sin rango";
+  }
+  return range.possible_scores.length > 0 ? range.possible_scores.map(String).join(" | ") : "Sin prediccion";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
