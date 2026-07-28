@@ -1668,6 +1668,10 @@ td {
   text-align: right;
 }
 
+.team-profile-heading .row-action {
+  flex: 0 0 auto;
+}
+
 .team-profile-note {
   margin: 0;
   line-height: 1.4;

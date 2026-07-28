@@ -25,6 +25,7 @@ import type {
   StatisticalQuestionAnswer,
   StatisticalSettings,
   Team,
+  TeamSquad,
 } from "../types/api";
 
 const api = axios.create({
@@ -83,6 +84,16 @@ export async function fetchCompetitions(): Promise<Competition[]> {
 
 export async function fetchTeams(): Promise<Team[]> {
   const response = await api.get<Team[]>(`/api/teams?limit=${CATALOG_LIMIT}`);
+  return response.data;
+}
+
+export async function fetchTeamSquad(teamId: number): Promise<TeamSquad> {
+  const response = await api.get<TeamSquad>(`/api/teams/${teamId}/squad`);
+  return response.data;
+}
+
+export async function importTransfermarktSquad(teamId: number): Promise<TeamSquad> {
+  const response = await api.post<TeamSquad>(`/api/teams/${teamId}/squad/import-transfermarkt`);
   return response.data;
 }
 

@@ -31,6 +31,26 @@ class PlayerRead(BaseModel):
     primary_position: str | None = None
 
 
+class TeamSquadPlayerRead(BaseModel):
+    id: int
+    full_name: str
+    nationality: str | None = None
+    primary_position: str | None = None
+    shirt_number: int | None = None
+    date_of_birth: date | None = None
+    source: str | None = None
+
+
+class TeamSquadRead(BaseModel):
+    team_id: int
+    team: str
+    provider: str
+    status: str
+    message: str
+    imported: int = 0
+    players: list[TeamSquadPlayerRead]
+
+
 class StadiumRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

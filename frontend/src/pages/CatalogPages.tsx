@@ -1,8 +1,8 @@
-import { ArrowLeft, BarChart3, ChevronDown, ChevronRight, Search, Trophy, UsersRound } from "lucide-react";
+import { ArrowLeft, BarChart3, ChevronDown, ChevronRight, RefreshCw, Search, Trophy, UsersRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { fetchCompetitions, fetchMatches, fetchPlayers, fetchTeams } from "../services/api";
-import type { Competition, MatchListItem, Player, Team } from "../types/api";
+import { fetchCompetitions, fetchMatches, fetchTeamSquad, fetchTeams, importTransfermarktSquad } from "../services/api";
+import type { Competition, MatchListItem, Team, TeamSquad } from "../types/api";
 
 export function MatchesPage() {
   const [matches, setMatches] = useState<MatchListItem[]>([]);
@@ -124,17 +124,15 @@ export function CompetitionsPage() {
 export function TeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [matches, setMatches] = useState<MatchListItem[]>([]);
-  const [players, setPlayers] = useState<Player[]>([]);
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
 
   useEffect(() => {
-    Promise.all([fetchTeams(), fetchMatches(), fetchPlayers()])
-      .then(([teamsResult, matchesResult, playersResult]) => {
+    Promise.all([fetchTeams(), fetchMatches()])
+      .then(([teamsResult, matchesResult]) => {
         setTeams(teamsResult);
         setMatches(matchesResult);
-        setPlayers(playersResult);
       })
       .finally(() => setIsLoading(false));
   }, []);
@@ -146,7 +144,7 @@ export function TeamsPage() {
   const selectedTeam = teams.find((team) => team.id === selectedTeamId) ?? null;
 
   if (!isLoading && selectedTeam) {
-    return <TeamDetailScreen matches={matches} onBack={() => setSelectedTeamId(null)} players={players} team={selectedTeam} />;
+    return <TeamDetailScreen matches={matches} onBack={() => setSelectedTeamId(null)} team={selectedTeam} />;
   }
 
   return (
@@ -264,7 +262,47 @@ function TeamGrid({
   );
 }
 
-function TeamDetailScreen({ matches, onBack, players, team }: { matches: MatchListItem[]; onBack: () => void; players: Player[]; team: Team }) {
+function TeamDetailScreen({ matches, onBack, team }: { matches: MatchListItem[]; onBack: () => void; team: Team }) {
+  const [squad, setSquad] = useState<TeamSquad | null>(null);
+  const [isSquadLoading, setIsSquadLoading] = useState(true);
+  const [isSyncingSquad, setIsSyncingSquad] = useState(false);
+
+  useEffect(() => {
+    setIsSquadLoading(true);
+    fetchTeamSquad(team.id)
+      .then(setSquad)
+      .catch(() =>
+        setSquad({
+          team_id: team.id,
+          team: team.name,
+          provider: "transfermarkt",
+          status: "error",
+          message: "No se pudo cargar la plantilla del equipo.",
+          imported: 0,
+          players: [],
+        }),
+      )
+      .finally(() => setIsSquadLoading(false));
+  }, [team.id, team.name]);
+
+  function syncSquad() {
+    setIsSyncingSquad(true);
+    importTransfermarktSquad(team.id)
+      .then(setSquad)
+      .catch(() =>
+        setSquad((current) => ({
+          team_id: team.id,
+          team: team.name,
+          provider: "transfermarkt",
+          status: "request_failed",
+          message: "No se pudo sincronizar la plantilla desde el proveedor autorizado.",
+          imported: 0,
+          players: current?.players ?? [],
+        })),
+      )
+      .finally(() => setIsSyncingSquad(false));
+  }
+
   return (
     <section className="catalog-page team-detail-screen">
       <header className="page-header team-detail-header">
@@ -280,7 +318,14 @@ function TeamDetailScreen({ matches, onBack, players, team }: { matches: MatchLi
       </header>
 
       <section className="panel team-detail-panel">
-        <TeamProfile matches={matches} players={players} team={team} />
+        <TeamProfile
+          isSquadLoading={isSquadLoading}
+          isSyncingSquad={isSyncingSquad}
+          matches={matches}
+          onSyncSquad={syncSquad}
+          squad={squad}
+          team={team}
+        />
       </section>
     </section>
   );
@@ -339,14 +384,28 @@ function CompetitionProfile({ competition, matches }: { competition: Competition
   );
 }
 
-function TeamProfile({ matches, players, team }: { matches: MatchListItem[]; players: Player[]; team: Team }) {
+function TeamProfile({
+  isSquadLoading,
+  isSyncingSquad,
+  matches,
+  onSyncSquad,
+  squad,
+  team,
+}: {
+  isSquadLoading: boolean;
+  isSyncingSquad: boolean;
+  matches: MatchListItem[];
+  onSyncSquad: () => void;
+  squad: TeamSquad | null;
+  team: Team;
+}) {
   const teamMatches = matches
     .filter((match) => match.home_team === team.name || match.away_team === team.name)
     .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime());
   const standings = buildStandings(matches);
   const standing = standings.find((row) => row.team === team.name);
   const streaks = buildUnderOverStreaks(teamMatches);
-  const localPlayers = players.slice(0, 8);
+  const squadPlayers = squad?.players ?? [];
 
   return (
     <div className="team-profile">
@@ -360,22 +419,26 @@ function TeamProfile({ matches, players, team }: { matches: MatchListItem[]; pla
         <div className="team-profile-heading">
           <UsersRound size={16} aria-hidden="true" />
           <strong>Plantilla</strong>
-          <span>Transfermarkt pendiente de conexion real</span>
+          <span>{squad?.message ?? "Cargando plantilla..."}</span>
+          <button className="row-action" type="button" onClick={onSyncSquad} disabled={isSyncingSquad}>
+            <RefreshCw size={15} aria-hidden="true" />
+            {isSyncingSquad ? "Sincronizando" : "Sincronizar Transfermarkt"}
+          </button>
         </div>
-        {localPlayers.length ? (
-          <>
-            <p className="team-profile-note">Plantilla provisional con jugadores ya importados. La vinculacion equipo-jugador se completara con el conector de Transfermarkt.</p>
-            <div className="team-squad-list">
-              {localPlayers.map((player) => (
-                <span key={player.id}>
-                  {player.full_name}
-                  <small>{player.primary_position ?? "posicion n/d"}</small>
-                </span>
-              ))}
-            </div>
-          </>
+        {isSquadLoading ? (
+          <p className="team-profile-note">Cargando plantilla del equipo...</p>
+        ) : squadPlayers.length ? (
+          <div className="team-squad-list">
+            {squadPlayers.map((player) => (
+              <span key={player.id}>
+                {player.shirt_number ? `${player.shirt_number}. ` : ""}
+                {player.full_name}
+                <small>{player.primary_position ?? "posicion n/d"}{player.nationality ? ` - ${player.nationality}` : ""}</small>
+              </span>
+            ))}
+          </div>
         ) : (
-          <p className="team-profile-note">No hay jugadores importados para mostrar. La conexion real con Transfermarkt debe hacerse desde backend o proveedor autorizado.</p>
+          <p className="team-profile-note">No hay plantilla importada para este equipo. Configura un feed autorizado y pulsa Sincronizar Transfermarkt.</p>
         )}
       </div>
       <div className="team-profile-section">

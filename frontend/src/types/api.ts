@@ -19,6 +19,22 @@ export type Player = {
   primary_position?: string | null;
 };
 
+export type TeamSquadPlayer = Player & {
+  shirt_number?: number | null;
+  date_of_birth?: string | null;
+  source?: string | null;
+};
+
+export type TeamSquad = {
+  team_id: number;
+  team: string;
+  provider: string;
+  status: string;
+  message: string;
+  imported: number;
+  players: TeamSquadPlayer[];
+};
+
 export type PlayerStadiumAnalytics = {
   player_id: number;
   player: string;

@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     sql_echo: bool = Field(default=False, alias="SQL_ECHO")
     sofascore_live_url_template: str | None = Field(default=None, alias="SOFASCORE_LIVE_URL_TEMPLATE")
     sofascore_api_token: str | None = Field(default=None, alias="SOFASCORE_API_TOKEN")
+    transfermarkt_squad_url_template: str | None = Field(default=None, alias="TRANSFERMARKT_SQUAD_URL_TEMPLATE")
+    transfermarkt_api_token: str | None = Field(default=None, alias="TRANSFERMARKT_API_TOKEN")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

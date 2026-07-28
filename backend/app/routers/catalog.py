@@ -4,8 +4,9 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Alert, Competition, Player, Stadium, Team, UserFavorite
-from app.schemas.api import AlertRead, CompetitionRead, FavoriteCreate, FavoriteRead, PlayerRead, StadiumRead, TeamRead
+from app.schemas.api import AlertRead, CompetitionRead, FavoriteCreate, FavoriteRead, PlayerRead, StadiumRead, TeamRead, TeamSquadRead
 from app.services.alert_service import generate_match_alerts
+from app.services.transfermarkt_provider import get_team_squad, import_team_squad, provider_status as transfermarkt_provider_status
 
 
 router = APIRouter(prefix="/api", tags=["catalog"])
@@ -24,6 +25,27 @@ def list_teams(db: Session = Depends(get_db), limit: int = 200) -> list[Team]:
 @router.get("/players", response_model=list[PlayerRead])
 def list_players(db: Session = Depends(get_db), limit: int = 200) -> list[Player]:
     return list(db.scalars(select(Player).order_by(Player.full_name).limit(limit)).all())
+
+
+@router.get("/providers/transfermarkt/status")
+def get_transfermarkt_provider_status() -> dict:
+    return transfermarkt_provider_status()
+
+
+@router.get("/teams/{team_id}/squad", response_model=TeamSquadRead)
+def get_squad_for_team(team_id: int, db: Session = Depends(get_db)) -> TeamSquadRead:
+    squad = get_team_squad(db, team_id)
+    if not squad:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return squad
+
+
+@router.post("/teams/{team_id}/squad/import-transfermarkt", response_model=TeamSquadRead)
+def import_transfermarkt_squad_for_team(team_id: int, db: Session = Depends(get_db)) -> TeamSquadRead:
+    squad = import_team_squad(db, team_id)
+    if not squad:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return squad
 
 
 @router.get("/stadiums", response_model=list[StadiumRead])

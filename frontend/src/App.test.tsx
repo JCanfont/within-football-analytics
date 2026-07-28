@@ -143,6 +143,24 @@ describe("App", () => {
       { id: 1, name: "Getafe", country: "Spain" },
       { id: 2, name: "Osasuna", country: "Spain" },
     ]);
+    mockedApi.fetchTeamSquad.mockResolvedValue({
+      team_id: 1,
+      team: "Getafe",
+      provider: "transfermarkt",
+      status: "ok",
+      message: "Plantilla local cargada.",
+      imported: 0,
+      players: [{ id: 1, full_name: "Borja Mayoral", nationality: "Spain", primary_position: "forward", shirt_number: 9, source: "local" }],
+    });
+    mockedApi.importTransfermarktSquad.mockResolvedValue({
+      team_id: 1,
+      team: "Getafe",
+      provider: "transfermarkt",
+      status: "provider_not_configured",
+      message: "Falta configurar TRANSFERMARKT_SQUAD_URL_TEMPLATE con un feed/API autorizado.",
+      imported: 0,
+      players: [],
+    });
     mockedApi.fetchMatchInsight.mockResolvedValue({
       detail: {
         id: 1,
@@ -652,8 +670,11 @@ describe("App", () => {
     expect(screen.getByText("Racha under")).toBeInTheDocument();
     expect(screen.getByText("Racha over")).toBeInTheDocument();
     expect(screen.getByText("Plantilla")).toBeInTheDocument();
-    expect(screen.getByText(/Transfermarkt pendiente/)).toBeInTheDocument();
-    expect(screen.getByText("Borja Mayoral")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sincronizar Transfermarkt" })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockedApi.fetchTeamSquad).toHaveBeenCalledWith(1);
+    });
+    expect(screen.getByText(/Borja Mayoral/)).toBeInTheDocument();
   }, 30000);
 
   it("opens the contrarian picks workspace and records a pick", async () => {

@@ -188,6 +188,24 @@ def test_team_favorites_can_be_saved_listed_and_deleted() -> None:
     app.dependency_overrides.clear()
 
 
+def test_transfermarkt_squad_endpoint_reports_missing_provider() -> None:
+    client = _client_with_seed_data()
+    team_id = next(team["id"] for team in client.get("/api/teams").json() if team["name"] == "Getafe")
+
+    status = client.get("/api/providers/transfermarkt/status")
+    local_squad = client.get(f"/api/teams/{team_id}/squad")
+    imported = client.post(f"/api/teams/{team_id}/squad/import-transfermarkt")
+
+    assert status.status_code == 200
+    assert status.json()["provider"] == "transfermarkt"
+    assert status.json()["configured"] is False
+    assert local_squad.status_code == 200
+    assert local_squad.json()["team"] == "Getafe"
+    assert imported.status_code == 200
+    assert imported.json()["status"] == "provider_not_configured"
+    app.dependency_overrides.clear()
+
+
 def test_live_tracking_can_follow_all_or_selected_match() -> None:
     client = _client_with_seed_data()
     match_id = client.get("/api/matches").json()[0]["id"]
