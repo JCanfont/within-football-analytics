@@ -486,7 +486,7 @@ function ForebetRangeRow({
           {forecastState ? (
             <span className={`forecast-status ${forecastState.status}`}>{forecastState.label}</span>
           ) : (
-            <span className="table-subtext">{isFinished(item) ? "Finalizado" : "Pendiente de inicio"}</span>
+            <span className="table-subtext">{formatNonLiveForecastLabel(item)}</span>
           )}
           <span className="table-subtext">
             {formatCurrentScore(item)}
@@ -641,6 +641,16 @@ function evaluateForecastState(item: ForebetRangeItem): { status: "possible" | "
     return { status: "possible", label: "Aun posible" };
   }
   return { status: "pending", label: "Sin regla" };
+}
+
+function formatNonLiveForecastLabel(item: ForebetRangeItem) {
+  if (isFinished(item)) {
+    return "Finalizado";
+  }
+  if (item.home_score != null && item.away_score != null) {
+    return "Resultado capturado";
+  }
+  return "Pendiente de inicio";
 }
 
 function isLiveMatch(item: ForebetRangeItem) {
