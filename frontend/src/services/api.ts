@@ -28,7 +28,7 @@ const api = axios.create({
   timeout: 30000,
 });
 
-const MATCH_LIST_LIMIT = 30000;
+const MATCH_LIST_LIMIT = 50000;
 const CATALOG_LIMIT = 5000;
 
 export async function fetchBackendHealth(): Promise<boolean> {

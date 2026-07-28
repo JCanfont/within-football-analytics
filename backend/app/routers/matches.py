@@ -112,14 +112,16 @@ def _match_list(db: Session, stmt, include_analytics: bool) -> list[MatchListIte
 def _latest_forebet_predictions(db: Session, match_ids: list[int]) -> dict[int, ForebetPrediction]:
     if not match_ids:
         return {}
-    predictions = db.scalars(
-        select(ForebetPrediction)
-        .where(ForebetPrediction.match_id.in_(match_ids))
-        .order_by(ForebetPrediction.match_id, desc(ForebetPrediction.captured_at))
-    ).all()
     latest_by_match: dict[int, ForebetPrediction] = {}
-    for prediction in predictions:
-        latest_by_match.setdefault(prediction.match_id, prediction)
+    for index in range(0, len(match_ids), 900):
+        chunk = match_ids[index : index + 900]
+        predictions = db.scalars(
+            select(ForebetPrediction)
+            .where(ForebetPrediction.match_id.in_(chunk))
+            .order_by(ForebetPrediction.match_id, desc(ForebetPrediction.captured_at))
+        ).all()
+        for prediction in predictions:
+            latest_by_match.setdefault(prediction.match_id, prediction)
     return latest_by_match
 
 

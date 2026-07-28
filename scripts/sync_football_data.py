@@ -21,6 +21,7 @@ SEASONS = {
 }
 
 FOOTBALL_DATA_ZIP_URL = "https://www.football-data.co.uk/mmz4281/{season_code}/data.zip"
+FOOTBALL_DATA_EXTRA_URL = "https://www.football-data.co.uk/new/{country_code}.csv"
 
 LEAGUES = {
     "E0": ("Premier League", "England"),
@@ -47,6 +48,25 @@ LEAGUES = {
     "G1": ("Super League Greece", "Greece"),
 }
 
+EXTRA_COUNTRY_CODES = {
+    "ARG": "Argentina",
+    "AUT": "Austria",
+    "BRA": "Brazil",
+    "CHN": "China",
+    "DNK": "Denmark",
+    "FIN": "Finland",
+    "IRL": "Ireland",
+    "JPN": "Japan",
+    "MEX": "Mexico",
+    "NOR": "Norway",
+    "POL": "Poland",
+    "ROU": "Romania",
+    "RUS": "Russia",
+    "SWE": "Sweden",
+    "SWZ": "Switzerland",
+    "USA": "USA",
+}
+
 
 @dataclass
 class TeamStanding:
@@ -67,6 +87,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Download Football-Data CSV files and convert them into WITHIN import CSVs.")
     parser.add_argument("--import-db", action="store_true", help="Import generated CSV files into the configured local database.")
     parser.add_argument("--with-standings", action="store_true", help="Also import generated standings snapshots. Slower on SQLite.")
+    parser.add_argument("--include-extra", action="store_true", help="Also import the extra country CSV files from Football-Data.")
     args = parser.parse_args()
 
     IMPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -85,6 +106,14 @@ def main() -> None:
             converted, standings = convert_league_rows(season, league_code, rows)
             result_rows.extend(converted)
             standing_rows.extend(standings)
+
+    if args.include_extra:
+        for country_code in EXTRA_COUNTRY_CODES:
+            source_path = SOURCE_DIR / f"extra-{country_code}.csv"
+            download_extra_country(country_code, source_path)
+            rows = read_csv(source_path)
+            converted = convert_extra_country_rows(country_code, rows)
+            result_rows.extend(converted)
 
     results_path = IMPORT_DIR / "football-data-2023-2026-results.csv"
     standings_path = IMPORT_DIR / "football-data-2023-2026-standings.csv"
@@ -105,6 +134,16 @@ def download_zip(season_code: str, path: Path) -> None:
         path.write_bytes(response.read())
 
 
+def download_extra_country(country_code: str, path: Path) -> None:
+    url = FOOTBALL_DATA_EXTRA_URL.format(country_code=country_code)
+    with urllib.request.urlopen(url, timeout=45) as response:
+        path.write_bytes(response.read())
+
+
+def read_csv(path: Path) -> list[dict[str, str]]:
+    return list(csv.DictReader(io.StringIO(path.read_text(encoding="utf-8-sig", errors="replace"))))
+
+
 def extract_league_files(zip_path: Path, season_code: str) -> dict[str, list[dict[str, str]]]:
     rows_by_league: dict[str, list[dict[str, str]]] = {}
     with zipfile.ZipFile(zip_path) as archive:
@@ -118,6 +157,59 @@ def extract_league_files(zip_path: Path, season_code: str) -> dict[str, list[dic
             text = content.decode("utf-8-sig", errors="replace")
             rows_by_league[league_code] = list(csv.DictReader(io.StringIO(text)))
     return rows_by_league
+
+
+def convert_extra_country_rows(country_code: str, rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    clean_rows = [
+        row
+        for row in rows
+        if row.get("Country")
+        and row.get("League")
+        and row.get("Season")
+        and row.get("Date")
+        and row.get("Home")
+        and row.get("Away")
+        and row.get("HG") not in {None, ""}
+        and row.get("AG") not in {None, ""}
+    ]
+    latest_seasons = set(sorted({row["Season"].strip() for row in clean_rows}, key=season_sort_key)[-3:])
+    result_rows: list[dict[str, str]] = []
+    grouped_indexes: dict[tuple[str, str], int] = {}
+
+    for row in sorted(clean_rows, key=lambda item: (season_sort_key(item["Season"]), parse_match_datetime(item["Date"], item.get("Time")), item["Home"], item["Away"])):
+        season = row["Season"].strip()
+        if season not in latest_seasons:
+            continue
+        country = (row.get("Country") or EXTRA_COUNTRY_CODES.get(country_code) or country_code).strip()
+        competition = row["League"].strip()
+        group_key = (competition, season)
+        grouped_indexes[group_key] = grouped_indexes.get(group_key, 0) + 1
+        match_date = parse_match_datetime(row["Date"], row.get("Time"))
+        home = row["Home"].strip()
+        away = row["Away"].strip()
+        external_id = make_external_id(f"extra-{country_code}", season, f"{row['Date']} {row.get('Time') or ''}", home, away)
+        result_rows.append(
+            {
+                "competition": competition,
+                "season": season,
+                "country": country,
+                "competition_type": "domestic_league",
+                "matchday": str(grouped_indexes[group_key]),
+                "match_date": match_date.isoformat(),
+                "home_team": home,
+                "away_team": away,
+                "stadium": "",
+                "city": "",
+                "home_score": str(optional_int(row["HG"]) or 0),
+                "away_score": str(optional_int(row["AG"]) or 0),
+                "status": "finished",
+                "is_friendly": "false",
+                "source": "football-data",
+                "external_id": external_id,
+            }
+        )
+
+    return result_rows
 
 
 def convert_league_rows(season: str, league_code: str, rows: list[dict[str, str]]) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
@@ -242,6 +334,29 @@ def parse_date(value: str) -> datetime:
     raise ValueError(f"Unsupported Football-Data date: {value}")
 
 
+def parse_match_datetime(date_value: str, time_value: str | None = None) -> datetime:
+    parsed = parse_date(date_value)
+    if not time_value:
+        return parsed
+    time_value = time_value.strip()
+    try:
+        hour, minute = time_value.split(":", maxsplit=1)
+        return parsed.replace(hour=int(hour), minute=int(minute[:2]))
+    except ValueError:
+        return parsed
+
+
+def season_sort_key(value: str) -> tuple[int, int, str]:
+    value = value.strip()
+    if "/" in value:
+        first, second = value.split("/", maxsplit=1)
+        return (int(first), int(second), value)
+    if value.isdigit():
+        year = int(value)
+        return (year, year, value)
+    return (0, 0, value)
+
+
 def make_external_id(league_code: str, season: str, date: str, home: str, away: str) -> str:
     raw = f"football-data-{league_code}-{season}-{date}-{home}-{away}"
     return "".join(character.lower() if character.isalnum() else "-" for character in raw).strip("-")
@@ -274,8 +389,8 @@ def fast_import_results(db, results_path: Path) -> tuple[int, int]:
     with results_path.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
 
-    competitions = {competition.normalized_name: competition for competition in db.scalars(select(Competition)).all()}
-    teams = {team.normalized_name: team for team in db.scalars(select(Team)).all()}
+    competitions = {(competition.normalized_name, normalize_name(competition.country or "")): competition for competition in db.scalars(select(Competition)).all()}
+    teams = {(team.normalized_name, normalize_name(team.country or "")): team for team in db.scalars(select(Team)).all()}
     existing_matches = {(match.source, match.external_id): match for match in db.scalars(select(Match).where(Match.source == "football-data")).all()}
     seasons: dict[tuple[int, str], Season] = {
         (season.competition_id, season.name): season for season in db.scalars(select(Season)).all()
@@ -284,16 +399,17 @@ def fast_import_results(db, results_path: Path) -> tuple[int, int]:
     updated = 0
 
     for index, row in enumerate(rows, start=1):
-        competition_key = normalize_name(row["competition"])
+        country_key = normalize_name(row.get("country") or "")
+        competition_key = (normalize_name(row["competition"]), country_key)
         competition = competitions.get(competition_key)
         if not competition:
             competition = Competition(
                 name=row["competition"],
-                normalized_name=competition_key,
+                normalized_name=competition_key[0],
                 country=row.get("country"),
                 competition_type=row.get("competition_type") or "domestic_league",
                 source="football-data",
-                external_id=competition_key,
+                external_id=f"{country_key}:{competition_key[0]}",
             )
             db.add(competition)
             db.flush()
@@ -342,17 +458,18 @@ def fast_import_results(db, results_path: Path) -> tuple[int, int]:
     return created, updated
 
 
-def get_or_create_team(db, teams: dict[str, object], name: str, country: str | None, normalize_name):
+def get_or_create_team(db, teams: dict[tuple[str, str], object], name: str, country: str | None, normalize_name):
     from app.models import Team
 
     normalized = normalize_name(name)
-    team = teams.get(normalized)
+    country_key = normalize_name(country or "")
+    team = teams.get((normalized, country_key))
     if team:
         return team
-    team = Team(name=name, normalized_name=normalized, country=country, external_id=f"football-data:{normalized}")
+    team = Team(name=name, normalized_name=normalized, country=country, external_id=f"football-data:{country_key}:{normalized}")
     db.add(team)
     db.flush()
-    teams[normalized] = team
+    teams[(normalized, country_key)] = team
     return team
 
 
