@@ -294,10 +294,10 @@ function IndexCalculationPanel({ analytics }: { analytics: MatchInsightData["ana
       note: "Aqui cuenta la resta directa entre posiciones.",
     },
     {
-      label: "Balance goleador",
+      label: "Diferencia goleadora media",
       value: formatPair(analytics.inputs.home_goal_balance, analytics.inputs.away_goal_balance),
       weight: weights.goal_balance,
-      note: "Compara goles a favor menos goles en contra por partido.",
+      note: "Goles a favor menos goles en contra dividido por partidos jugados. Si es negativo, encaja mas de lo que marca.",
     },
     {
       label: "Actividad goleadora",

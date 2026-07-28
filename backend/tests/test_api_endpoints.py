@@ -62,6 +62,8 @@ def test_match_analytics_endpoint_explains_balance_index() -> None:
     assert body["status"] == "ok"
     assert body["closed_midtable_index"] is not None
     assert "equilibrio del partido" in body["explanation"]
+    assert "diferencia goleadora media por partido" in body["explanation"]
+    assert "si sale negativa" in body["explanation"]
     assert body["inputs"]["teams_in_table"] == 4
     assert "home_recent_form" in body["inputs"]
     assert "away_recent_form" in body["inputs"]
