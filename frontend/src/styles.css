@@ -1479,6 +1479,126 @@ td {
   font-weight: 800;
 }
 
+.team-card {
+  align-content: start;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.team-card > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 82px;
+  padding: 12px;
+  border: 0;
+  background: transparent;
+  color: #18212f;
+  cursor: pointer;
+  text-align: left;
+}
+
+.team-card > button:hover {
+  background: #f7fafb;
+}
+
+.team-card > button span {
+  display: grid;
+  gap: 5px;
+}
+
+.team-profile {
+  display: grid;
+  gap: 12px;
+  padding: 0 12px 12px;
+  border-top: 1px solid #edf0f4;
+}
+
+.team-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 12px;
+}
+
+.team-profile-grid > div {
+  display: grid;
+  gap: 3px;
+  min-height: 74px;
+  padding: 10px;
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+
+.team-profile-grid span,
+.team-profile-grid small,
+.team-profile-note,
+.team-recent-list span {
+  color: #617083;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.team-profile-grid strong {
+  color: #18212f;
+  font-size: 22px;
+}
+
+.team-profile-section {
+  display: grid;
+  gap: 8px;
+}
+
+.team-profile-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #18212f;
+}
+
+.team-profile-heading span {
+  margin-left: auto;
+  color: #617083;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.team-profile-note {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.team-squad-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(142px, 1fr));
+  gap: 8px;
+}
+
+.team-squad-list > span {
+  display: grid;
+  gap: 2px;
+  min-height: 48px;
+  padding: 9px;
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #18212f;
+}
+
+.team-squad-list small {
+  color: #617083;
+}
+
+.team-recent-list {
+  display: grid;
+  gap: 6px;
+}
+
 .catalog-table {
   max-height: min(72vh, 760px);
 }
@@ -2761,6 +2881,7 @@ button.analysis-card:disabled {
     .under-breakdown-grid,
     .control-grid,
     .voice-analysis-tables,
+    .team-profile-grid,
   .weight-list {
     grid-template-columns: 1fr;
   }
@@ -2816,5 +2937,15 @@ button.analysis-card:disabled {
 
   .nav-list {
     grid-template-columns: 1fr;
+  }
+
+  .team-profile-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .team-profile-heading span {
+    margin-left: 0;
+    text-align: left;
   }
 }

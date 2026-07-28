@@ -620,6 +620,13 @@ describe("App", () => {
       expect(screen.getByRole("heading", { name: "Equipos", level: 1 })).toBeInTheDocument();
     });
     expect(screen.getByText("Osasuna")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: /Getafe/ })[0]);
+    expect(screen.getByText("Posicion calculada")).toBeInTheDocument();
+    expect(screen.getByText("Racha under")).toBeInTheDocument();
+    expect(screen.getByText("Racha over")).toBeInTheDocument();
+    expect(screen.getByText("Plantilla")).toBeInTheDocument();
+    expect(screen.getByText(/Transfermarkt pendiente/)).toBeInTheDocument();
+    expect(screen.getByText("Borja Mayoral")).toBeInTheDocument();
   }, 30000);
 
   it("opens the contrarian picks workspace and records a pick", async () => {
