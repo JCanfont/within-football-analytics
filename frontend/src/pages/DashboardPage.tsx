@@ -96,10 +96,6 @@ export function DashboardPage() {
     }
   }
 
-  function revealAnalysisPanels() {
-    window.requestAnimationFrame(() => document.getElementById("match-detail-analysis")?.scrollIntoView({ behavior: "smooth", block: "start" }));
-  }
-
   function speakAnalysis(text: string) {
     if (!("speechSynthesis" in window)) {
       return;
@@ -171,7 +167,7 @@ export function DashboardPage() {
         isLoadingMatches={isLoading}
         selectedInsight={insight.data}
         onSelectMatch={selectMatchFromVoice}
-        onReadAnalysis={revealAnalysisPanels}
+        onReadAnalysis={() => undefined}
       />
 
       <LiveTrackingPanel

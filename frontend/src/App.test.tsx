@@ -433,10 +433,9 @@ describe("App", () => {
       expect(screen.getByLabelText("Sintesis del analisis")).toBeInTheDocument();
     });
     expect(screen.getByText(/Bloque 1\//)).toBeInTheDocument();
+    vi.mocked(window.HTMLElement.prototype.scrollIntoView).mockClear();
     fireEvent.click(screen.getByRole("button", { name: "Leer analisis" }));
-    await waitFor(() => {
-      expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
-    });
+    expect(window.HTMLElement.prototype.scrollIntoView).not.toHaveBeenCalled();
     expect(screen.getByText("Explicacion del analisis")).toBeInTheDocument();
     expect(screen.getByText("Parametros de goles")).toBeInTheDocument();
     expect(screen.getByText("Enfrentamientos directos")).toBeInTheDocument();
