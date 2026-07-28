@@ -17,7 +17,7 @@ from app.utils.normalization import normalize_name
 
 
 FOREBET_PREDICTIONS_URL = "https://www.forebet.com/en/football-predictions"
-FOREBET_READER_URL = "https://r.jina.ai/http://r.jina.ai/http://https://www.forebet.com/en/football-predictions"
+FOREBET_READER_PREFIX = "https://r.jina.ai/"
 DATE_RE = re.compile(r"(?P<day>\d{2})/(?P<month>\d{2})/(?P<year>\d{4})\s+(?P<time>\d{1,2}:\d{2})")
 READER_DATE_RE = re.compile(
     r"(?P<month>\d{2})/(?P<day>\d{2})/(?P<year>\d{4})\s+(?P<hour>\d{1,2}):(?P<minute>\d{2})\s+(?P<ampm>AM|PM)"
@@ -196,12 +196,25 @@ def _forebet_url(target_date: date) -> str:
 
 def _fetch_forebet_reader_predictions(target_date: date) -> list[ForebetSourcePrediction]:
     try:
-        response = requests.get(FOREBET_READER_URL, timeout=15, headers=REQUEST_HEADERS)
+        response = requests.get(_forebet_reader_url(target_date), timeout=20, headers=_reader_headers())
     except requests.RequestException:
         return []
     if response.status_code >= 400:
         return []
     return _parse_forebet_reader_predictions(response.text, target_date)
+
+
+def _forebet_reader_url(target_date: date) -> str:
+    return f"{FOREBET_READER_PREFIX}{_forebet_url(target_date)}"
+
+
+def _reader_headers() -> dict[str, str]:
+    return {
+        **REQUEST_HEADERS,
+        "X-No-Cache": "true",
+        "X-Respond-With": "markdown",
+        "X-Timeout": "15",
+    }
 
 
 def _is_cloudflare_challenge(html: str) -> bool:

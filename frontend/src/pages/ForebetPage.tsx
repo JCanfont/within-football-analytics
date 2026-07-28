@@ -110,6 +110,19 @@ export function ForebetPage() {
       .finally(() => setIsLiveRefreshing(false));
   }
 
+  function toggleAutoRefresh() {
+    setAutoRefresh((current) => {
+      const next = !current;
+      if (next) {
+        setLiveMessage("Actualizacion cada 10 minutos activada. Haciendo una primera captura ahora...");
+        window.setTimeout(() => refreshLiveResults(true), 0);
+      } else {
+        setLiveMessage("Actualizacion cada 10 minutos desactivada.");
+      }
+      return next;
+    });
+  }
+
   function toggleStartAlert(item: ForebetRangeItem) {
     const isWatched = watchedMatchIds.includes(item.match_id);
     if (isWatched) {
@@ -177,10 +190,12 @@ export function ForebetPage() {
       setNextLiveRefresh(null);
       return;
     }
-    setNextLiveRefresh(new Date(Date.now() + LIVE_REFRESH_MS).toISOString());
+    if (!nextLiveRefresh) {
+      setNextLiveRefresh(new Date(Date.now() + LIVE_REFRESH_MS).toISOString());
+    }
     const intervalId = window.setInterval(() => refreshLiveResults(false), LIVE_REFRESH_MS);
     return () => window.clearInterval(intervalId);
-  }, [autoRefresh, targetDate, watchedMatchIds.join(",")]);
+  }, [autoRefresh, targetDate]);
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -269,7 +284,7 @@ export function ForebetPage() {
             requestNotificationPermission();
             setForecastAlerts((current) => !current);
           }}
-          onToggleAuto={() => setAutoRefresh((current) => !current)}
+          onToggleAuto={toggleAutoRefresh}
           watchedCount={watchedMatchIds.length}
         />
         {isLoading ? <div className="detail-state">{loadingDetail(loadingMode)}</div> : null}
@@ -349,7 +364,7 @@ function ForebetLiveWatchPanel({
         <span>Seguimiento de inicio y directo</span>
         <strong>{watchedCount} partidos con aviso</strong>
         <small>
-          {autoRefresh && watchedCount > 0
+          {autoRefresh
             ? `Actualizacion cada 10 minutos${nextRefresh ? `, proxima ${formatTimeOnly(nextRefresh)}` : ""}`
             : "Activa el seguimiento para revisar la jornada automaticamente"}
         </small>

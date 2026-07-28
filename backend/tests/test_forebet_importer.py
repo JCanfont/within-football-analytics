@@ -6,12 +6,20 @@ from bs4 import BeautifulSoup
 from app.services import forebet_importer
 from app.services.forebet_importer import (
     _actual_score_from_cells,
+    _forebet_reader_url,
     _parse_forebet_predictions,
     _parse_forebet_reader_predictions,
     _prediction_from_row,
     _split_reader_compact_teams,
     _status_from_cells,
 )
+
+
+def test_forebet_reader_url_uses_single_reader_prefix() -> None:
+    url = _forebet_reader_url(date(2026, 7, 28))
+
+    assert url.startswith("https://r.jina.ai/https://www.forebet.com/")
+    assert "r.jina.ai/http://r.jina.ai" not in url
 
 
 def test_prediction_from_row_builds_match_from_visible_forebet_link() -> None:
