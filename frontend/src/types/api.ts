@@ -389,6 +389,30 @@ export type LiveMatchSnapshot = {
   captured_at: string;
 };
 
+export type SofaScoreTeamEvent = {
+  event_id: number;
+  start_time: string;
+  status: string;
+  competition: string;
+  country?: string | null;
+  home_team: string;
+  away_team: string;
+  home_team_id?: number | null;
+  away_team_id?: number | null;
+  home_score?: number | null;
+  away_score?: number | null;
+};
+
+export type SofaScoreTeamEventsResult = {
+  provider: string;
+  team_id: number;
+  direction: "next" | "last" | string;
+  page: number;
+  has_next_page: boolean;
+  message: string;
+  events: SofaScoreTeamEvent[];
+};
+
 export type DashboardData = {
   matches: MatchListItem[];
   competitions: Competition[];

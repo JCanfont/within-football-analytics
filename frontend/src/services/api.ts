@@ -20,6 +20,7 @@ import type {
   MatchListItem,
   Player,
   PlayerStadiumAnalytics,
+  SofaScoreTeamEventsResult,
   Stadium,
   StatisticalConfig,
   StatisticalQuestionAnswer,
@@ -234,6 +235,16 @@ export async function fetchLiveProviderStatus(): Promise<LiveProviderStatus> {
 
 export async function fetchLiveMatchSnapshot(matchId: number): Promise<LiveMatchSnapshot> {
   const response = await api.get<LiveMatchSnapshot>(`/api/live/sofascore/matches/${matchId}/snapshot`);
+  return response.data;
+}
+
+export async function fetchSofaScoreTeamEvents(teamId: number, direction: "next" | "last" = "next", page = 0): Promise<SofaScoreTeamEventsResult> {
+  const response = await api.get<SofaScoreTeamEventsResult>(`/api/live/sofascore/teams/${teamId}/events?direction=${direction}&page=${page}`);
+  return response.data;
+}
+
+export async function fetchSofaScoreEventSnapshot(eventId: number): Promise<LiveMatchSnapshot> {
+  const response = await api.get<LiveMatchSnapshot>(`/api/live/sofascore/events/${eventId}/snapshot`);
   return response.data;
 }
 

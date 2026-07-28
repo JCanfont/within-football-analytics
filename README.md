@@ -355,16 +355,21 @@ Tambien se pueden indicar otras ligas compatibles con FootyStats:
 .\backend\.venv\Scripts\python.exe scripts\sync_footystats_leagues.py --targets "Honduras:Liga Nacional de Futbol Profesional de Honduras" "South Africa:Premier Soccer League"
 ```
 
-## Importar Honduras y Sudafrica desde SofaScore gratis
+## Importar catalogo SofaScore gratis
 
-SofaScore cubre Honduras y Sudafrica, pero su API directa bloquea llamadas de
+SofaScore cubre muchas competiciones, pero su API directa bloquea llamadas de
 backend con `403 Forbidden`. La ruta gratuita preparada usa Crawlora, que ofrece
 endpoints de SofaScore con plan Free y clave API.
 
-IDs de SofaScore usados por defecto:
+El catalogo base esta en:
 
-- Honduras Liga Nacional: `925`.
-- South African Premier Division: `358`.
+```text
+data/imports/sofascore-competitions-40.csv
+```
+
+Incluye 40 competiciones. Las que tienen `sofascore_id` informado se pueden
+cargar directamente; las que no lo tienen quedan pendientes de completar con el
+ID exacto de SofaScore antes de importarlas. No se deben inventar IDs.
 
 Comando:
 
@@ -373,10 +378,22 @@ $env:CRAWLORA_API_KEY="TU_CLAVE_GRATUITA"
 .\backend\.venv\Scripts\python.exe scripts\sync_sofascore_crawlora_leagues.py --import-db --with-standings
 ```
 
-El importador usa temporadas, clasificaciones y partidos recientes por equipo
-para reconstruir resultados de esas competiciones. En el plan gratuito conviene
-respetar el ritmo lento por defecto, porque la cuota indicada por Crawlora es de
-5 peticiones por minuto.
+Para cargar solo una competicion concreta:
+
+```powershell
+.\backend\.venv\Scripts\python.exe scripts\sync_sofascore_crawlora_leagues.py --tournament-id 358 --import-db --with-standings
+```
+
+El importador usa temporadas, clasificaciones y partidos recientes por equipo.
+En el plan gratuito conviene respetar el ritmo lento por defecto, porque la
+cuota indicada por Crawlora es de 5 peticiones por minuto.
+
+## SofaScore live por equipos elegidos
+
+La pantalla `Partidos en directo` permite guardar IDs de equipos SofaScore. Con
+`CRAWLORA_API_KEY` configurada en el backend, se pueden cargar sus proximos
+eventos y pedir un snapshot de evento con marcador, posesion y tiros cuando
+SofaScore tenga esos datos.
 
 ## Tests
 

@@ -15,6 +15,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 IMPORT_DIR = ROOT / "data" / "imports"
 CRAWLORA_BASE_URL = "https://api.crawlora.net/api/v1"
+DEFAULT_CATALOG_PATH = IMPORT_DIR / "sofascore-competitions-40.csv"
 
 DEFAULT_TOURNAMENTS = {
     925: ("Liga Nacional", "Honduras"),
@@ -61,9 +62,11 @@ STANDINGS_HEADERS = [
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Import Honduras and South Africa from SofaScore through Crawlora free SofaScore endpoints.",
+        description="Import a SofaScore competition catalog through Crawlora free SofaScore endpoints.",
     )
     parser.add_argument("--api-key", default=os.getenv("CRAWLORA_API_KEY"), help="Crawlora API key. Defaults to CRAWLORA_API_KEY.")
+    parser.add_argument("--catalog", type=Path, default=DEFAULT_CATALOG_PATH, help="CSV catalog with sofascore_id,competition,country.")
+    parser.add_argument("--tournament-id", action="append", type=int, help="Import only this SofaScore tournament id. Can be repeated.")
     parser.add_argument("--seasons", type=int, default=3, help="Number of latest seasons to collect per tournament.")
     parser.add_argument("--team-pages", type=int, default=10, help="Last-event pages to read per team and season.")
     parser.add_argument("--sleep", type=float, default=12.0, help="Seconds between calls. Free Crawlora is 5 requests/min.")
@@ -78,8 +81,14 @@ def main() -> None:
     result_rows: list[dict[str, str]] = []
     standing_rows: list[dict[str, str]] = []
     seen_event_ids: set[int] = set()
+    tournaments = load_tournaments(args.catalog)
+    if args.tournament_id:
+        allowed = set(args.tournament_id)
+        tournaments = {tournament_id: value for tournament_id, value in tournaments.items() if tournament_id in allowed}
+    if not tournaments:
+        raise SystemExit("No SofaScore tournaments with IDs were found. Fill sofascore_id in the catalog or pass --tournament-id.")
 
-    for tournament_id, (fallback_competition, fallback_country) in DEFAULT_TOURNAMENTS.items():
+    for tournament_id, (fallback_competition, fallback_country) in tournaments.items():
         seasons = crawlora_get("sofascore/tournament-seasons", args.api_key, id=tournament_id).get("data", {}).get("seasons", [])
         for season in seasons[: args.seasons]:
             season_id = str(season["id"])
@@ -113,8 +122,8 @@ def main() -> None:
                     time.sleep(args.sleep)
 
     result_rows.sort(key=lambda row: (row["country"], row["competition"], row["season"], row["match_date"], row["home_team"]))
-    results_path = IMPORT_DIR / "sofascore-honduras-south-africa-results.csv"
-    standings_path = IMPORT_DIR / "sofascore-honduras-south-africa-standings.csv"
+    results_path = IMPORT_DIR / "sofascore-catalog-results.csv"
+    standings_path = IMPORT_DIR / "sofascore-catalog-standings.csv"
     write_csv(results_path, RESULTS_HEADERS, result_rows)
     write_csv(standings_path, STANDINGS_HEADERS, standing_rows)
     print(f"results={len(result_rows)} -> {results_path}")
@@ -122,6 +131,19 @@ def main() -> None:
 
     if args.import_db:
         import_into_database(results_path, standings_path if args.with_standings else None)
+
+
+def load_tournaments(path: Path) -> dict[int, tuple[str, str]]:
+    if not path.exists():
+        return DEFAULT_TOURNAMENTS
+    tournaments: dict[int, tuple[str, str]] = {}
+    with path.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            tournament_id = int_or_none(row.get("sofascore_id"))
+            if tournament_id is None:
+                continue
+            tournaments[tournament_id] = (clean_text(row.get("competition")), clean_text(row.get("country")))
+    return tournaments
 
 
 def crawlora_get(endpoint: str, api_key: str, **params: Any) -> dict[str, Any]:

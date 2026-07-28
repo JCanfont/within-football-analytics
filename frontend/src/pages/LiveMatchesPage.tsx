@@ -1,10 +1,11 @@
 import { Activity, RefreshCw, Save } from "lucide-react";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
-import { fetchLiveMatchSnapshot, fetchLiveProviderStatus, loadForebetDate } from "../services/api";
-import type { ForebetRangeItem, LiveMatchSnapshot, LiveProviderStatus } from "../types/api";
+import { fetchLiveMatchSnapshot, fetchLiveProviderStatus, fetchSofaScoreEventSnapshot, fetchSofaScoreTeamEvents, loadForebetDate } from "../services/api";
+import type { ForebetRangeItem, LiveMatchSnapshot, LiveProviderStatus, SofaScoreTeamEvent } from "../types/api";
 
 const FOREBET_WATCH_KEY = "within_forebet_watch";
 const LIVE_PARAMS_KEY = "within_live_match_parameters";
+const SOFASCORE_TEAMS_KEY = "within_sofascore_live_teams";
 
 type LiveMatchParameters = {
   minute: number;
@@ -30,7 +31,12 @@ export function LiveMatchesPage() {
   const [parameters, setParameters] = useState<Record<number, LiveMatchParameters>>(readLiveParameters);
   const [snapshots, setSnapshots] = useState<Record<number, LiveMatchSnapshot>>({});
   const [providerStatus, setProviderStatus] = useState<LiveProviderStatus | null>(null);
+  const [teamInput, setTeamInput] = useState("");
+  const [sofaScoreTeamIds, setSofaScoreTeamIds] = useState<number[]>(readSofaScoreTeamIds);
+  const [teamEvents, setTeamEvents] = useState<Record<number, SofaScoreTeamEvent[]>>({});
+  const [eventSnapshots, setEventSnapshots] = useState<Record<number, LiveMatchSnapshot>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
   const [message, setMessage] = useState<string | null>(() => initialLiveMessage());
 
   const watchedIds = useMemo(() => readWatchedForebetMatchIds(), []);
@@ -103,6 +109,61 @@ export function LiveMatchesPage() {
     }
   }
 
+  function saveSofaScoreTeams(nextIds: number[]) {
+    const unique = Array.from(new Set(nextIds)).filter((teamId) => Number.isFinite(teamId) && teamId > 0);
+    setSofaScoreTeamIds(unique);
+    localStorage.setItem(SOFASCORE_TEAMS_KEY, JSON.stringify(unique));
+  }
+
+  function addSofaScoreTeam() {
+    const teamId = Number(teamInput.trim());
+    if (!Number.isFinite(teamId) || teamId <= 0) {
+      setMessage("Introduce un ID numerico de equipo SofaScore.");
+      return;
+    }
+    saveSofaScoreTeams([...sofaScoreTeamIds, teamId]);
+    setTeamInput("");
+  }
+
+  function refreshTeamEvents() {
+    if (!sofaScoreTeamIds.length) {
+      setMessage("Anade primero uno o varios equipos SofaScore.");
+      return;
+    }
+    setIsLoadingTeams(true);
+    setMessage("Consultando SofaScore para los equipos elegidos...");
+    Promise.all(
+      sofaScoreTeamIds.map((teamId) =>
+        fetchSofaScoreTeamEvents(teamId, "next", 0)
+          .then((result) => [teamId, result.events] as const)
+          .catch(() => [teamId, []] as const),
+      ),
+    )
+      .then((items) => {
+        setTeamEvents(Object.fromEntries(items));
+        const total = items.reduce((sum, [, events]) => sum + events.length, 0);
+        setMessage(`${total} eventos SofaScore encontrados para ${items.length} equipos elegidos.`);
+      })
+      .finally(() => setIsLoadingTeams(false));
+  }
+
+  function refreshEventSnapshot(eventId: number) {
+    fetchSofaScoreEventSnapshot(eventId)
+      .then((snapshot) => setEventSnapshots((current) => ({ ...current, [eventId]: snapshot })))
+      .catch(() =>
+        setEventSnapshots((current) => ({
+          ...current,
+          [eventId]: {
+            match_id: eventId,
+            provider: "sofascore-crawlora",
+            status: "request_failed",
+            message: "No se pudo consultar el evento SofaScore.",
+            captured_at: new Date().toISOString(),
+          },
+        })),
+      );
+  }
+
   return (
     <section className="live-matches-page">
       <header className="page-header">
@@ -152,7 +213,107 @@ export function LiveMatchesPage() {
           <div className="detail-state">Selecciona partidos en Forebet con el boton Avisar inicio para que aparezcan aqui.</div>
         )}
       </section>
+
+      <section className="panel live-matches-panel">
+        <div className="panel-heading">
+          <div>
+            <h2>Equipos SofaScore elegidos</h2>
+            <p>Introduce los IDs de equipo SofaScore y carga sus proximos partidos o eventos live.</p>
+          </div>
+          <Activity size={20} aria-hidden="true" />
+        </div>
+        <div className="forebet-actions">
+          <label className="forebet-date-form">
+            <span>ID equipo SofaScore</span>
+            <input value={teamInput} inputMode="numeric" onChange={(event) => setTeamInput(event.target.value)} placeholder="Ej. 2817" />
+          </label>
+          <button className="filter-show" type="button" onClick={addSofaScoreTeam}>
+            Anadir equipo
+          </button>
+          <button className="filter-show" type="button" onClick={refreshTeamEvents} disabled={isLoadingTeams}>
+            <RefreshCw size={17} aria-hidden="true" />
+            {isLoadingTeams ? "Consultando" : "Cargar equipos"}
+          </button>
+        </div>
+        {sofaScoreTeamIds.length ? (
+          <div className="live-match-list">
+            {sofaScoreTeamIds.map((teamId) => (
+              <SofaScoreTeamBlock
+                key={teamId}
+                events={teamEvents[teamId] ?? []}
+                onRemove={() => saveSofaScoreTeams(sofaScoreTeamIds.filter((item) => item !== teamId))}
+                onSnapshot={refreshEventSnapshot}
+                snapshots={eventSnapshots}
+                teamId={teamId}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="detail-state">Aun no hay equipos SofaScore elegidos.</div>
+        )}
+      </section>
     </section>
+  );
+}
+
+function SofaScoreTeamBlock({
+  events,
+  onRemove,
+  onSnapshot,
+  snapshots,
+  teamId,
+}: {
+  events: SofaScoreTeamEvent[];
+  onRemove: () => void;
+  onSnapshot: (eventId: number) => void;
+  snapshots: Record<number, LiveMatchSnapshot>;
+  teamId: number;
+}) {
+  return (
+    <article className="live-match-card">
+      <div className="live-match-heading">
+        <div>
+          <span>Equipo SofaScore</span>
+          <strong>ID {teamId}</strong>
+        </div>
+        <button className="row-action" type="button" onClick={onRemove}>
+          Quitar
+        </button>
+      </div>
+      {events.length ? (
+        <div className="live-match-list compact">
+          {events.map((event) => {
+            const snapshot = snapshots[event.event_id];
+            return (
+              <div className="live-provider-card" key={event.event_id}>
+                <div>
+                  <span>{event.competition || "SofaScore"}</span>
+                  <strong>
+                    {event.home_team} vs {event.away_team}
+                  </strong>
+                  <small>{formatTime(event.start_time)} · {event.status}</small>
+                </div>
+                <div>
+                  <span>Marcador</span>
+                  <strong>{formatEventScore(event, snapshot)}</strong>
+                  <small>{snapshot?.minute != null ? `Minuto ${snapshot.minute}` : snapshot?.message ?? "Sin snapshot"}</small>
+                </div>
+                <div>
+                  <span>Tiros a puerta</span>
+                  <strong>{formatPair(snapshot?.home_shots_on_target, snapshot?.away_shots_on_target)}</strong>
+                  <small>Evento {event.event_id}</small>
+                </div>
+                <button className="row-action" type="button" onClick={() => onSnapshot(event.event_id)}>
+                  Actualizar evento
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="detail-state">Pulsa Cargar equipos para traer eventos de este equipo.</div>
+      )}
+    </article>
   );
 }
 
@@ -339,6 +500,16 @@ function readLiveParameters() {
   }
 }
 
+function readSofaScoreTeamIds() {
+  try {
+    const raw = localStorage.getItem(SOFASCORE_TEAMS_KEY);
+    const parsed = raw ? (JSON.parse(raw) as number[]) : [];
+    return Array.isArray(parsed) ? parsed.filter((value) => Number.isFinite(value)) : [];
+  } catch {
+    return [];
+  }
+}
+
 function formatScore(match: ForebetRangeItem) {
   if (match.home_score == null || match.away_score == null) {
     return match.status;
@@ -361,6 +532,16 @@ function formatPair(home?: number | null, away?: number | null, suffix = "") {
     return "n/d";
   }
   return `${home}${suffix} - ${away}${suffix}`;
+}
+
+function formatEventScore(event: SofaScoreTeamEvent, snapshot?: LiveMatchSnapshot) {
+  if (snapshot?.home_score != null && snapshot.away_score != null) {
+    return `${snapshot.home_score}-${snapshot.away_score}`;
+  }
+  if (event.home_score != null && event.away_score != null) {
+    return `${event.home_score}-${event.away_score}`;
+  }
+  return event.status;
 }
 
 function formatTime(value: string) {

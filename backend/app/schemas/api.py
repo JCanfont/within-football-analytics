@@ -426,6 +426,30 @@ class LiveMatchSnapshot(BaseModel):
     captured_at: datetime
 
 
+class SofaScoreTeamEvent(BaseModel):
+    event_id: int
+    start_time: datetime
+    status: str
+    competition: str
+    country: str | None = None
+    home_team: str
+    away_team: str
+    home_team_id: int | None = None
+    away_team_id: int | None = None
+    home_score: int | None = None
+    away_score: int | None = None
+
+
+class SofaScoreTeamEventsResult(BaseModel):
+    provider: str
+    team_id: int
+    direction: str
+    page: int
+    has_next_page: bool
+    message: str
+    events: list[SofaScoreTeamEvent]
+
+
 class PlayerStadiumAnalytics(BaseModel):
     player_id: int
     player: str
