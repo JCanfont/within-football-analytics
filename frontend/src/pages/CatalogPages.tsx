@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Search, UsersRound } from "lucide-react";
+import { BarChart3, ChevronDown, ChevronRight, Search, Trophy, UsersRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { fetchCompetitions, fetchMatches, fetchPlayers, fetchTeams } from "../services/api";
@@ -78,14 +78,18 @@ export function MatchesPage() {
 
 export function CompetitionsPage() {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [matches, setMatches] = useState<MatchListItem[]>([]);
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [openCompetitionId, setOpenCompetitionId] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchCompetitions().then((result) => {
-      setCompetitions(result);
-      setIsLoading(false);
-    });
+    Promise.all([fetchCompetitions(), fetchMatches()])
+      .then(([competitionsResult, matchesResult]) => {
+        setCompetitions(competitionsResult);
+        setMatches(matchesResult);
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
   const visibleCompetitions = useMemo(() => {
@@ -103,7 +107,16 @@ export function CompetitionsPage() {
       onQueryChange={setQuery}
       placeholder="Buscar liga o pais"
     >
-      {isLoading ? <div className="detail-state">Cargando campeonatos...</div> : <CompetitionGrid competitions={visibleCompetitions} />}
+      {isLoading ? (
+        <div className="detail-state">Cargando campeonatos...</div>
+      ) : (
+        <CompetitionGrid
+          competitions={visibleCompetitions}
+          matches={matches}
+          onToggle={(competitionId) => setOpenCompetitionId((current) => (current === competitionId ? null : competitionId))}
+          openCompetitionId={openCompetitionId}
+        />
+      )}
     </CatalogShell>
   );
 }
@@ -195,14 +208,30 @@ function CatalogShell({
   );
 }
 
-function CompetitionGrid({ competitions }: { competitions: Competition[] }) {
+function CompetitionGrid({
+  competitions,
+  matches,
+  onToggle,
+  openCompetitionId,
+}: {
+  competitions: Competition[];
+  matches: MatchListItem[];
+  onToggle: (competitionId: number) => void;
+  openCompetitionId: number | null;
+}) {
   return (
     <div className="catalog-grid">
       {competitions.map((competition) => (
-        <article className="catalog-card" key={competition.id}>
-          <strong>{competition.name}</strong>
-          <span>{competition.country ?? "Pais no informado"}</span>
-          <small>{competition.competition_type ?? "domestic_league"}</small>
+        <article className="catalog-card expandable-card competition-card" key={competition.id}>
+          <button type="button" onClick={() => onToggle(competition.id)}>
+            <span>
+              <strong>{competition.name}</strong>
+              <small>{competition.country ?? "Pais no informado"}</small>
+              <small>{competition.competition_type ?? "domestic_league"}</small>
+            </span>
+            {openCompetitionId === competition.id ? <ChevronDown size={17} aria-hidden="true" /> : <ChevronRight size={17} aria-hidden="true" />}
+          </button>
+          {openCompetitionId === competition.id ? <CompetitionProfile competition={competition} matches={matches} /> : null}
         </article>
       ))}
     </div>
@@ -225,7 +254,7 @@ function TeamGrid({
   return (
     <div className="catalog-grid">
       {teams.map((team) => (
-        <article className="catalog-card team-card" key={team.id}>
+        <article className="catalog-card expandable-card team-card" key={team.id}>
           <button type="button" onClick={() => onToggle(team.id)}>
             <span>
               <strong>{team.name}</strong>
@@ -236,6 +265,59 @@ function TeamGrid({
           {openTeamId === team.id ? <TeamProfile matches={matches} players={players} team={team} /> : null}
         </article>
       ))}
+    </div>
+  );
+}
+
+function CompetitionProfile({ competition, matches }: { competition: Competition; matches: MatchListItem[] }) {
+  const competitionMatches = matches.filter((match) => match.competition === competition.name);
+  const stats = buildCompetitionStats(competition, competitionMatches);
+
+  return (
+    <div className="team-profile competition-profile">
+      <div className="team-profile-grid">
+        <TeamProfileMetric label="Temporada analizada" value={formatSeason(stats.season)} detail="Ultima disponible" />
+        <TeamProfileMetric label="Jornadas totales" value={stats.totalMatchdaysLabel} detail={stats.matchdaySource} />
+        <TeamProfileMetric label="Jornada actual" value={stats.currentMatchdayLabel} detail={`${stats.finishedMatches.length} finalizados`} />
+        <TeamProfileMetric label="Partidos cargados" value={stats.seasonMatches.length.toString()} detail={`${stats.teamCount} equipos`} />
+      </div>
+      <div className="team-profile-section">
+        <div className="team-profile-heading">
+          <Trophy size={16} aria-hidden="true" />
+          <strong>Goles por equipo</strong>
+          <span>Calculado con partidos finalizados</span>
+        </div>
+        <div className="competition-rankings">
+          <TeamProfileMetric label="Mas goles" value={stats.mostGoalsFor?.team ?? "n/d"} detail={stats.mostGoalsFor ? `${stats.mostGoalsFor.goalsFor} goles` : "Sin muestra"} />
+          <TeamProfileMetric label="Menos goles" value={stats.leastGoalsFor?.team ?? "n/d"} detail={stats.leastGoalsFor ? `${stats.leastGoalsFor.goalsFor} goles` : "Sin muestra"} />
+          <TeamProfileMetric label="Mejor defensa" value={stats.bestDefense?.team ?? "n/d"} detail={stats.bestDefense ? `${stats.bestDefense.goalsAgainst} recibidos` : "Sin muestra"} />
+          <TeamProfileMetric label="Mejor diferencia" value={stats.bestDifference?.team ?? "n/d"} detail={stats.bestDifference ? `DG ${stats.bestDifference.goalDifference}` : "Sin muestra"} />
+        </div>
+      </div>
+      <div className="team-profile-section">
+        <div className="team-profile-heading">
+          <BarChart3 size={16} aria-hidden="true" />
+          <strong>Rachas under y over</strong>
+          <span>Solo esta competicion y temporada</span>
+        </div>
+        <div className="competition-rankings">
+          <TeamProfileMetric label="Under actual" value={stats.streaks.under.current.toString()} detail={`Maxima ${stats.streaks.under.maximum}`} />
+          <TeamProfileMetric label="Over actual" value={stats.streaks.over.current.toString()} detail={`Maxima ${stats.streaks.over.maximum}`} />
+          <TeamProfileMetric label="Promedio goles" value={stats.averageGoals.toFixed(2)} detail="Por partido finalizado" />
+          <TeamProfileMetric label="Total goles" value={stats.totalGoals.toString()} detail="Temporada analizada" />
+        </div>
+      </div>
+      <div className="team-profile-section">
+        <strong>Ultimos partidos finalizados</strong>
+        <div className="team-recent-list">
+          {stats.finishedMatches.slice(0, 5).map((match) => (
+            <span key={match.id}>
+              {formatDate(match.match_date)} - {match.home_team} {formatScore(match)} {match.away_team}
+            </span>
+          ))}
+          {!stats.finishedMatches.length ? <span>Sin partidos finalizados en la muestra.</span> : null}
+        </div>
+      </div>
     </div>
   );
 }
@@ -302,6 +384,42 @@ function TeamProfileMetric({ detail, label, value }: { detail: string; label: st
       <small>{detail}</small>
     </div>
   );
+}
+
+function buildCompetitionStats(competition: Competition, matches: MatchListItem[]) {
+  const seasons = Array.from(new Set(matches.map((match) => match.season))).sort((a, b) => b.localeCompare(a));
+  const season = seasons[0] ?? "n/d";
+  const seasonMatches = matches
+    .filter((match) => match.season === season)
+    .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime());
+  const finishedMatches = seasonMatches.filter((match) => match.home_score != null && match.away_score != null);
+  const standings = buildStandings(finishedMatches);
+  const teamCount = new Set(seasonMatches.flatMap((match) => [match.home_team, match.away_team])).size;
+  const matchesPerMatchday = Math.max(1, Math.floor(teamCount / 2));
+  const isLeague = (competition.competition_type ?? "domestic_league").includes("league");
+  const estimatedTotalMatchdays = isLeague && teamCount > 1 ? (teamCount - 1) * 2 : Math.ceil(seasonMatches.length / matchesPerMatchday);
+  const currentMatchday = Math.min(estimatedTotalMatchdays || 0, Math.ceil(finishedMatches.length / matchesPerMatchday));
+  const totalGoals = finishedMatches.reduce((sum, match) => sum + (match.home_score ?? 0) + (match.away_score ?? 0), 0);
+  const rankedByGoalsFor = [...standings].sort((a, b) => b.goalsFor - a.goalsFor || a.team.localeCompare(b.team));
+  const rankedByGoalsAgainst = [...standings].sort((a, b) => a.goalsAgainst - b.goalsAgainst || a.team.localeCompare(b.team));
+  const rankedByDifference = [...standings].sort((a, b) => b.goalDifference - a.goalDifference || a.team.localeCompare(b.team));
+
+  return {
+    averageGoals: finishedMatches.length ? totalGoals / finishedMatches.length : 0,
+    bestDefense: rankedByGoalsAgainst[0],
+    bestDifference: rankedByDifference[0],
+    currentMatchdayLabel: currentMatchday ? `${currentMatchday}` : "n/d",
+    finishedMatches,
+    leastGoalsFor: rankedByGoalsFor.at(-1),
+    matchdaySource: isLeague ? "Estimacion por equipos" : "Estimacion por partidos",
+    mostGoalsFor: rankedByGoalsFor[0],
+    season,
+    seasonMatches,
+    streaks: buildUnderOverStreaks(finishedMatches),
+    teamCount,
+    totalGoals,
+    totalMatchdaysLabel: estimatedTotalMatchdays ? `${estimatedTotalMatchdays}` : "n/d",
+  };
 }
 
 function buildStandings(matches: MatchListItem[]) {

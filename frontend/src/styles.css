@@ -1479,14 +1479,14 @@ td {
   font-weight: 800;
 }
 
-.team-card {
+.expandable-card {
   align-content: start;
   gap: 0;
   padding: 0;
   overflow: hidden;
 }
 
-.team-card > button {
+.expandable-card > button {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1501,11 +1501,11 @@ td {
   text-align: left;
 }
 
-.team-card > button:hover {
+.expandable-card > button:hover {
   background: #f7fafb;
 }
 
-.team-card > button span {
+.expandable-card > button span {
   display: grid;
   gap: 5px;
 }
@@ -1551,6 +1551,34 @@ td {
 .team-profile-section {
   display: grid;
   gap: 8px;
+}
+
+.competition-rankings {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.competition-rankings > div {
+  display: grid;
+  gap: 3px;
+  min-height: 74px;
+  padding: 10px;
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.competition-rankings span,
+.competition-rankings small {
+  color: #617083;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.competition-rankings strong {
+  color: #18212f;
+  font-size: 16px;
 }
 
 .team-profile-heading {
@@ -2882,6 +2910,7 @@ button.analysis-card:disabled {
     .control-grid,
     .voice-analysis-tables,
     .team-profile-grid,
+    .competition-rankings,
   .weight-list {
     grid-template-columns: 1fr;
   }

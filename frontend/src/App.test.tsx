@@ -614,6 +614,13 @@ describe("App", () => {
       expect(screen.getByRole("heading", { name: "Competiciones", level: 1 })).toBeInTheDocument();
     });
     expect(screen.getByText("LaLiga")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: /LaLiga/ })[0]);
+    expect(screen.getByText("Jornadas totales")).toBeInTheDocument();
+    expect(screen.getByText("Jornada actual")).toBeInTheDocument();
+    expect(screen.getByText("Goles por equipo")).toBeInTheDocument();
+    expect(screen.getByText("Mas goles")).toBeInTheDocument();
+    expect(screen.getByText("Menos goles")).toBeInTheDocument();
+    expect(screen.getByText("Rachas under y over")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Equipos" }));
     await waitFor(() => {
