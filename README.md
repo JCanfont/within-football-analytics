@@ -329,6 +329,32 @@ Respuesta esperada:
 }
 ```
 
+## Importar Honduras y Sudafrica desde FootyStats
+
+Las ligas hondurena y sudafricana no estan disponibles en el CSV publico de
+Football-Data que usa `scripts/sync_football_data.py`. Para cargarlas se usa
+FootyStats con una clave API autorizada y con esas ligas seleccionadas en la
+cuenta.
+
+El importador genera resultados, clasificaciones calculadas y minutos de goles
+cuando FootyStats los devuelve:
+
+```powershell
+$env:FOOTYSTATS_API_KEY="TU_CLAVE"
+.\backend\.venv\Scripts\python.exe scripts\sync_footystats_leagues.py --import-db --with-standings
+```
+
+Por defecto carga las tres ultimas temporadas utiles de:
+
+- Honduras: Liga Nacional de Futbol Profesional de Honduras.
+- South Africa: Premier Soccer League.
+
+Tambien se pueden indicar otras ligas compatibles con FootyStats:
+
+```powershell
+.\backend\.venv\Scripts\python.exe scripts\sync_footystats_leagues.py --targets "Honduras:Liga Nacional de Futbol Profesional de Honduras" "South Africa:Premier Soccer League"
+```
+
 ## Tests
 
 Desde `backend`:
