@@ -111,6 +111,26 @@ def test_match_analytics_uses_saved_weights() -> None:
     app.dependency_overrides.clear()
 
 
+def test_match_feature_snapshot_endpoint_builds_tensor_ready_vector() -> None:
+    client = _client_with_seed_data()
+    match_id = client.get("/api/matches").json()[0]["id"]
+
+    response = client.get(f"/api/analytics/features/matches/{match_id}")
+    rebuild = client.post("/api/analytics/features/rebuild?limit=1")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["match_id"] == match_id
+    assert body["schema_version"] == "v1"
+    assert body["tensor_key"].startswith("competition:")
+    assert body["classification_gap"] == 1
+    assert body["feature_vector"]["order"][0] == "competition_id"
+    assert len(body["feature_vector"]["order"]) == len(body["feature_vector"]["values"])
+    assert rebuild.status_code == 200
+    assert rebuild.json()["created_or_updated"] == 1
+    app.dependency_overrides.clear()
+
+
 def test_team_favorites_can_be_saved_listed_and_deleted() -> None:
     client = _client_with_seed_data()
     team_id = next(team["id"] for team in client.get("/api/teams").json() if team["name"] == "Getafe")

@@ -1,4 +1,4 @@
-import { BarChart3, Calculator, ChevronDown, ChevronRight, Download, Gauge, Info, Percent, ShieldCheck, TrendingDown } from "lucide-react";
+import { BarChart3, Binary, Calculator, ChevronDown, ChevronRight, Download, Gauge, Info, Percent, ShieldCheck, TrendingDown } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import { GoalTimingChart } from "../charts/GoalTimingChart";
 import { fetchMatchGoalMoments } from "../services/api";
@@ -156,6 +156,42 @@ export function MatchDetailPanel({ insight, isLoading, error }: MatchDetailPanel
 
       <section className="detail-block">
         <div className="detail-title">
+          <Binary size={18} aria-hidden="true" />
+          <h3>Matriz tensorial del partido</h3>
+        </div>
+        {insight.features ? (
+          <>
+            <div className="parameter-grid">
+              <div>
+                <span>Version</span>
+                <strong>{insight.features.schema_version}</strong>
+                <small>Esquema de features</small>
+              </div>
+              <div>
+                <span>Clave tensorial</span>
+                <strong>{insight.features.tensor_key}</strong>
+                <small>liga / temporada / jornada / equipos</small>
+              </div>
+              <div>
+                <span>Vector</span>
+                <strong>{insight.features.feature_vector.values.length} valores</strong>
+                <small>{formatFeatureReliability(insight.features.feature_vector.explainability)}</small>
+              </div>
+              <div>
+                <span>Rango</span>
+                <strong>{formatScoreRangeSummary(insight.features.score_range ?? null)}</strong>
+                <small>Disponible para modelos futuros</small>
+              </div>
+            </div>
+            <FeatureVectorTable order={insight.features.feature_vector.order} values={insight.features.feature_vector.values} />
+          </>
+        ) : (
+          <p>No hay vector tensorial calculado para este partido.</p>
+        )}
+      </section>
+
+      <section className="detail-block">
+        <div className="detail-title">
           <Gauge size={18} aria-hidden="true" />
           <h3>Parametros de goles</h3>
         </div>
@@ -274,6 +310,31 @@ export function MatchDetailPanel({ insight, isLoading, error }: MatchDetailPanel
           )}
         </div>
       </section>
+    </div>
+  );
+}
+
+function FeatureVectorTable({ order, values }: { order: string[]; values: unknown[] }) {
+  return (
+    <div className="index-calculation-table feature-vector-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Indice</th>
+            <th>Feature</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {order.map((name, index) => (
+            <tr key={`${name}-${index}`}>
+              <td>{index}</td>
+              <td>{formatFeatureName(name)}</td>
+              <td>{formatUnknown(values[index])}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -788,6 +849,35 @@ function formatWeight(value: unknown) {
     return "n/d";
   }
   return `${Math.round(value * 100)}%`;
+}
+
+function formatFeatureName(value: string) {
+  const labels: Record<string, string> = {
+    competition_id: "Liga",
+    season_id: "Temporada",
+    matchday: "Jornada",
+    home_team_id: "Equipo local",
+    away_team_id: "Equipo visitante",
+    home_goals: "Goles local",
+    away_goals: "Goles visitante",
+    total_goals: "Goles totales",
+    home_position: "Posicion local",
+    away_position: "Posicion visitante",
+    classification_gap: "Diferencia posiciones",
+    home_recent_points: "Puntos recientes local",
+    away_recent_points: "Puntos recientes visitante",
+    home_recent_goal_difference: "DG reciente local",
+    away_recent_goal_difference: "DG reciente visitante",
+    closed_midtable_index: "Indice equilibrio",
+  };
+  return labels[value] ?? value;
+}
+
+function formatFeatureReliability(value: Record<string, unknown> | undefined) {
+  if (!value) {
+    return "Fiabilidad no calculada";
+  }
+  return `Fiabilidad: ${formatUnknown(value.analytics_reliability)}`;
 }
 
 function formatScoreRangeSummary(scoreRange: Record<string, unknown> | null) {

@@ -12,6 +12,7 @@ import type {
   ImportResult,
   LiveTrackingSettings,
   MatchAnalytics,
+  MatchFeatureSnapshot,
   MatchDetail,
   MatchInsightData,
   MatchListItem,
@@ -87,6 +88,11 @@ export async function fetchMatchAnalytics(matchId: number): Promise<MatchAnalyti
   return response.data;
 }
 
+export async function fetchMatchFeatures(matchId: number): Promise<MatchFeatureSnapshot> {
+  const response = await api.get<MatchFeatureSnapshot>(`/api/analytics/features/matches/${matchId}`);
+  return response.data;
+}
+
 export async function fetchMatchDetail(matchId: number): Promise<MatchDetail> {
   const response = await api.get<MatchDetail>(`/api/matches/${matchId}`);
   return response.data;
@@ -146,16 +152,20 @@ export async function loadForebetDate(targetDate: string, includeRanges = false)
 }
 
 export async function fetchMatchInsight(matchId: number): Promise<MatchInsightData> {
-  const [detail, analytics] = await Promise.all([fetchMatchDetail(matchId), fetchMatchAnalytics(matchId)]);
+  const [detail, analytics, featuresResult] = await Promise.allSettled([fetchMatchDetail(matchId), fetchMatchAnalytics(matchId), fetchMatchFeatures(matchId)]);
+  if (detail.status === "rejected" || analytics.status === "rejected") {
+    throw new Error("Match insight endpoints are unavailable.");
+  }
   const [homeGoalTiming, awayGoalTiming, goalTimingContext] = await Promise.all([
-    fetchTeamGoalTiming(detail.home_team.id),
-    fetchTeamGoalTiming(detail.away_team.id),
+    fetchTeamGoalTiming(detail.value.home_team.id),
+    fetchTeamGoalTiming(detail.value.away_team.id),
     fetchMatchGoalTimingContext(matchId),
   ]);
 
   return {
-    detail,
-    analytics,
+    detail: detail.value,
+    analytics: analytics.value,
+    features: featuresResult.status === "fulfilled" ? featuresResult.value : null,
     homeGoalTiming,
     awayGoalTiming,
     goalTimingContext,

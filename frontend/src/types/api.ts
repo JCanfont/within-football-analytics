@@ -83,6 +83,37 @@ export type MatchAnalytics = {
   three_season_summary?: ThreeSeasonSummary | null;
 };
 
+export type MatchFeatureSnapshot = {
+  id: number;
+  match_id: number;
+  schema_version: string;
+  tensor_key: string;
+  competition_id: number;
+  season_id: number;
+  matchday?: number | null;
+  home_team_id: number;
+  away_team_id: number;
+  home_goals?: number | null;
+  away_goals?: number | null;
+  total_goals?: number | null;
+  home_position?: number | null;
+  away_position?: number | null;
+  classification_gap?: number | null;
+  home_recent_points: number;
+  away_recent_points: number;
+  home_recent_goal_difference: number;
+  away_recent_goal_difference: number;
+  closed_midtable_index?: string | number | null;
+  score_range?: Record<string, unknown> | null;
+  feature_vector: {
+    schema: string;
+    order: string[];
+    values: unknown[];
+    explainability?: Record<string, unknown>;
+  };
+  calculated_at: string;
+};
+
 export type TeamReferenceStanding = {
   team_id: number;
   team: string;
@@ -303,6 +334,7 @@ export type Alert = {
 export type MatchInsightData = {
   detail: MatchDetail;
   analytics: MatchAnalytics;
+  features?: MatchFeatureSnapshot | null;
   homeGoalTiming: GoalTiming[];
   awayGoalTiming: GoalTiming[];
   goalTimingContext?: GoalTimingContext | null;

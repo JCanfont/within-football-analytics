@@ -211,6 +211,35 @@ class AnalysisResult(Base):
     calculated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
 
 
+class MatchFeatureSnapshot(Base):
+    __tablename__ = "match_feature_snapshot"
+    __table_args__ = (UniqueConstraint("match_id", "schema_version", name="uq_match_feature_schema"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    match_id: Mapped[int] = mapped_column(ForeignKey("match.id"), nullable=False, index=True)
+    schema_version: Mapped[str] = mapped_column(String(40), nullable=False, default="v1")
+    tensor_key: Mapped[str] = mapped_column(String(240), nullable=False, index=True)
+    competition_id: Mapped[int] = mapped_column(ForeignKey("competition.id"), nullable=False, index=True)
+    season_id: Mapped[int] = mapped_column(ForeignKey("season.id"), nullable=False, index=True)
+    matchday: Mapped[int | None] = mapped_column(Integer)
+    home_team_id: Mapped[int] = mapped_column(ForeignKey("team.id"), nullable=False, index=True)
+    away_team_id: Mapped[int] = mapped_column(ForeignKey("team.id"), nullable=False, index=True)
+    home_goals: Mapped[int | None] = mapped_column(Integer)
+    away_goals: Mapped[int | None] = mapped_column(Integer)
+    total_goals: Mapped[int | None] = mapped_column(Integer)
+    home_position: Mapped[int | None] = mapped_column(Integer)
+    away_position: Mapped[int | None] = mapped_column(Integer)
+    classification_gap: Mapped[int | None] = mapped_column(Integer)
+    home_recent_points: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    away_recent_points: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    home_recent_goal_difference: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    away_recent_goal_difference: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    closed_midtable_index: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    score_range: Mapped[dict | None] = mapped_column(JSON)
+    feature_vector: Mapped[dict] = mapped_column(JSON, nullable=False)
+    calculated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+
+
 class Alert(Base):
     __tablename__ = "alert"
     __table_args__ = (UniqueConstraint("match_id", "alert_type", "created_at", name="uq_alert_match_type_created"),)

@@ -222,6 +222,40 @@ class MatchAnalytics(BaseModel):
     three_season_summary: ThreeSeasonSummary | None = None
 
 
+class MatchFeatureSnapshotRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    match_id: int
+    schema_version: str
+    tensor_key: str
+    competition_id: int
+    season_id: int
+    matchday: int | None = None
+    home_team_id: int
+    away_team_id: int
+    home_goals: int | None = None
+    away_goals: int | None = None
+    total_goals: int | None = None
+    home_position: int | None = None
+    away_position: int | None = None
+    classification_gap: int | None = None
+    home_recent_points: int
+    away_recent_points: int
+    home_recent_goal_difference: int
+    away_recent_goal_difference: int
+    closed_midtable_index: Decimal | None = None
+    score_range: dict | None = None
+    feature_vector: dict
+    calculated_at: datetime
+
+
+class MatchFeatureRebuildResult(BaseModel):
+    created_or_updated: int
+    schema_version: str
+    sample: list[MatchFeatureSnapshotRead]
+
+
 class GoalTimingRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
