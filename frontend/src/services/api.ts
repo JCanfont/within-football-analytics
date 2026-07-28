@@ -28,7 +28,8 @@ const api = axios.create({
   timeout: 30000,
 });
 
-const MATCH_LIST_LIMIT = 2000;
+const MATCH_LIST_LIMIT = 30000;
+const CATALOG_LIMIT = 5000;
 
 export async function fetchBackendHealth(): Promise<boolean> {
   try {
@@ -42,10 +43,10 @@ export async function fetchBackendHealth(): Promise<boolean> {
 export async function fetchDashboardData(): Promise<DashboardData> {
   const [matches, competitions, teams, players, stadiums] = await Promise.allSettled([
     api.get<MatchListItem[]>(`/api/matches?include_analytics=false&limit=${MATCH_LIST_LIMIT}`),
-    api.get<Competition[]>("/api/competitions"),
-    api.get<Team[]>("/api/teams"),
-    api.get<Player[]>("/api/players"),
-    api.get<Stadium[]>("/api/stadiums"),
+    api.get<Competition[]>(`/api/competitions?limit=${CATALOG_LIMIT}`),
+    api.get<Team[]>(`/api/teams?limit=${CATALOG_LIMIT}`),
+    api.get<Player[]>(`/api/players?limit=${CATALOG_LIMIT}`),
+    api.get<Stadium[]>(`/api/stadiums?limit=${CATALOG_LIMIT}`),
   ]);
 
   if (matches.status === "rejected" || competitions.status === "rejected" || teams.status === "rejected") {
@@ -63,6 +64,21 @@ export async function fetchDashboardData(): Promise<DashboardData> {
 
 export async function fetchMatchesWithAnalytics(): Promise<MatchListItem[]> {
   const response = await api.get<MatchListItem[]>(`/api/matches?include_analytics=true&limit=${MATCH_LIST_LIMIT}`);
+  return response.data;
+}
+
+export async function fetchMatches(): Promise<MatchListItem[]> {
+  const response = await api.get<MatchListItem[]>(`/api/matches?include_analytics=false&limit=${MATCH_LIST_LIMIT}`);
+  return response.data;
+}
+
+export async function fetchCompetitions(): Promise<Competition[]> {
+  const response = await api.get<Competition[]>(`/api/competitions?limit=${CATALOG_LIMIT}`);
+  return response.data;
+}
+
+export async function fetchTeams(): Promise<Team[]> {
+  const response = await api.get<Team[]>(`/api/teams?limit=${CATALOG_LIMIT}`);
   return response.data;
 }
 

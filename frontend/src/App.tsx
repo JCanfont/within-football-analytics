@@ -1,6 +1,7 @@
 import { Bell, CalendarDays, DatabaseZap, Gauge, Goal, ListChecks, SearchCheck, Settings, Shield, Trophy, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { AlertsPage } from "./pages/AlertsPage";
+import { CompetitionsPage, MatchesPage, TeamsPage } from "./pages/CatalogPages";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ForebetPage } from "./pages/ForebetPage";
 import { ImportsPage } from "./pages/ImportsPage";
@@ -9,9 +10,9 @@ import { SettingsPage } from "./pages/SettingsPage";
 
 const navigation = [
   { label: "Dashboard", icon: Gauge, view: "dashboard" },
-  { label: "Partidos", icon: CalendarDays },
-  { label: "Competiciones", icon: Trophy },
-  { label: "Equipos", icon: Shield },
+  { label: "Partidos", icon: CalendarDays, view: "matches" },
+  { label: "Competiciones", icon: Trophy, view: "competitions" },
+  { label: "Equipos", icon: Shield, view: "teams" },
   { label: "Jugadores", icon: UsersRound, view: "players" },
   { label: "Forebet", icon: SearchCheck, view: "forebet" },
   { label: "Importaciones", icon: DatabaseZap, view: "imports" },
@@ -71,6 +72,12 @@ export default function App() {
           <ImportsPage />
         ) : activeView === "players" ? (
           <PlayersPage />
+        ) : activeView === "matches" ? (
+          <MatchesPage />
+        ) : activeView === "competitions" ? (
+          <CompetitionsPage />
+        ) : activeView === "teams" ? (
+          <TeamsPage />
         ) : (
           <DashboardPage />
         )}

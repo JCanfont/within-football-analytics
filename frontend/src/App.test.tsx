@@ -121,6 +121,28 @@ describe("App", () => {
         closed_midtable_index: 72.4,
       },
     ]);
+    mockedApi.fetchMatches.mockResolvedValue([
+      {
+        id: 1,
+        match_date: "2026-08-15T19:30:00+00:00",
+        competition: "LaLiga",
+        competition_type: "domestic_league",
+        season: "2026/2027",
+        home_team: "Getafe",
+        away_team: "Osasuna",
+        status: "finished",
+        home_score: 1,
+        away_score: 1,
+        is_friendly: false,
+        latest_forebet_prediction: "under_2_5",
+        closed_midtable_index: 81.84,
+      },
+    ]);
+    mockedApi.fetchCompetitions.mockResolvedValue([{ id: 1, name: "LaLiga", country: "Spain", competition_type: "domestic_league", source: "csv" }]);
+    mockedApi.fetchTeams.mockResolvedValue([
+      { id: 1, name: "Getafe", country: "Spain" },
+      { id: 2, name: "Osasuna", country: "Spain" },
+    ]);
     mockedApi.fetchMatchInsight.mockResolvedValue({
       detail: {
         id: 1,
@@ -558,6 +580,28 @@ describe("App", () => {
     });
     expect(screen.getByText("Coliseum")).toBeInTheDocument();
     expect(screen.getByText("Rendimiento por estadio")).toBeInTheDocument();
+  }, 30000);
+
+  it("opens matches competitions and teams catalog pages", async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Partidos" }));
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Partidos", level: 1 })).toBeInTheDocument();
+    });
+    expect(screen.getByText("Getafe")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Competiciones" }));
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Competiciones", level: 1 })).toBeInTheDocument();
+    });
+    expect(screen.getByText("LaLiga")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Equipos" }));
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Equipos", level: 1 })).toBeInTheDocument();
+    });
+    expect(screen.getByText("Osasuna")).toBeInTheDocument();
   }, 30000);
 
   it("lets the user choose the Forebet goal prediction view", async () => {

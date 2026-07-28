@@ -1035,6 +1035,44 @@ td {
   gap: 22px;
 }
 
+.catalog-page {
+  display: grid;
+  gap: 22px;
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+  padding: 0 18px 18px;
+}
+
+.catalog-card {
+  display: grid;
+  gap: 5px;
+  min-height: 82px;
+  padding: 12px;
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.catalog-card strong {
+  color: #18212f;
+  font-size: 14px;
+}
+
+.catalog-card span,
+.catalog-card small {
+  color: #617083;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.catalog-table {
+  max-height: min(72vh, 760px);
+}
+
 .players-search {
   display: inline-flex;
   align-items: center;
