@@ -10,6 +10,8 @@ type UnderSignalsChartProps = {
 };
 
 export function UnderSignalsChart({ matches, directMatches = [], useDirectScope = false, scopeLabel }: UnderSignalsChartProps) {
+  const underBreakdown = useDirectScope ? directUnderBreakdown(directMatches) : matchUnderBreakdown(matches);
+  const underTotal = underBreakdown.reduce((sum, item) => sum + item.value, 0);
   const data = [
     {
       name: "Under",
@@ -39,8 +41,55 @@ export function UnderSignalsChart({ matches, directMatches = [], useDirectScope 
           <Bar dataKey="value" fill="#2f6f73" radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
+      <div className="under-breakdown">
+        <div className="under-breakdown-heading">
+          <span>Lectura rapida under</span>
+          <strong>{underTotal} marcadores under con resultado</strong>
+        </div>
+        <div className="under-breakdown-grid">
+          {underBreakdown.map((item) => (
+            <div className={`under-breakdown-item ${item.key}`} key={item.key}>
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+              <small>{underTotal ? `${Math.round((item.value / underTotal) * 100)}%` : "0%"}</small>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
+}
+
+function matchUnderBreakdown(matches: MatchListItem[]) {
+  return underBreakdownFromScores(matches.map((match) => ({ home: match.home_score, away: match.away_score })));
+}
+
+function directUnderBreakdown(matches: DirectMatchResult[]) {
+  return underBreakdownFromScores(matches.map((match) => ({ home: match.home_score, away: match.away_score })));
+}
+
+function underBreakdownFromScores(scores: Array<{ home?: number | null; away?: number | null }>) {
+  const buckets = [
+    { key: "score-00", label: "0-0", value: 0 },
+    { key: "score-10", label: "1-0 / 0-1", value: 0 },
+    { key: "score-11", label: "1-1", value: 0 },
+    { key: "score-20", label: "2-0 / 0-2", value: 0 },
+  ];
+  for (const score of scores) {
+    if (score.home == null || score.away == null || score.home + score.away >= 2.5) {
+      continue;
+    }
+    if (score.home === 0 && score.away === 0) {
+      buckets[0].value += 1;
+    } else if ((score.home === 1 && score.away === 0) || (score.home === 0 && score.away === 1)) {
+      buckets[1].value += 1;
+    } else if (score.home === 1 && score.away === 1) {
+      buckets[2].value += 1;
+    } else if ((score.home === 2 && score.away === 0) || (score.home === 0 && score.away === 2)) {
+      buckets[3].value += 1;
+    }
+  }
+  return buckets;
 }
 
 function classifyDirectUnderOver(match: DirectMatchResult) {

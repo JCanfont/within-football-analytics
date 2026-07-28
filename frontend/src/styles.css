@@ -412,7 +412,7 @@ td {
 }
 
 .chart-box {
-  height: 290px;
+  min-height: 390px;
   padding: 12px 12px 22px;
 }
 
@@ -421,6 +421,72 @@ td {
   margin: 0 0 8px;
   font-size: 13px;
   font-weight: 800;
+}
+
+.under-breakdown {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.under-breakdown-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.under-breakdown-heading span,
+.under-breakdown-heading strong {
+  color: #536174;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.under-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.under-breakdown-item {
+  display: grid;
+  gap: 4px;
+  min-height: 74px;
+  padding: 10px;
+  border-radius: 8px;
+  color: #18212f;
+}
+
+.under-breakdown-item span,
+.under-breakdown-item small {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.under-breakdown-item strong {
+  font-size: 22px;
+}
+
+.under-breakdown-item.score-00 {
+  background: #e7f0ff;
+  border: 1px solid #bcd2f7;
+}
+
+.under-breakdown-item.score-10 {
+  background: #e8f6ef;
+  border: 1px solid #b7dec9;
+}
+
+.under-breakdown-item.score-11 {
+  background: #fff4d8;
+  border: 1px solid #f3d58d;
+}
+
+.under-breakdown-item.score-20 {
+  background: #ffe9e3;
+  border: 1px solid #f2b8aa;
 }
 
 .empty-state {
@@ -2692,6 +2758,7 @@ button.analysis-card:disabled {
     .contra-summary-grid,
     .live-parameter-grid,
     .live-signal-grid,
+    .under-breakdown-grid,
     .control-grid,
     .voice-analysis-tables,
   .weight-list {

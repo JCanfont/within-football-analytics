@@ -500,6 +500,11 @@ describe("App", () => {
     expect(screen.getByText("Senales Over")).toBeInTheDocument();
     expect(screen.getByText("Menos de 2.5 goles")).toBeInTheDocument();
     expect(screen.getByText("Mas de 2.5 goles")).toBeInTheDocument();
+    expect(screen.getByText("Lectura rapida under")).toBeInTheDocument();
+    expect(screen.getByText("0-0")).toBeInTheDocument();
+    expect(screen.getByText("1-0 / 0-1")).toBeInTheDocument();
+    expect(screen.getByText("1-1")).toBeInTheDocument();
+    expect(screen.getByText("2-0 / 0-2")).toBeInTheDocument();
     expect(screen.getByText("Filtros de parametros")).toBeInTheDocument();
     expect(screen.getByLabelText("Equipo local")).toBeInTheDocument();
     expect(screen.getByLabelText("Equipo visitante")).toBeInTheDocument();
