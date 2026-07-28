@@ -265,6 +265,8 @@ class ForebetRangeItem(BaseModel):
     status: str
     forebet_prediction: str | None = None
     expected_goals: Decimal | float | None = None
+    predicted_score: str | None = None
+    goal_prediction: dict | None = None
     score_range: dict | None = None
     reliability: str
 

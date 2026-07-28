@@ -128,6 +128,7 @@ export function ForebetPage() {
                   <th>Fecha</th>
                   <th>Partido</th>
                   <th>Forebet</th>
+                  <th>Predicción goles</th>
                   <th>Goles esperados</th>
                   {hasCalculatedRanges ? <th>Rango</th> : null}
                   {hasCalculatedRanges ? <th>Marcadores posibles</th> : null}
@@ -232,6 +233,7 @@ function ForebetRangeRow({
           <span className="table-subtext">{item.competition} · {formatSeason(item.season)}</span>
         </td>
         <td>{item.forebet_prediction ?? "Sin captura"}</td>
+        <td>{formatGoalPrediction(item)}</td>
         <td>{formatUnknown(item.expected_goals)}</td>
         {showRanges ? <td>{formatRange(range)}</td> : null}
         {showRanges ? <td>{formatPossibleScores(range)}</td> : null}
@@ -246,7 +248,7 @@ function ForebetRangeRow({
       </tr>
       {showRanges && isExpanded ? (
         <tr className="forebet-calculation-row">
-          <td colSpan={7}>
+          <td colSpan={8}>
             <ForebetCalculation range={range} reliability={item.reliability} />
           </td>
         </tr>
@@ -319,6 +321,27 @@ function formatSeason(value: string) {
 
 function formatRange(range?: Record<string, unknown> | null) {
   return typeof range?.summary === "string" ? range.summary : "Sin rango";
+}
+
+function formatGoalPrediction(item: ForebetRangeItem) {
+  const prediction = isRecord(item.goal_prediction) ? item.goal_prediction : {};
+  const total = prediction.predicted_total_goals;
+  const overUnder = prediction.over_under_25;
+  const score = item.predicted_score ?? (typeof prediction.predicted_score === "string" ? prediction.predicted_score : null);
+  if (!score && typeof total !== "number" && typeof overUnder !== "string") {
+    return "Sin captura";
+  }
+  const parts = [];
+  if (score) {
+    parts.push(score);
+  }
+  if (typeof total === "number") {
+    parts.push(`${total} goles`);
+  }
+  if (typeof overUnder === "string") {
+    parts.push(overUnder === "over_2_5" ? "Over 2.5" : "Under 2.5");
+  }
+  return parts.join(" · ");
 }
 
 function formatPossibleScores(range?: Record<string, unknown> | null) {

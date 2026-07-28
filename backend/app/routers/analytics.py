@@ -262,6 +262,8 @@ def _forebet_range_item(db: Session, match: Match) -> ForebetRangeItem:
         status=match.status,
         forebet_prediction=latest.prediction if latest else None,
         expected_goals=latest.expected_goals if latest else None,
+        predicted_score=_prediction_score_from_latest(latest),
+        goal_prediction=_goal_prediction(_prediction_score_from_latest(latest), latest.expected_goals if latest else None),
         score_range=analytics.inputs.get("score_range") if analytics else None,
         reliability=analytics.reliability if analytics else "insufficient",
     )
@@ -283,6 +285,8 @@ def _forebet_basic_item(db: Session, match: Match) -> ForebetRangeItem:
         status=match.status,
         forebet_prediction=latest.prediction if latest else None,
         expected_goals=latest.expected_goals if latest else None,
+        predicted_score=_prediction_score_from_latest(latest),
+        goal_prediction=_goal_prediction(_prediction_score_from_latest(latest), latest.expected_goals if latest else None),
         score_range=None,
         reliability="pending_range",
     )
@@ -300,6 +304,8 @@ def _forebet_source_item(index: int, prediction: ForebetSourcePrediction, includ
         status="scheduled",
         forebet_prediction=prediction.prediction,
         expected_goals=prediction.expected_goals,
+        predicted_score=prediction.predicted_score,
+        goal_prediction=_goal_prediction(prediction.predicted_score, prediction.expected_goals),
         score_range=_forebet_source_score_range(prediction) if include_range else None,
         reliability="forebet_external" if include_range else "pending_range",
     )
@@ -315,6 +321,36 @@ def _forebet_source_score_range(prediction: ForebetSourcePrediction) -> dict | N
         "predicted_score": prediction.predicted_score,
         "explanation": "Resultado probable leido directamente de Forebet para la fecha solicitada.",
     }
+
+
+def _prediction_score_from_latest(latest) -> str | None:
+    if not latest or latest.predicted_home_score is None or latest.predicted_away_score is None:
+        return None
+    return f"{latest.predicted_home_score}-{latest.predicted_away_score}"
+
+
+def _goal_prediction(predicted_score: str | None, expected_goals) -> dict | None:
+    home_goals, away_goals = _split_predicted_score(predicted_score)
+    total_goals = home_goals + away_goals if home_goals is not None and away_goals is not None else None
+    expected = float(expected_goals) if expected_goals is not None else None
+    reference_total = total_goals if total_goals is not None else expected
+    if reference_total is None:
+        return None
+    return {
+        "predicted_score": predicted_score,
+        "predicted_total_goals": total_goals,
+        "expected_goals": expected,
+        "over_under_25": "over_2_5" if reference_total > 2.5 else "under_2_5",
+    }
+
+
+def _split_predicted_score(value: str | None) -> tuple[int | None, int | None]:
+    if not value:
+        return None, None
+    parts = value.split("-")
+    if len(parts) != 2 or not all(part.strip().isdigit() for part in parts):
+        return None, None
+    return int(parts[0]), int(parts[1])
 
 
 @router.get("/stadium/{stadium_id}/players", response_model=StadiumPlayerAnalytics)

@@ -231,6 +231,8 @@ export type ForebetRangeItem = {
   status: string;
   forebet_prediction?: string | null;
   expected_goals?: string | number | null;
+  predicted_score?: string | null;
+  goal_prediction?: Record<string, unknown> | null;
   score_range?: Record<string, unknown> | null;
   reliability: string;
 };
