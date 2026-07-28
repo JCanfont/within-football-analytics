@@ -8,6 +8,7 @@ from app.database import get_db
 from app.models import Competition, GoalMoment, Match, Season, Team, TeamGoalTiming
 from app.schemas.api import ForebetDateLoadResult, ForebetRangeItem, GoalMomentRead, GoalTimingContext, GoalTimingRead, GoalTimingSeriesRow, MatchAnalytics, PlayerStadiumAnalytics, StadiumPlayerAnalytics
 from app.services.analytics_queries import build_match_analytics, player_stadium_analytics, stadium_players_analytics
+from app.services.forebet_importer import import_forebet_jornada
 
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
@@ -111,6 +112,7 @@ def get_forebet_ranges(db: Session = Depends(get_db), limit: int = 2000) -> list
 
 @router.post("/forebet/load-date", response_model=ForebetDateLoadResult)
 def load_forebet_date(target_date: date, db: Session = Depends(get_db)) -> ForebetDateLoadResult:
+    forebet_outcome = import_forebet_jornada(db, target_date)
     matches = list(
         db.scalars(
             select(Match)
@@ -122,20 +124,26 @@ def load_forebet_date(target_date: date, db: Session = Depends(get_db)) -> Foreb
     if items:
         message = (
             f"Se han encontrado {len(items)} partidos para la fecha {target_date.isoformat()} "
-            "y se ha calculado el rango de resultado para toda la jornada cargada."
+            "y se ha calculado el rango de resultado para toda la jornada cargada. "
+            f"Forebet: {forebet_outcome.message}"
         )
-        status = "ok"
+        status = "ok" if forebet_outcome.status in {"ok", "blocked", "request_failed", "no_forebet_matches"} else forebet_outcome.status
     else:
         message = (
             f"No hay partidos cargados para la fecha {target_date.isoformat()}. "
-            "La conexion externa con Forebet aun no esta configurada; al conectarla, este mismo boton importara la jornada si existe en Forebet."
+            f"Forebet: {forebet_outcome.message}"
         )
-        status = "no_local_matches"
+        status = "no_local_matches" if forebet_outcome.status != "ok" else "no_local_match"
     return ForebetDateLoadResult(
         target_date=target_date,
         status=status,
         message=message,
-        external_fetch_status="not_configured",
+        external_fetch_status=forebet_outcome.status,
+        forebet_source_url=forebet_outcome.source_url,
+        forebet_fetched=forebet_outcome.fetched,
+        forebet_matched=forebet_outcome.matched,
+        forebet_imported=forebet_outcome.imported,
+        forebet_unmatched=forebet_outcome.unmatched,
         matches=items,
     )
 

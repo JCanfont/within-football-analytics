@@ -274,6 +274,11 @@ class ForebetDateLoadResult(BaseModel):
     status: str
     message: str
     external_fetch_status: str
+    forebet_source_url: str | None = None
+    forebet_fetched: int = 0
+    forebet_matched: int = 0
+    forebet_imported: int = 0
+    forebet_unmatched: int = 0
     matches: list[ForebetRangeItem]
 
 

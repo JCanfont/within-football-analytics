@@ -240,6 +240,11 @@ export type ForebetDateLoadResult = {
   status: string;
   message: string;
   external_fetch_status: string;
+  forebet_source_url?: string | null;
+  forebet_fetched: number;
+  forebet_matched: number;
+  forebet_imported: number;
+  forebet_unmatched: number;
   matches: ForebetRangeItem[];
 };
 

@@ -1,7 +1,7 @@
 import { Calculator, CalendarDays, ChevronDown, ChevronRight, RefreshCcw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { fetchForebetRanges, loadForebetDate } from "../services/api";
-import type { ForebetRangeItem } from "../types/api";
+import type { ForebetDateLoadResult, ForebetRangeItem } from "../types/api";
 
 export function ForebetPage() {
   const [items, setItems] = useState<ForebetRangeItem[]>([]);
@@ -10,12 +10,14 @@ export function ForebetPage() {
   const [query, setQuery] = useState("");
   const [targetDate, setTargetDate] = useState(todayInputValue());
   const [loadMessage, setLoadMessage] = useState<string | null>(null);
+  const [forebetLoad, setForebetLoad] = useState<ForebetDateLoadResult | null>(null);
   const [expandedMatchId, setExpandedMatchId] = useState<number | null>(null);
 
   function load() {
     setIsLoading(true);
     setError(null);
     setLoadMessage(null);
+    setForebetLoad(null);
     fetchForebetRanges()
       .then((data) => {
         setItems(data);
@@ -35,11 +37,13 @@ export function ForebetPage() {
     setIsLoading(true);
     setError(null);
     setLoadMessage(null);
+    setForebetLoad(null);
     setExpandedMatchId(null);
     loadForebetDate(targetDate)
       .then((result) => {
         setItems(result.matches);
         setLoadMessage(result.message);
+        setForebetLoad(result);
         setIsLoading(false);
       })
       .catch(() => {
@@ -107,6 +111,7 @@ export function ForebetPage() {
 
         {error ? <div className="detail-state">{error}</div> : null}
         {loadMessage ? <div className="forebet-load-message">{loadMessage}</div> : null}
+        {forebetLoad ? <ForebetLoadSummary result={forebetLoad} /> : null}
         {isLoading ? <div className="detail-state">Calculando rangos de resultado para los partidos importados...</div> : null}
         {!isLoading && !error ? (
           <div className="table-wrap">
@@ -137,6 +142,34 @@ export function ForebetPage() {
       </section>
     </section>
   );
+}
+
+function ForebetLoadSummary({ result }: { result: ForebetDateLoadResult }) {
+  return (
+    <div className="forebet-source-summary">
+      <span>Estado Forebet: {formatExternalStatus(result.external_fetch_status)}</span>
+      <span>Extraidos: {result.forebet_fetched}</span>
+      <span>Cruzados: {result.forebet_matched}</span>
+      <span>Importados: {result.forebet_imported}</span>
+      {result.forebet_source_url ? (
+        <a href={result.forebet_source_url} target="_blank" rel="noreferrer">
+          Fuente
+        </a>
+      ) : null}
+    </div>
+  );
+}
+
+function formatExternalStatus(value: string) {
+  const labels: Record<string, string> = {
+    ok: "conectado",
+    blocked: "bloqueado por proteccion",
+    request_failed: "sin conexion",
+    http_error: "error HTTP",
+    no_forebet_matches: "sin partidos extraidos",
+    no_local_match: "sin cruce local",
+  };
+  return labels[value] ?? value;
 }
 
 function todayInputValue() {

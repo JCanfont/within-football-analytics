@@ -1015,6 +1015,32 @@ td {
   font-weight: 700;
 }
 
+.forebet-source-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.forebet-source-summary span,
+.forebet-source-summary a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #344054;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.forebet-source-summary a {
+  color: #2f6f73;
+}
+
 .forebet-calculation-row td {
   background: #f7fbf9;
   white-space: normal;
