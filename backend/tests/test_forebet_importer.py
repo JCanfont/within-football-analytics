@@ -4,7 +4,7 @@ from decimal import Decimal
 from bs4 import BeautifulSoup
 
 from app.services import forebet_importer
-from app.services.forebet_importer import _parse_forebet_reader_predictions, _prediction_from_row
+from app.services.forebet_importer import _parse_forebet_reader_predictions, _prediction_from_row, _split_reader_compact_teams
 
 
 def test_prediction_from_row_builds_match_from_visible_forebet_link() -> None:
@@ -89,3 +89,15 @@ def test_parse_forebet_reader_predictions_accepts_european_date_links(monkeypatc
     assert predictions[0].prediction == "2"
     assert predictions[0].predicted_score == "0-1"
     assert predictions[0].expected_goals == Decimal("2.07")
+
+
+def test_split_reader_compact_teams_handles_common_compound_names() -> None:
+    assert _split_reader_compact_teams("FK Kauno Zalgiris Klaksvik") == ("FK Kauno Zalgiris", "Klaksvik")
+    assert _split_reader_compact_teams("Gornik Zabrze Fenerbahçe") == ("Gornik Zabrze", "Fenerbahçe")
+    assert _split_reader_compact_teams("Crvena Zvezda Larne") == ("Crvena Zvezda", "Larne")
+    assert _split_reader_compact_teams("Slovan Bratislava Saburtalo") == ("Slovan Bratislava", "Saburtalo")
+    assert _split_reader_compact_teams("Rapid Wien FC Santa Coloma") == ("Rapid Wien", "FC Santa Coloma")
+    assert _split_reader_compact_teams("Argentinos Juniors Estudiantes Río Cuarto") == (
+        "Argentinos Juniors",
+        "Estudiantes Río Cuarto",
+    )

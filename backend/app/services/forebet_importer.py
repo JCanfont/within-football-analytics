@@ -349,14 +349,22 @@ def _split_reader_compact_teams(label: str) -> tuple[str, str] | None:
 
 
 def _reader_team_split_index(words: list[str]) -> int:
+    prefixes = {"AC", "AEK", "CA", "CS", "FC", "FK", "GKS", "HB", "IFK", "MSK", "NK", "RB", "SL"}
+    home_second_words = {"Bratislava", "Juniors", "Zabrze", "Zvezda"}
     if len(words) == 2:
         return 1
     if len(words) == 3:
+        if words[1] in home_second_words:
+            return 2
         return 2 if len(words[0]) <= 4 or words[0].isupper() else 1
     if len(words) == 4:
+        if words[0].upper() in prefixes:
+            return 3
         return 2
     if len(words) == 5:
-        return 3 if words[0].upper() in {"AC", "AEK", "CA", "CS", "FC", "FK", "GKS", "HB", "IFK", "MSK", "NK", "RB", "SL"} else 3
+        if words[2].upper() in prefixes or words[1] in home_second_words:
+            return 2
+        return 3
     return max(1, len(words) // 2)
 
 
