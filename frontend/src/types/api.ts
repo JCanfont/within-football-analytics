@@ -114,6 +114,36 @@ export type MatchFeatureSnapshot = {
   calculated_at: string;
 };
 
+export type StreakSummary = {
+  signal: string;
+  current: number;
+  maximum: number;
+  total: number;
+  percentage: number;
+};
+
+export type QuestionMatchRow = {
+  match_id: number;
+  match_date: string;
+  home_team: string;
+  away_team: string;
+  home_score: number;
+  away_score: number;
+  total_goals: number;
+  signal: string;
+};
+
+export type StatisticalQuestionAnswer = {
+  question: string;
+  answer: string;
+  scope: string;
+  matched_team?: string | null;
+  sample_size: number;
+  under_25: StreakSummary;
+  over_25: StreakSummary;
+  recent_matches: QuestionMatchRow[];
+};
+
 export type TeamReferenceStanding = {
   team_id: number;
   team: string;

@@ -1048,6 +1048,121 @@ td {
   gap: 22px;
 }
 
+.questions-page {
+  display: grid;
+  gap: 22px;
+}
+
+.question-panel {
+  overflow: visible;
+}
+
+.question-form {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 10px;
+  padding: 6px 18px 12px;
+}
+
+.question-form label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+  background: #f9fbfc;
+  color: #617083;
+}
+
+.question-form input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #18212f;
+}
+
+.question-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 18px 18px;
+}
+
+.question-examples button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #c9d7d2;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #245c60;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.question-answer {
+  display: grid;
+  gap: 14px;
+  padding: 0 18px 18px;
+}
+
+.question-answer-text {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid #cfe0da;
+  border-radius: 8px;
+  background: #f7fbf9;
+}
+
+.question-answer-text span {
+  color: #617083;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.question-answer-text strong {
+  color: #18212f;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.question-streak-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.question-streak-card {
+  display: grid;
+  gap: 6px;
+  min-height: 100px;
+  padding: 14px;
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.question-streak-card span,
+.question-streak-card small {
+  color: #617083;
+  font-size: 13px;
+}
+
+.question-streak-card strong {
+  color: #18212f;
+  font-size: 24px;
+}
+
+.question-table table {
+  min-width: 760px;
+}
+
 .catalog-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -2350,6 +2465,8 @@ button.analysis-card:disabled {
     .timing-summary,
     .settings-grid,
     .imports-grid,
+    .question-form,
+    .question-streak-grid,
     .control-grid,
     .voice-analysis-tables,
   .weight-list {

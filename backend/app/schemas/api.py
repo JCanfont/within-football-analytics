@@ -256,6 +256,40 @@ class MatchFeatureRebuildResult(BaseModel):
     sample: list[MatchFeatureSnapshotRead]
 
 
+class StatisticalQuestionRequest(BaseModel):
+    question: str
+
+
+class StreakSummary(BaseModel):
+    signal: str
+    current: int
+    maximum: int
+    total: int
+    percentage: float
+
+
+class QuestionMatchRow(BaseModel):
+    match_id: int
+    match_date: datetime
+    home_team: str
+    away_team: str
+    home_score: int
+    away_score: int
+    total_goals: int
+    signal: str
+
+
+class StatisticalQuestionAnswer(BaseModel):
+    question: str
+    answer: str
+    scope: str
+    matched_team: str | None = None
+    sample_size: int
+    under_25: StreakSummary
+    over_25: StreakSummary
+    recent_matches: list[QuestionMatchRow]
+
+
 class GoalTimingRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

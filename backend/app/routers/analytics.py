@@ -6,10 +6,11 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Competition, GoalMoment, Match, Season, Team, TeamGoalTiming
-from app.schemas.api import ForebetDateLoadResult, ForebetRangeItem, GoalMomentRead, GoalTimingContext, GoalTimingRead, GoalTimingSeriesRow, MatchAnalytics, MatchFeatureRebuildResult, MatchFeatureSnapshotRead, PlayerStadiumAnalytics, StadiumPlayerAnalytics
+from app.schemas.api import ForebetDateLoadResult, ForebetRangeItem, GoalMomentRead, GoalTimingContext, GoalTimingRead, GoalTimingSeriesRow, MatchAnalytics, MatchFeatureRebuildResult, MatchFeatureSnapshotRead, PlayerStadiumAnalytics, StadiumPlayerAnalytics, StatisticalQuestionAnswer, StatisticalQuestionRequest
 from app.services.analytics_queries import build_match_analytics, latest_forebet_prediction, player_stadium_analytics, stadium_players_analytics
 from app.services.feature_snapshots import FEATURE_SCHEMA_VERSION, get_or_build_match_features, rebuild_match_features
 from app.services.forebet_importer import ForebetSourcePrediction, import_forebet_jornada
+from app.services.statistical_questions import answer_statistical_question
 
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
@@ -40,6 +41,11 @@ def rebuild_features(limit: int = 1000, db: Session = Depends(get_db)) -> MatchF
         schema_version=FEATURE_SCHEMA_VERSION,
         sample=[MatchFeatureSnapshotRead.model_validate(snapshot) for snapshot in snapshots[:5]],
     )
+
+
+@router.post("/questions", response_model=StatisticalQuestionAnswer)
+def ask_statistical_question(payload: StatisticalQuestionRequest, db: Session = Depends(get_db)) -> StatisticalQuestionAnswer:
+    return StatisticalQuestionAnswer.model_validate(answer_statistical_question(db, payload.question))
 
 
 @router.get("/team/{team_id}/goal-timing", response_model=list[GoalTimingRead])

@@ -1,4 +1,4 @@
-import { Bell, CalendarDays, DatabaseZap, Gauge, Goal, ListChecks, SearchCheck, Settings, Shield, Trophy, UsersRound } from "lucide-react";
+import { Bell, CalendarDays, DatabaseZap, Gauge, Goal, HelpCircle, ListChecks, SearchCheck, Settings, Shield, Trophy, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { AlertsPage } from "./pages/AlertsPage";
 import { CompetitionsPage, MatchesPage, TeamsPage } from "./pages/CatalogPages";
@@ -6,6 +6,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { ForebetPage } from "./pages/ForebetPage";
 import { ImportsPage } from "./pages/ImportsPage";
 import { PlayersPage } from "./pages/PlayersPage";
+import { QuestionsPage } from "./pages/QuestionsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
 const navigation = [
@@ -15,6 +16,7 @@ const navigation = [
   { label: "Equipos", icon: Shield, view: "teams" },
   { label: "Jugadores", icon: UsersRound, view: "players" },
   { label: "Forebet", icon: SearchCheck, view: "forebet" },
+  { label: "Preguntas", icon: HelpCircle, view: "questions" },
   { label: "Importaciones", icon: DatabaseZap, view: "imports" },
   { label: "Alertas", icon: Bell, view: "alerts" },
   { label: "Configuracion", icon: Settings, view: "settings" },
@@ -68,6 +70,8 @@ export default function App() {
           <AlertsPage />
         ) : activeView === "forebet" ? (
           <ForebetPage />
+        ) : activeView === "questions" ? (
+          <QuestionsPage />
         ) : activeView === "imports" ? (
           <ImportsPage />
         ) : activeView === "players" ? (

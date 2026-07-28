@@ -131,6 +131,22 @@ def test_match_feature_snapshot_endpoint_builds_tensor_ready_vector() -> None:
     app.dependency_overrides.clear()
 
 
+def test_statistical_question_endpoint_answers_under_over_streaks() -> None:
+    client = _client_with_seed_data()
+
+    response = client.post("/api/analytics/questions", json={"question": "Cuantos partidos seguidos lleva Getafe con under 2,5?"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["matched_team"] == "Getafe"
+    assert body["sample_size"] == 1
+    assert body["under_25"]["current"] == 1
+    assert body["under_25"]["maximum"] == 1
+    assert body["over_25"]["current"] == 0
+    assert body["recent_matches"][0]["signal"] == "under_2_5"
+    app.dependency_overrides.clear()
+
+
 def test_team_favorites_can_be_saved_listed_and_deleted() -> None:
     client = _client_with_seed_data()
     team_id = next(team["id"] for team in client.get("/api/teams").json() if team["name"] == "Getafe")

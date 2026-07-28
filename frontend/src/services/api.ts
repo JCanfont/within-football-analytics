@@ -20,6 +20,7 @@ import type {
   PlayerStadiumAnalytics,
   Stadium,
   StatisticalConfig,
+  StatisticalQuestionAnswer,
   StatisticalSettings,
   Team,
 } from "../types/api";
@@ -90,6 +91,11 @@ export async function fetchMatchAnalytics(matchId: number): Promise<MatchAnalyti
 
 export async function fetchMatchFeatures(matchId: number): Promise<MatchFeatureSnapshot> {
   const response = await api.get<MatchFeatureSnapshot>(`/api/analytics/features/matches/${matchId}`);
+  return response.data;
+}
+
+export async function askStatisticalQuestion(question: string): Promise<StatisticalQuestionAnswer> {
+  const response = await api.post<StatisticalQuestionAnswer>("/api/analytics/questions", { question });
   return response.data;
 }
 
