@@ -442,15 +442,24 @@ function formatDirectMatchOpening(
     return `${homeName} contra ${awayName}. ${formatHeadToHeadSampleNotice(0)}`;
   }
 
-  const results = directMatches
-    .map(
-      (match) =>
-        `${formatShortDate(match.match_date)}, temporada ${formatSpokenSeason(match.season)}, ${formatDirectResultScore(match)}`,
-    )
-    .join("; ");
+  const results = directMatches.map((match) => `${formatShortDate(match.match_date)}, ${formatDirectResultScore(match)}`).join("; ");
   const highlights = formatDirectMatchHighlights(directMatches);
+  const sampleNotice = directMatches.length < 3 ? `${formatHeadToHeadSampleNotice(directMatches.length)}. ` : "";
+  const venueSummary = formatVenueSummary(homeName, directMatches);
 
-  return `${homeName} contra ${awayName}. ${formatHeadToHeadSampleNotice(summary.matches)}. He encontrado ${summary.matches} partidos entre estos dos equipos en las ultimas temporadas cargadas, contando casa y fuera. Los resultados fueron: ${results}. ${highlights}`;
+  return `${homeName} contra ${awayName}. ${sampleNotice}He encontrado ${directMatches.length} partidos entre estos dos equipos en las ultimas temporadas cargadas: ${venueSummary}. Los resultados fueron: ${results}. ${highlights}`;
+}
+
+function formatVenueSummary(homeName: string, matches: DirectMatchResult[]) {
+  const selectedHomeMatches = matches.filter((match) => match.venue_context === "same_home").length;
+  const selectedAwayMatches = matches.filter((match) => match.venue_context === "reversed_home").length;
+  const unknownVenueMatches = Math.max(matches.length - selectedHomeMatches - selectedAwayMatches, 0);
+  const parts = [
+    `${selectedHomeMatches} con ${homeName} en casa`,
+    `${selectedAwayMatches} con ${homeName} fuera`,
+    unknownVenueMatches > 0 ? `${unknownVenueMatches} sin localia identificada` : "",
+  ].filter(Boolean);
+  return parts.join(" y ");
 }
 
 function formatDirectMatchHighlights(matches: DirectMatchResult[]) {

@@ -281,8 +281,9 @@ describe("voiceAssistant utilities", () => {
     const summary = buildSpokenSummary(insight);
 
     expect(summary).toContain("Getafe contra Osasuna");
-    expect(summary).toContain("He encontrado 1140 partidos entre estos dos equipos");
-    expect(summary).toContain("temporada veintiséis - veintisiete");
+    expect(summary).toContain("He encontrado 2 partidos entre estos dos equipos");
+    expect(summary).toContain("1 con Getafe en casa y 1 con Getafe fuera");
+    expect(summary).not.toContain("temporada veintiséis - veintisiete");
     expect(summary).toContain("Getafe 1, Osasuna 1");
     expect(summary).toContain("El último resultado fue");
     expect(summary).toContain("El resultado con mayor número de goles y mayor diferencia de goles fue");
@@ -368,6 +369,7 @@ describe("voiceAssistant utilities", () => {
     const summary = buildSpokenSummary(insight);
 
     expect(summary).toContain("aviso inicial: no tenemos tres enfrentamientos directos disponibles para este cruce, solo hay dos");
+    expect(summary).toContain("1 con Getafe en casa y 1 con Getafe fuera");
     expect(summary).toContain("Los resultados fueron");
     expect(summary.indexOf("aviso inicial")).toBeLessThan(summary.indexOf("en los enfrentamientos directos"));
   });
