@@ -1517,6 +1517,32 @@ td {
   border-top: 1px solid #edf0f4;
 }
 
+.team-detail-screen {
+  display: grid;
+  gap: 18px;
+}
+
+.team-detail-header p:not(.eyebrow) {
+  margin: 6px 0 0;
+  color: #617083;
+  font-weight: 800;
+}
+
+.team-detail-header .filter-show {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.team-detail-panel {
+  padding: 18px;
+}
+
+.team-detail-panel .team-profile {
+  padding: 0;
+  border-top: 0;
+}
+
 .team-profile-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

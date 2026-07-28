@@ -1,4 +1,4 @@
-import { BarChart3, ChevronDown, ChevronRight, Search, Trophy, UsersRound } from "lucide-react";
+import { ArrowLeft, BarChart3, ChevronDown, ChevronRight, Search, Trophy, UsersRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { fetchCompetitions, fetchMatches, fetchPlayers, fetchTeams } from "../services/api";
@@ -127,7 +127,7 @@ export function TeamsPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [openTeamId, setOpenTeamId] = useState<number | null>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
 
   useEffect(() => {
     Promise.all([fetchTeams(), fetchMatches(), fetchPlayers()])
@@ -143,6 +143,11 @@ export function TeamsPage() {
     const normalized = query.trim().toLowerCase();
     return normalized ? teams.filter((team) => `${team.name} ${team.country ?? ""}`.toLowerCase().includes(normalized)) : teams;
   }, [teams, query]);
+  const selectedTeam = teams.find((team) => team.id === selectedTeamId) ?? null;
+
+  if (!isLoading && selectedTeam) {
+    return <TeamDetailScreen matches={matches} onBack={() => setSelectedTeamId(null)} players={players} team={selectedTeam} />;
+  }
 
   return (
     <CatalogShell
@@ -156,10 +161,7 @@ export function TeamsPage() {
         <div className="detail-state">Cargando equipos...</div>
       ) : (
         <TeamGrid
-          matches={matches}
-          onToggle={(teamId) => setOpenTeamId((current) => (current === teamId ? null : teamId))}
-          openTeamId={openTeamId}
-          players={players}
+          onSelect={(teamId) => setSelectedTeamId(teamId)}
           teams={visibleTeams}
         />
       )}
@@ -239,33 +241,48 @@ function CompetitionGrid({
 }
 
 function TeamGrid({
-  matches,
-  onToggle,
-  openTeamId,
-  players,
+  onSelect,
   teams,
 }: {
-  matches: MatchListItem[];
-  onToggle: (teamId: number) => void;
-  openTeamId: number | null;
-  players: Player[];
+  onSelect: (teamId: number) => void;
   teams: Team[];
 }) {
   return (
     <div className="catalog-grid">
       {teams.map((team) => (
         <article className="catalog-card expandable-card team-card" key={team.id}>
-          <button type="button" onClick={() => onToggle(team.id)}>
+          <button type="button" onClick={() => onSelect(team.id)}>
             <span>
               <strong>{team.name}</strong>
               <small>{team.country ?? "Pais no informado"}</small>
             </span>
-            {openTeamId === team.id ? <ChevronDown size={17} aria-hidden="true" /> : <ChevronRight size={17} aria-hidden="true" />}
+            <ChevronRight size={17} aria-hidden="true" />
           </button>
-          {openTeamId === team.id ? <TeamProfile matches={matches} players={players} team={team} /> : null}
         </article>
       ))}
     </div>
+  );
+}
+
+function TeamDetailScreen({ matches, onBack, players, team }: { matches: MatchListItem[]; onBack: () => void; players: Player[]; team: Team }) {
+  return (
+    <section className="catalog-page team-detail-screen">
+      <header className="page-header team-detail-header">
+        <div>
+          <p className="eyebrow">Ficha de equipo</p>
+          <h1>{team.name}</h1>
+          <p>{team.country ?? "Pais no informado"}</p>
+        </div>
+        <button className="filter-show" type="button" onClick={onBack}>
+          <ArrowLeft size={16} aria-hidden="true" />
+          Volver a equipos
+        </button>
+      </header>
+
+      <section className="panel team-detail-panel">
+        <TeamProfile matches={matches} players={players} team={team} />
+      </section>
+    </section>
   );
 }
 
