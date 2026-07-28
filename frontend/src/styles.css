@@ -2006,41 +2006,50 @@ td {
   opacity: 0.62;
 }
 
-.forebet-score-board {
+.forebet-score-strip {
   display: grid;
-  gap: 6px;
-  width: 250px;
+  gap: 5px;
+  min-width: 260px;
+  margin-top: 7px;
 }
 
-.forebet-score-board-grid {
-  display: grid;
-  grid-template-columns: repeat(10, 22px);
-  gap: 3px;
+.forebet-score-strip > span {
+  color: #617083;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
-.forebet-score-board-grid span {
+.forebet-score-strip div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 360px;
+}
+
+.forebet-score-strip div span {
   display: inline-grid;
   place-items: center;
-  width: 22px;
-  height: 20px;
+  min-width: 28px;
+  height: 22px;
+  padding: 0 5px;
   border: 1px solid #d8e0e8;
-  border-radius: 5px;
-  background: #f0f3f6;
-  color: #9aa6b5;
-  font-size: 9px;
+  border-radius: 6px;
+  background: #f4f7f9;
+  color: #536174;
+  font-size: 11px;
   font-weight: 900;
-  line-height: 1;
 }
 
-.forebet-score-board-grid span.lit {
+.forebet-score-strip div span.very-likely {
   border-color: #1f7a4d;
   background: #d6f263;
   color: #111827;
-  box-shadow: 0 0 0 2px rgba(214, 242, 99, 0.28), 0 0 14px rgba(47, 111, 115, 0.42);
+  box-shadow: 0 0 0 2px rgba(214, 242, 99, 0.28), 0 0 12px rgba(47, 111, 115, 0.34);
 }
 
-.forebet-score-board small {
-  color: #536174;
+.forebet-score-strip small {
+  color: #245c60;
   font-size: 11px;
   font-weight: 900;
 }

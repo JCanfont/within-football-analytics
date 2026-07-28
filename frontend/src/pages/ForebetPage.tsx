@@ -316,7 +316,6 @@ export function ForebetPage() {
                   <th>Estado pronostico</th>
                   <th>Predicción goles</th>
                   <th>Goles esperados</th>
-                  <th>Parrilla 0-9</th>
                   {showRangeColumns ? <th>Rango</th> : null}
                   {showRangeColumns ? <th>Marcadores posibles</th> : null}
                   {showRangeColumns ? <th>Calculo</th> : null}
@@ -510,11 +509,11 @@ function ForebetRangeRow({
             {forecastAlerts && isWatched ? " · aviso min 60" : ""}
           </span>
         </td>
-        <td>{formatGoalPrediction(item, predictionMode)}</td>
-        <td>{formatUnknown(item.expected_goals)}</td>
         <td>
-          <ForebetPredictionGrid item={item} />
+          {formatGoalPrediction(item, predictionMode)}
+          <ForebetPredictionResults item={item} />
         </td>
+        <td>{formatUnknown(item.expected_goals)}</td>
         {showRanges ? <td>{isCalculatingRanges ? "Calculando..." : formatRange(range)}</td> : null}
         {showRanges ? <td>{isCalculatingRanges ? "Calculando..." : formatPossibleScores(range)}</td> : null}
         {showRanges ? (
@@ -528,7 +527,7 @@ function ForebetRangeRow({
       </tr>
       {showRanges && isExpanded ? (
         <tr className="forebet-calculation-row">
-          <td colSpan={11}>
+          <td colSpan={10}>
             <ForebetCalculation range={range} reliability={item.reliability} />
           </td>
         </tr>
@@ -537,27 +536,24 @@ function ForebetRangeRow({
   );
 }
 
-function ForebetPredictionGrid({ item }: { item: ForebetRangeItem }) {
-  const cells = buildForebetPredictionCells(item);
-  const highlighted = cells.filter((cell) => cell.highlighted);
+function ForebetPredictionResults({ item }: { item: ForebetRangeItem }) {
+  const scores = buildForebetPredictionScores(item);
+  const likelyScore = predictedScoreLabel(item);
   return (
-    <div className="forebet-score-board" aria-label={`Parrilla de marcadores ${item.home_team} contra ${item.away_team}`}>
-      <div className="forebet-score-board-grid">
-        {cells.map((cell) => (
+    <div className="forebet-score-strip" aria-label={`Posibles resultados ${item.home_team} contra ${item.away_team}`}>
+      <span>Posibles resultados</span>
+      <div>
+        {scores.map((score) => (
           <span
-            className={cell.highlighted ? "lit" : ""}
-            key={cell.label}
-            title={cell.highlighted ? "Cumple los tres pronosticos disponibles" : "No cumple el conjunto de pronosticos"}
+            className={score === likelyScore ? "very-likely" : ""}
+            key={score}
+            title={score === likelyScore ? "Muy probable segun resultado exacto Forebet" : "Encaja por goles y Over/Under"}
           >
-            {cell.label}
+            {score}
           </span>
         ))}
       </div>
-      <small>
-        {highlighted.length
-          ? `${highlighted.length} marcador${highlighted.length === 1 ? "" : "es"} encaja${highlighted.length === 1 ? "" : "n"}`
-          : "Sin coincidencias completas"}
-      </small>
+      {likelyScore ? <small>Muy probable: {likelyScore}</small> : null}
     </div>
   );
 }
@@ -666,39 +662,23 @@ function formatOverUnder(value: string) {
   return value === "over_2_5" ? "Over 2.5" : "Under 2.5";
 }
 
-function buildForebetPredictionCells(item: ForebetRangeItem) {
+function buildForebetPredictionScores(item: ForebetRangeItem) {
   const prediction = isRecord(item.goal_prediction) ? item.goal_prediction : {};
-  const predictedScore = splitPredictedScore(item.predicted_score ?? (typeof prediction.predicted_score === "string" ? prediction.predicted_score : null));
   const predictedTotal = typeof prediction.predicted_total_goals === "number" ? prediction.predicted_total_goals : null;
   const overUnder = typeof prediction.over_under_25 === "string" ? prediction.over_under_25 : null;
-  const matchPrediction = item.forebet_prediction ?? null;
-  const cells: Array<{ label: string; highlighted: boolean }> = [];
+  const likelyScore = predictedScoreLabel(item);
+  const scores: string[] = [];
   for (let home = 0; home <= 9; home += 1) {
     for (let away = 0; away <= 9; away += 1) {
-      cells.push({
-        label: `${home}-${away}`,
-        highlighted:
-          matchesForebetOutcome(home, away, matchPrediction) &&
-          matchesForebetGoalPrediction(home, away, predictedTotal, overUnder) &&
-          matchesForebetExactScore(home, away, predictedScore),
-      });
+      if (matchesForebetGoalPrediction(home, away, predictedTotal, overUnder)) {
+        scores.push(`${home}-${away}`);
+      }
     }
   }
-  return cells;
-}
-
-function matchesForebetOutcome(home: number, away: number, prediction?: string | null) {
-  if (!prediction) {
-    return true;
+  if (likelyScore && !scores.includes(likelyScore)) {
+    scores.push(likelyScore);
   }
-  const normalized = prediction.toUpperCase();
-  if (home > away) {
-    return normalized.includes("1");
-  }
-  if (home === away) {
-    return normalized.includes("X");
-  }
-  return normalized.includes("2");
+  return scores;
 }
 
 function matchesForebetGoalPrediction(home: number, away: number, predictedTotal: number | null, overUnder: string | null) {
@@ -715,11 +695,11 @@ function matchesForebetGoalPrediction(home: number, away: number, predictedTotal
   return true;
 }
 
-function matchesForebetExactScore(home: number, away: number, predictedScore: { home: number; away: number } | null) {
-  if (!predictedScore) {
-    return true;
-  }
-  return home === predictedScore.home && away === predictedScore.away;
+function predictedScoreLabel(item: ForebetRangeItem) {
+  const prediction = isRecord(item.goal_prediction) ? item.goal_prediction : {};
+  const score = item.predicted_score ?? (typeof prediction.predicted_score === "string" ? prediction.predicted_score : null);
+  const parsed = splitPredictedScore(score);
+  return parsed ? `${parsed.home}-${parsed.away}` : null;
 }
 
 function evaluateForecastState(item: ForebetRangeItem): { status: "possible" | "impossible" | "pending"; label: string } {
