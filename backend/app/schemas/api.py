@@ -20,6 +20,8 @@ class TeamRead(BaseModel):
     id: int
     name: str
     country: str | None = None
+    squad_players_count: int = 0
+    squad_status: str = "not_imported"
 
 
 class PlayerRead(BaseModel):

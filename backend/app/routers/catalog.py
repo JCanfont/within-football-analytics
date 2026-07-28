@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Alert, Competition, Player, Stadium, Team, UserFavorite
+from app.models import Alert, Competition, Player, PlayerTeamHistory, Stadium, Team, UserFavorite
 from app.schemas.api import AlertRead, CompetitionRead, FavoriteCreate, FavoriteRead, PlayerRead, StadiumRead, TeamRead, TeamSquadRead
 from app.services.alert_service import generate_match_alerts
 from app.services.transfermarkt_provider import get_team_squad, import_team_squad, provider_status as transfermarkt_provider_status
@@ -18,8 +18,29 @@ def list_competitions(db: Session = Depends(get_db), limit: int = 100) -> list[C
 
 
 @router.get("/teams", response_model=list[TeamRead])
-def list_teams(db: Session = Depends(get_db), limit: int = 200) -> list[Team]:
-    return list(db.scalars(select(Team).order_by(Team.name).limit(limit)).all())
+def list_teams(db: Session = Depends(get_db), limit: int = 200) -> list[TeamRead]:
+    teams = list(db.scalars(select(Team).order_by(Team.name).limit(limit)).all())
+    if not teams:
+        return []
+
+    squad_counts = dict(
+        db.execute(
+            select(PlayerTeamHistory.team_id, func.count(func.distinct(PlayerTeamHistory.player_id)))
+            .where(PlayerTeamHistory.team_id.in_([team.id for team in teams]))
+            .group_by(PlayerTeamHistory.team_id)
+        ).all()
+    )
+
+    return [
+        TeamRead(
+            id=team.id,
+            name=team.name,
+            country=team.country,
+            squad_players_count=squad_counts.get(team.id, 0),
+            squad_status="imported" if squad_counts.get(team.id, 0) else "not_imported",
+        )
+        for team in teams
+    ]
 
 
 @router.get("/players", response_model=list[PlayerRead])

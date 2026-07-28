@@ -143,8 +143,18 @@ export function TeamsPage() {
   }, [teams, query]);
   const selectedTeam = teams.find((team) => team.id === selectedTeamId) ?? null;
 
+  function updateTeamSquadSummary(teamId: number, playersCount: number) {
+    setTeams((currentTeams) =>
+      currentTeams.map((team) =>
+        team.id === teamId
+          ? { ...team, squad_players_count: playersCount, squad_status: playersCount ? "imported" : "not_imported" }
+          : team,
+      ),
+    );
+  }
+
   if (!isLoading && selectedTeam) {
-    return <TeamDetailScreen matches={matches} onBack={() => setSelectedTeamId(null)} team={selectedTeam} />;
+    return <TeamDetailScreen matches={matches} onBack={() => setSelectedTeamId(null)} onSquadUpdated={updateTeamSquadSummary} team={selectedTeam} />;
   }
 
   return (
@@ -253,6 +263,7 @@ function TeamGrid({
             <span>
               <strong>{team.name}</strong>
               <small>{team.country ?? "Pais no informado"}</small>
+              <small>{formatSquadSummary(team)}</small>
             </span>
             <ChevronRight size={17} aria-hidden="true" />
           </button>
@@ -262,7 +273,17 @@ function TeamGrid({
   );
 }
 
-function TeamDetailScreen({ matches, onBack, team }: { matches: MatchListItem[]; onBack: () => void; team: Team }) {
+function TeamDetailScreen({
+  matches,
+  onBack,
+  onSquadUpdated,
+  team,
+}: {
+  matches: MatchListItem[];
+  onBack: () => void;
+  onSquadUpdated: (teamId: number, playersCount: number) => void;
+  team: Team;
+}) {
   const [squad, setSquad] = useState<TeamSquad | null>(null);
   const [isSquadLoading, setIsSquadLoading] = useState(true);
   const [isSyncingSquad, setIsSyncingSquad] = useState(false);
@@ -288,7 +309,10 @@ function TeamDetailScreen({ matches, onBack, team }: { matches: MatchListItem[];
   function syncSquad() {
     setIsSyncingSquad(true);
     importTransfermarktSquad(team.id)
-      .then(setSquad)
+      .then((result) => {
+        setSquad(result);
+        onSquadUpdated(team.id, result.players.length);
+      })
       .catch(() =>
         setSquad((current) => ({
           team_id: team.id,
@@ -583,4 +607,9 @@ function formatScore(match: MatchListItem) {
     return match.status;
   }
   return `${match.home_score}-${match.away_score}`;
+}
+
+function formatSquadSummary(team: Team) {
+  const count = team.squad_players_count ?? 0;
+  return count ? `${count} jugadores importados` : "Plantilla pendiente";
 }

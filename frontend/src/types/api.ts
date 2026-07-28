@@ -10,6 +10,8 @@ export type Team = {
   id: number;
   name: string;
   country?: string | null;
+  squad_players_count?: number;
+  squad_status?: "imported" | "not_imported" | string;
 };
 
 export type Player = {
