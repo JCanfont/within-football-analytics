@@ -1,7 +1,8 @@
-import { Bell, CalendarDays, DatabaseZap, Gauge, Goal, HelpCircle, ListChecks, SearchCheck, Settings, Shield, Trophy, UsersRound } from "lucide-react";
+import { Bell, CalendarDays, DatabaseZap, Gauge, Goal, HelpCircle, ListChecks, SearchCheck, Settings, Shield, Scale, Trophy, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { AlertsPage } from "./pages/AlertsPage";
 import { CompetitionsPage, MatchesPage, TeamsPage } from "./pages/CatalogPages";
+import { ContraPage } from "./pages/ContraPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ForebetPage } from "./pages/ForebetPage";
 import { ImportsPage } from "./pages/ImportsPage";
@@ -16,6 +17,7 @@ const navigation = [
   { label: "Equipos", icon: Shield, view: "teams" },
   { label: "Jugadores", icon: UsersRound, view: "players" },
   { label: "Forebet", icon: SearchCheck, view: "forebet" },
+  { label: "A la contra", icon: Scale, view: "contra" },
   { label: "Preguntas", icon: HelpCircle, view: "questions" },
   { label: "Importaciones", icon: DatabaseZap, view: "imports" },
   { label: "Alertas", icon: Bell, view: "alerts" },
@@ -70,6 +72,8 @@ export default function App() {
           <AlertsPage />
         ) : activeView === "forebet" ? (
           <ForebetPage />
+        ) : activeView === "contra" ? (
+          <ContraPage />
         ) : activeView === "questions" ? (
           <QuestionsPage />
         ) : activeView === "imports" ? (

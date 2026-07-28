@@ -606,6 +606,23 @@ describe("App", () => {
     expect(screen.getByText("Osasuna")).toBeInTheDocument();
   }, 30000);
 
+  it("opens the contrarian picks workspace and records a pick", async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "A la contra" }));
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "A la contra", level: 1 })).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByPlaceholderText("Valencia - Celta"), { target: { value: "Getafe - Celta" } });
+    fireEvent.change(screen.getByLabelText("Resultado original"), { target: { value: "lost" } });
+    fireEvent.click(screen.getByRole("button", { name: "Anadir" }));
+
+    expect(screen.getByText("Getafe - Celta")).toBeInTheDocument();
+    expect(screen.getByText("Resultado a la contra")).toBeInTheDocument();
+    expect(screen.getAllByText("+1.10 u")[0]).toBeInTheDocument();
+  }, 30000);
+
   it("lets the user choose the Forebet goal prediction view", async () => {
     render(<App />);
 

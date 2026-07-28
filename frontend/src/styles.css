@@ -1053,6 +1053,89 @@ td {
   gap: 22px;
 }
 
+.contra-page {
+  display: grid;
+  gap: 22px;
+}
+
+.contra-panel {
+  overflow: hidden;
+}
+
+.contra-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 12px;
+  padding: 0 18px 18px;
+}
+
+.contra-form label {
+  display: grid;
+  gap: 6px;
+  color: #617083;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.contra-form input,
+.contra-form select {
+  min-height: 40px;
+  width: 100%;
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #18212f;
+  font: inherit;
+  outline: 0;
+  padding: 0 10px;
+  text-transform: none;
+}
+
+.contra-form .primary-action {
+  align-self: end;
+}
+
+.contra-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.contra-metric {
+  display: grid;
+  gap: 7px;
+  min-height: 86px;
+  padding: 14px;
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.contra-metric span {
+  color: #617083;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.contra-metric strong {
+  color: #18212f;
+  font-size: 24px;
+}
+
+.contra-metric.good strong {
+  color: #1f7a4d;
+}
+
+.contra-metric.bad strong {
+  color: #b42318;
+}
+
+.contra-table table {
+  min-width: 920px;
+}
+
 .question-panel {
   overflow: visible;
 }
@@ -2467,6 +2550,8 @@ button.analysis-card:disabled {
     .imports-grid,
     .question-form,
     .question-streak-grid,
+    .contra-form,
+    .contra-summary-grid,
     .control-grid,
     .voice-analysis-tables,
   .weight-list {
