@@ -3,6 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import { loadForebetDate } from "../services/api";
 import type { ForebetDateLoadResult, ForebetRangeItem } from "../types/api";
 
+type GoalPredictionMode = "full" | "score" | "total" | "overUnder";
+
+const goalPredictionModes: Array<{ label: string; mode: GoalPredictionMode }> = [
+  { label: "Todo", mode: "full" },
+  { label: "Marcador", mode: "score" },
+  { label: "Goles", mode: "total" },
+  { label: "Over/Under", mode: "overUnder" },
+];
+
 export function ForebetPage() {
   const [items, setItems] = useState<ForebetRangeItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -14,6 +23,7 @@ export function ForebetPage() {
   const [expandedMatchId, setExpandedMatchId] = useState<number | null>(null);
   const [hasCalculatedRanges, setHasCalculatedRanges] = useState(false);
   const [loadingMode, setLoadingMode] = useState<"matches" | "ranges">("matches");
+  const [goalPredictionMode, setGoalPredictionMode] = useState<GoalPredictionMode>("full");
 
   function loadDate() {
     if (!targetDate) {
@@ -107,13 +117,27 @@ export function ForebetPage() {
             <h2>Jornada del {formatDateLabel(targetDate)}</h2>
             <p>{isLoading ? loadingLabel(loadingMode) : `${filteredItems.length} partidos de la fecha solicitada`}</p>
           </div>
-          <input
-            className="forebet-search"
-            aria-label="Buscar partido Forebet"
-            placeholder="Buscar equipo, liga o temporada"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
+          <div className="forebet-table-tools">
+            <div className="forebet-mode-control" aria-label="Vista de prediccion de goles">
+              {goalPredictionModes.map((option) => (
+                <button
+                  className={goalPredictionMode === option.mode ? "active" : ""}
+                  key={option.mode}
+                  type="button"
+                  onClick={() => setGoalPredictionMode(option.mode)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <input
+              className="forebet-search"
+              aria-label="Buscar partido Forebet"
+              placeholder="Buscar equipo, liga o temporada"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </div>
         </div>
 
         {error ? <div className="detail-state">{error}</div> : null}
@@ -142,6 +166,7 @@ export function ForebetPage() {
                     item={item}
                     key={item.match_id}
                     onToggle={() => setExpandedMatchId((current) => (current === item.match_id ? null : item.match_id))}
+                    predictionMode={goalPredictionMode}
                     showRanges={hasCalculatedRanges}
                   />
                 ))}
@@ -216,11 +241,13 @@ function ForebetRangeRow({
   isExpanded,
   item,
   onToggle,
+  predictionMode,
   showRanges,
 }: {
   isExpanded: boolean;
   item: ForebetRangeItem;
   onToggle: () => void;
+  predictionMode: GoalPredictionMode;
   showRanges: boolean;
 }) {
   const range = item.score_range;
@@ -233,7 +260,7 @@ function ForebetRangeRow({
           <span className="table-subtext">{item.competition} · {formatSeason(item.season)}</span>
         </td>
         <td>{item.forebet_prediction ?? "Sin captura"}</td>
-        <td>{formatGoalPrediction(item)}</td>
+        <td>{formatGoalPrediction(item, predictionMode)}</td>
         <td>{formatUnknown(item.expected_goals)}</td>
         {showRanges ? <td>{formatRange(range)}</td> : null}
         {showRanges ? <td>{formatPossibleScores(range)}</td> : null}
@@ -323,13 +350,22 @@ function formatRange(range?: Record<string, unknown> | null) {
   return typeof range?.summary === "string" ? range.summary : "Sin rango";
 }
 
-function formatGoalPrediction(item: ForebetRangeItem) {
+function formatGoalPrediction(item: ForebetRangeItem, mode: GoalPredictionMode) {
   const prediction = isRecord(item.goal_prediction) ? item.goal_prediction : {};
   const total = prediction.predicted_total_goals;
   const overUnder = prediction.over_under_25;
   const score = item.predicted_score ?? (typeof prediction.predicted_score === "string" ? prediction.predicted_score : null);
   if (!score && typeof total !== "number" && typeof overUnder !== "string") {
     return "Sin captura";
+  }
+  if (mode === "score") {
+    return score ?? "Sin marcador";
+  }
+  if (mode === "total") {
+    return typeof total === "number" ? `${total} goles` : "Sin total";
+  }
+  if (mode === "overUnder") {
+    return typeof overUnder === "string" ? formatOverUnder(overUnder) : "Sin Over/Under";
   }
   const parts = [];
   if (score) {
@@ -339,9 +375,13 @@ function formatGoalPrediction(item: ForebetRangeItem) {
     parts.push(`${total} goles`);
   }
   if (typeof overUnder === "string") {
-    parts.push(overUnder === "over_2_5" ? "Over 2.5" : "Under 2.5");
+    parts.push(formatOverUnder(overUnder));
   }
   return parts.join(" · ");
+}
+
+function formatOverUnder(value: string) {
+  return value === "over_2_5" ? "Over 2.5" : "Under 2.5";
 }
 
 function formatPossibleScores(range?: Record<string, unknown> | null) {

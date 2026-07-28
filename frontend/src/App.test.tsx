@@ -384,6 +384,39 @@ describe("App", () => {
       alert_level: "normal",
     });
     mockedApi.updateLiveTrackingSettings.mockImplementation(async (settings) => settings);
+    mockedApi.loadForebetDate.mockResolvedValue({
+      target_date: "2026-07-28",
+      status: "ok",
+      message: "Partidos Forebet cargados.",
+      external_fetch_status: "ok",
+      forebet_source_url: "https://www.forebet.com/",
+      forebet_fetched: 1,
+      forebet_matched: 1,
+      forebet_created_matches: 0,
+      forebet_imported: 1,
+      forebet_unmatched: 0,
+      matches: [
+        {
+          match_id: 50,
+          match_date: "2026-07-28T19:00:00+00:00",
+          competition: "LaLiga",
+          season: "2026/2027",
+          home_team: "Getafe",
+          away_team: "Celta",
+          status: "scheduled",
+          forebet_prediction: "2",
+          expected_goals: "2.90",
+          predicted_score: "1-2",
+          goal_prediction: {
+            predicted_score: "1-2",
+            predicted_total_goals: 3,
+            over_under_25: "over_2_5",
+          },
+          score_range: null,
+          reliability: "pending_range",
+        },
+      ],
+    });
   });
 
   it("renders the dashboard with imported match data", async () => {
@@ -451,6 +484,27 @@ describe("App", () => {
     await waitFor(() => {
       expect(screen.getByText("Sistema actualizandose")).toBeInTheDocument();
     });
+  }, 30000);
+
+  it("lets the user choose the Forebet goal prediction view", async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Forebet" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Predicción goles")).toBeInTheDocument();
+    });
+    expect(screen.getByText(/1-2.*3 goles.*Over 2\.5/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Marcador" }));
+    expect(screen.getByText("1-2")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Goles" }));
+    expect(screen.getByText("3 goles")).toBeInTheDocument();
+    expect(screen.queryByText("Over 2.5")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Over/Under" }));
+    expect(screen.getByText("Over 2.5")).toBeInTheDocument();
   }, 30000);
 
   it("enables live tracking globally and for the selected match", async () => {

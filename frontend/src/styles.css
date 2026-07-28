@@ -1004,6 +1004,39 @@ td {
   color: #18212f;
 }
 
+.forebet-table-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.forebet-mode-control {
+  display: inline-flex;
+  min-height: 38px;
+  padding: 3px;
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+  background: #f9fbfc;
+}
+
+.forebet-mode-control button {
+  min-width: 74px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #536174;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.forebet-mode-control button.active {
+  background: #2f6f73;
+  color: #ffffff;
+}
+
 .forebet-load-message {
   margin-bottom: 12px;
   padding: 11px 12px;
