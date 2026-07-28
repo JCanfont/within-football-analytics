@@ -1030,6 +1030,125 @@ td {
   gap: 22px;
 }
 
+.players-page {
+  display: grid;
+  gap: 22px;
+}
+
+.players-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  min-width: min(360px, 100%);
+  padding: 0 12px;
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #617083;
+}
+
+.players-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #18212f;
+  font: inherit;
+}
+
+.players-panel {
+  overflow: hidden;
+}
+
+.players-list {
+  display: grid;
+  gap: 8px;
+  padding: 0 18px 18px;
+}
+
+.player-row {
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.player-row > button {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 58px;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: #18212f;
+  cursor: pointer;
+  text-align: left;
+}
+
+.player-row > button:hover {
+  background: #f7fafb;
+}
+
+.player-row strong,
+.player-row small {
+  display: block;
+}
+
+.player-row small {
+  margin-top: 3px;
+  color: #617083;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.player-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #eaf4f1;
+  color: #245c60;
+}
+
+.player-analytics,
+.player-analytics-state {
+  border-top: 1px solid #e5ebf0;
+  background: #fbfcfd;
+}
+
+.player-analytics-state {
+  padding: 14px;
+  color: #617083;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.player-analytics {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.player-analytics-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #245c60;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.compact-table {
+  border: 1px solid #e5ebf0;
+  border-radius: 8px;
+}
+
 .forebet-panel {
   overflow: hidden;
 }

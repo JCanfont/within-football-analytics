@@ -4,6 +4,7 @@ import { AlertsPage } from "./pages/AlertsPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ForebetPage } from "./pages/ForebetPage";
 import { ImportsPage } from "./pages/ImportsPage";
+import { PlayersPage } from "./pages/PlayersPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
 const navigation = [
@@ -11,7 +12,7 @@ const navigation = [
   { label: "Partidos", icon: CalendarDays },
   { label: "Competiciones", icon: Trophy },
   { label: "Equipos", icon: Shield },
-  { label: "Jugadores", icon: UsersRound },
+  { label: "Jugadores", icon: UsersRound, view: "players" },
   { label: "Forebet", icon: SearchCheck, view: "forebet" },
   { label: "Importaciones", icon: DatabaseZap, view: "imports" },
   { label: "Alertas", icon: Bell, view: "alerts" },
@@ -68,6 +69,8 @@ export default function App() {
           <ForebetPage />
         ) : activeView === "imports" ? (
           <ImportsPage />
+        ) : activeView === "players" ? (
+          <PlayersPage />
         ) : (
           <DashboardPage />
         )}

@@ -16,6 +16,7 @@ import type {
   MatchInsightData,
   MatchListItem,
   Player,
+  PlayerStadiumAnalytics,
   Stadium,
   StatisticalConfig,
   StatisticalSettings,
@@ -92,6 +93,16 @@ export async function fetchMatchGoalMoments(matchId: number): Promise<GoalMoment
 
 export async function fetchForebetRanges(): Promise<ForebetRangeItem[]> {
   const response = await api.get<ForebetRangeItem[]>("/api/analytics/forebet-ranges?limit=2000");
+  return response.data;
+}
+
+export async function fetchPlayers(): Promise<Player[]> {
+  const response = await api.get<Player[]>("/api/players?limit=2000");
+  return response.data;
+}
+
+export async function fetchPlayerStadiumAnalytics(playerId: number): Promise<PlayerStadiumAnalytics[]> {
+  const response = await api.get<PlayerStadiumAnalytics[]>(`/api/analytics/player/${playerId}/stadiums`);
   return response.data;
 }
 

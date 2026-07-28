@@ -346,6 +346,25 @@ describe("App", () => {
       },
     ]);
     mockedApi.fetchFavorites.mockResolvedValue([]);
+    mockedApi.fetchPlayers.mockResolvedValue([{ id: 1, full_name: "Borja Mayoral", nationality: "Spain", primary_position: "forward" }]);
+    mockedApi.fetchPlayerStadiumAnalytics.mockResolvedValue([
+      {
+        player_id: 1,
+        player: "Borja Mayoral",
+        stadium_id: 1,
+        stadium: "Coliseum",
+        matches: 1,
+        starts: 1,
+        minutes: 90,
+        goals: 1,
+        assists: 0,
+        goal_participations_per_90: 1,
+        goals_per_90: 1,
+        assists_per_90: 0,
+        average_rating: null,
+        reliability: "very_low",
+      },
+    ]);
     mockedApi.saveFavorite.mockImplementation(async (payload) => ({
       id: 1,
       user_key: payload.user_key ?? "default",
@@ -518,6 +537,25 @@ describe("App", () => {
     await waitFor(() => {
       expect(screen.getByText("Sistema actualizandose")).toBeInTheDocument();
     });
+  }, 30000);
+
+  it("shows player information in the players list", async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Jugadores" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Jugadores" })).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Borja Mayoral")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Borja Mayoral/ }));
+
+    await waitFor(() => {
+      expect(mockedApi.fetchPlayerStadiumAnalytics).toHaveBeenCalledWith(1);
+    });
+    expect(screen.getByText("Coliseum")).toBeInTheDocument();
+    expect(screen.getByText("Rendimiento por estadio")).toBeInTheDocument();
   }, 30000);
 
   it("lets the user choose the Forebet goal prediction view", async () => {

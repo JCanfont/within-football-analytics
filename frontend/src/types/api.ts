@@ -19,6 +19,23 @@ export type Player = {
   primary_position?: string | null;
 };
 
+export type PlayerStadiumAnalytics = {
+  player_id: number;
+  player: string;
+  stadium_id?: number | null;
+  stadium?: string | null;
+  matches: number;
+  starts: number;
+  minutes: number;
+  goals: number;
+  assists: number;
+  goal_participations_per_90: number;
+  goals_per_90: number;
+  assists_per_90: number;
+  average_rating?: number | null;
+  reliability: string;
+};
+
 export type Stadium = {
   id: number;
   name: string;
