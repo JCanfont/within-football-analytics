@@ -1,5 +1,5 @@
 import { Bell, BellRing, Calculator, CalendarDays, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadForebetDate } from "../services/api";
 import type { ForebetDateLoadResult, ForebetRangeItem } from "../types/api";
 
@@ -44,6 +44,11 @@ export function ForebetPage() {
   const [forecastAlerts, setForecastAlerts] = useState(() => readForebetWatchState().forecastAlerts);
   const [lastLiveRefresh, setLastLiveRefresh] = useState<string | null>(null);
   const [nextLiveRefresh, setNextLiveRefresh] = useState<string | null>(null);
+  const liveRefreshInFlightRef = useRef(false);
+  const watchedMatchIdsRef = useRef(watchedMatchIds);
+  const notifiedStartedIdsRef = useRef(notifiedStartedIds);
+  const notifiedForecastIdsRef = useRef(notifiedForecastIds);
+  const forecastAlertsRef = useRef(forecastAlerts);
   const isCalculatingRanges = isLoading && loadingMode === "ranges";
   const showRangeColumns = hasCalculatedRanges || isCalculatingRanges;
 
@@ -88,10 +93,11 @@ export function ForebetPage() {
       });
   }
 
-  function refreshLiveResults(manual = false) {
-    if (!targetDate || isLiveRefreshing) {
+  const refreshLiveResults = useCallback((manual = false) => {
+    if (!targetDate || liveRefreshInFlightRef.current) {
       return;
     }
+    liveRefreshInFlightRef.current = true;
     setIsLiveRefreshing(true);
     setLiveMessage(manual ? "Actualizando Forebet ahora..." : "Actualizacion automatica de Forebet en curso...");
     loadForebetDate(targetDate, false)
@@ -107,8 +113,11 @@ export function ForebetPage() {
       .catch(() => {
         setLiveMessage("No se pudo actualizar Forebet en este intento.");
       })
-      .finally(() => setIsLiveRefreshing(false));
-  }
+      .finally(() => {
+        liveRefreshInFlightRef.current = false;
+        setIsLiveRefreshing(false);
+      });
+  }, [targetDate]);
 
   function toggleAutoRefresh() {
     setAutoRefresh((current) => {
@@ -143,26 +152,26 @@ export function ForebetPage() {
   }
 
   function checkStartedAlerts(nextItems: ForebetRangeItem[]) {
-    const nextNotified = new Set(notifiedStartedIds);
+    const nextNotified = new Set(notifiedStartedIdsRef.current);
     for (const item of nextItems) {
-      if (!watchedMatchIds.includes(item.match_id) || nextNotified.has(item.match_id) || !hasMatchStarted(item)) {
+      if (!watchedMatchIdsRef.current.includes(item.match_id) || nextNotified.has(item.match_id) || !hasMatchStarted(item)) {
         continue;
       }
       notifyMatchStarted(item);
       nextNotified.add(item.match_id);
     }
-    if (nextNotified.size !== notifiedStartedIds.length) {
+    if (nextNotified.size !== notifiedStartedIdsRef.current.length) {
       setNotifiedStartedIds(Array.from(nextNotified));
     }
   }
 
   function checkForecastAlerts(nextItems: ForebetRangeItem[]) {
-    if (!forecastAlerts) {
+    if (!forecastAlertsRef.current) {
       return;
     }
-    const nextNotified = new Set(notifiedForecastIds);
+    const nextNotified = new Set(notifiedForecastIdsRef.current);
     for (const item of nextItems) {
-      if (!watchedMatchIds.includes(item.match_id) || nextNotified.has(item.match_id) || !isLiveMatch(item) || !isThirtyMinuteWarningWindow(item)) {
+      if (!watchedMatchIdsRef.current.includes(item.match_id) || nextNotified.has(item.match_id) || !isLiveMatch(item) || !isThirtyMinuteWarningWindow(item)) {
         continue;
       }
       const forecastState = evaluateForecastState(item);
@@ -172,7 +181,7 @@ export function ForebetPage() {
       notifyForecastStillPossible(item, forecastState.label);
       nextNotified.add(item.match_id);
     }
-    if (nextNotified.size !== notifiedForecastIds.length) {
+    if (nextNotified.size !== notifiedForecastIdsRef.current.length) {
       setNotifiedForecastIds(Array.from(nextNotified));
     }
   }
@@ -186,16 +195,23 @@ export function ForebetPage() {
   }, [autoRefresh, forecastAlerts, watchedMatchIds, notifiedForecastIds, notifiedStartedIds]);
 
   useEffect(() => {
+    watchedMatchIdsRef.current = watchedMatchIds;
+    notifiedStartedIdsRef.current = notifiedStartedIds;
+    notifiedForecastIdsRef.current = notifiedForecastIds;
+    forecastAlertsRef.current = forecastAlerts;
+  }, [forecastAlerts, notifiedForecastIds, notifiedStartedIds, watchedMatchIds]);
+
+  useEffect(() => {
     if (!autoRefresh) {
       setNextLiveRefresh(null);
       return;
     }
-    if (!nextLiveRefresh) {
-      setNextLiveRefresh(new Date(Date.now() + LIVE_REFRESH_MS).toISOString());
-    }
-    const intervalId = window.setInterval(() => refreshLiveResults(false), LIVE_REFRESH_MS);
+    setNextLiveRefresh(new Date(Date.now() + LIVE_REFRESH_MS).toISOString());
+    const intervalId = window.setInterval(() => {
+      refreshLiveResults(false);
+    }, LIVE_REFRESH_MS);
     return () => window.clearInterval(intervalId);
-  }, [autoRefresh, targetDate]);
+  }, [autoRefresh, refreshLiveResults]);
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();

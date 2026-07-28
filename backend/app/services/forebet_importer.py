@@ -756,8 +756,8 @@ def _update_match_result_from_forebet(match: Match, prediction: ForebetSourcePre
         match.status = prediction.status
     elif prediction.status == "finished":
         match.status = "finished"
-    elif prediction.status == "live" and match.home_score is None and match.away_score is None:
-        match.status = "scheduled"
+    elif prediction.status == "live":
+        match.status = "live"
 
 
 def _get_or_create_forebet_competition(db: Session) -> Competition:

@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 
 from app.services import forebet_importer
 from app.services.forebet_importer import (
+    ForebetSourcePrediction,
     _actual_score_from_cells,
     _forebet_reader_url,
     _parse_forebet_predictions,
@@ -12,6 +13,7 @@ from app.services.forebet_importer import (
     _prediction_from_row,
     _split_reader_compact_teams,
     _status_from_cells,
+    _update_match_result_from_forebet,
 )
 
 
@@ -210,3 +212,23 @@ def test_parse_forebet_reader_predictions_extracts_live_result_after_minute() ->
     assert predictions[0].predicted_score == "0-2"
     assert predictions[0].status == "live"
     assert predictions[0].actual_score == "0-2"
+
+
+def test_update_match_result_keeps_live_status_without_score() -> None:
+    class MatchStub:
+        home_score = None
+        away_score = None
+        status = "scheduled"
+
+    match = MatchStub()
+    prediction = ForebetSourcePrediction(
+        home_team="Valencia",
+        away_team="Celta",
+        match_date=date(2026, 7, 28),
+        status="live",
+        actual_score=None,
+    )
+
+    _update_match_result_from_forebet(match, prediction)  # type: ignore[arg-type]
+
+    assert match.status == "live"
