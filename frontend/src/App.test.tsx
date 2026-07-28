@@ -703,9 +703,11 @@ describe("App", () => {
       expect(screen.getByText("Predicción goles")).toBeInTheDocument();
     });
     expect(screen.getByText(/1-2.*3 goles.*Over 2\.5/)).toBeInTheDocument();
+    expect(screen.getByText("Parrilla 0-9")).toBeInTheDocument();
+    expect(screen.getByText("1 marcador encaja")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Marcador" }));
-    expect(screen.getByText("1-2")).toBeInTheDocument();
+    expect(screen.getAllByText("1-2").length).toBeGreaterThanOrEqual(2);
 
     fireEvent.click(screen.getByRole("button", { name: "Goles" }));
     expect(screen.getByText("3 goles")).toBeInTheDocument();

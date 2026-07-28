@@ -316,6 +316,7 @@ export function ForebetPage() {
                   <th>Estado pronostico</th>
                   <th>Predicción goles</th>
                   <th>Goles esperados</th>
+                  <th>Parrilla 0-9</th>
                   {showRangeColumns ? <th>Rango</th> : null}
                   {showRangeColumns ? <th>Marcadores posibles</th> : null}
                   {showRangeColumns ? <th>Calculo</th> : null}
@@ -511,6 +512,9 @@ function ForebetRangeRow({
         </td>
         <td>{formatGoalPrediction(item, predictionMode)}</td>
         <td>{formatUnknown(item.expected_goals)}</td>
+        <td>
+          <ForebetPredictionGrid item={item} />
+        </td>
         {showRanges ? <td>{isCalculatingRanges ? "Calculando..." : formatRange(range)}</td> : null}
         {showRanges ? <td>{isCalculatingRanges ? "Calculando..." : formatPossibleScores(range)}</td> : null}
         {showRanges ? (
@@ -524,12 +528,37 @@ function ForebetRangeRow({
       </tr>
       {showRanges && isExpanded ? (
         <tr className="forebet-calculation-row">
-          <td colSpan={10}>
+          <td colSpan={11}>
             <ForebetCalculation range={range} reliability={item.reliability} />
           </td>
         </tr>
       ) : null}
     </>
+  );
+}
+
+function ForebetPredictionGrid({ item }: { item: ForebetRangeItem }) {
+  const cells = buildForebetPredictionCells(item);
+  const highlighted = cells.filter((cell) => cell.highlighted);
+  return (
+    <div className="forebet-score-board" aria-label={`Parrilla de marcadores ${item.home_team} contra ${item.away_team}`}>
+      <div className="forebet-score-board-grid">
+        {cells.map((cell) => (
+          <span
+            className={cell.highlighted ? "lit" : ""}
+            key={cell.label}
+            title={cell.highlighted ? "Cumple los tres pronosticos disponibles" : "No cumple el conjunto de pronosticos"}
+          >
+            {cell.label}
+          </span>
+        ))}
+      </div>
+      <small>
+        {highlighted.length
+          ? `${highlighted.length} marcador${highlighted.length === 1 ? "" : "es"} encaja${highlighted.length === 1 ? "" : "n"}`
+          : "Sin coincidencias completas"}
+      </small>
+    </div>
   );
 }
 
@@ -635,6 +664,62 @@ function formatGoalPrediction(item: ForebetRangeItem, mode: GoalPredictionMode) 
 
 function formatOverUnder(value: string) {
   return value === "over_2_5" ? "Over 2.5" : "Under 2.5";
+}
+
+function buildForebetPredictionCells(item: ForebetRangeItem) {
+  const prediction = isRecord(item.goal_prediction) ? item.goal_prediction : {};
+  const predictedScore = splitPredictedScore(item.predicted_score ?? (typeof prediction.predicted_score === "string" ? prediction.predicted_score : null));
+  const predictedTotal = typeof prediction.predicted_total_goals === "number" ? prediction.predicted_total_goals : null;
+  const overUnder = typeof prediction.over_under_25 === "string" ? prediction.over_under_25 : null;
+  const matchPrediction = item.forebet_prediction ?? null;
+  const cells: Array<{ label: string; highlighted: boolean }> = [];
+  for (let home = 0; home <= 9; home += 1) {
+    for (let away = 0; away <= 9; away += 1) {
+      cells.push({
+        label: `${home}-${away}`,
+        highlighted:
+          matchesForebetOutcome(home, away, matchPrediction) &&
+          matchesForebetGoalPrediction(home, away, predictedTotal, overUnder) &&
+          matchesForebetExactScore(home, away, predictedScore),
+      });
+    }
+  }
+  return cells;
+}
+
+function matchesForebetOutcome(home: number, away: number, prediction?: string | null) {
+  if (!prediction) {
+    return true;
+  }
+  const normalized = prediction.toUpperCase();
+  if (home > away) {
+    return normalized.includes("1");
+  }
+  if (home === away) {
+    return normalized.includes("X");
+  }
+  return normalized.includes("2");
+}
+
+function matchesForebetGoalPrediction(home: number, away: number, predictedTotal: number | null, overUnder: string | null) {
+  const total = home + away;
+  if (predictedTotal != null && total !== predictedTotal) {
+    return false;
+  }
+  if (overUnder === "over_2_5" && total < 3) {
+    return false;
+  }
+  if (overUnder === "under_2_5" && total >= 3) {
+    return false;
+  }
+  return true;
+}
+
+function matchesForebetExactScore(home: number, away: number, predictedScore: { home: number; away: number } | null) {
+  if (!predictedScore) {
+    return true;
+  }
+  return home === predictedScore.home && away === predictedScore.away;
 }
 
 function evaluateForecastState(item: ForebetRangeItem): { status: "possible" | "impossible" | "pending"; label: string } {
