@@ -45,6 +45,8 @@ class ForebetSourcePrediction:
     match_date: datetime
     prediction: str | None = None
     predicted_score: str | None = None
+    actual_score: str | None = None
+    status: str | None = None
     expected_goals: Decimal | None = None
     home_probability: Decimal | None = None
     draw_probability: Decimal | None = None
@@ -132,6 +134,7 @@ def _store_forebet_predictions(
                 match = _get_or_create_forebet_match(db, prediction)
                 local_matches.append(match)
                 created_matches += 1
+            _update_match_result_from_forebet(match, prediction)
             if _prediction_exists(db, match.id, prediction):
                 continue
             predicted_home_score, predicted_away_score = _split_score(prediction.predicted_score)
@@ -244,6 +247,8 @@ def _parse_forebet_reader_predictions(markdown: str, target_date: date) -> list[
                 match_date=parsed_date,
                 prediction=stats["prediction"],
                 predicted_score=stats["predicted_score"],
+                actual_score=stats.get("actual_score"),
+                status=stats.get("status"),
                 expected_goals=stats["expected_goals"],
                 home_probability=stats["home_probability"],
                 draw_probability=stats["draw_probability"],
@@ -282,6 +287,8 @@ def _reader_stats_from_lines(lines: list[str], start_index: int) -> dict[str, De
         return {
             "prediction": compact_match.group("prediction"),
             "predicted_score": f"{compact_match.group('home_score')}-{compact_match.group('away_score')}",
+            "actual_score": _actual_score_from_lines(lines, start_index),
+            "status": _status_from_lines(lines, start_index),
             "expected_goals": Decimal(compact_match.group("expected_goals")),
             "home_probability": Decimal(compact_match.group("home_probability")),
             "draw_probability": Decimal(compact_match.group("draw_probability")),
@@ -305,6 +312,8 @@ def _reader_stats_from_lines(lines: list[str], start_index: int) -> dict[str, De
     return {
         "prediction": prediction,
         "predicted_score": predicted_score,
+        "actual_score": _actual_score_from_lines(lines, start_index),
+        "status": _status_from_lines(lines, start_index),
         "expected_goals": expected_goals,
         "home_probability": probabilities[0],
         "draw_probability": probabilities[1],
@@ -393,12 +402,16 @@ def _prediction_from_row(row, target_date: date) -> ForebetSourcePrediction | No
     prediction, predicted_score = _prediction_and_score(rest[1] if len(rest) > 1 else "")
     correct_score = next((match.group(0).replace(" ", "") for cell in rest[2:] for match in [SCORE_RE.search(cell)] if match), None)
     expected_goals = next((_decimal(cell) for cell in rest[2:] if _decimal(cell) is not None and "." in cell), None)
+    status = _status_from_cells(rest)
+    actual_score = _actual_score_from_cells(rest, predicted_score or correct_score)
     return ForebetSourcePrediction(
         home_team=teams[0],
         away_team=teams[1],
         match_date=parsed_date,
         prediction=prediction,
         predicted_score=predicted_score or correct_score,
+        actual_score=actual_score,
+        status=status,
         expected_goals=expected_goals,
         home_probability=probabilities[0] if len(probabilities) > 0 else None,
         draw_probability=probabilities[1] if len(probabilities) > 1 else None,
@@ -424,12 +437,16 @@ def _prediction_from_cells(cells: list[str], target_date: date) -> ForebetSource
     prediction = next((cell for cell in rest[3:7] if cell in {"1", "X", "2"}), None)
     predicted_score = next((match.group(0).replace(" ", "") for cell in rest for match in [SCORE_RE.search(cell)] if match), None)
     expected_goals = next((_decimal(cell) for cell in rest if _decimal(cell) is not None and "." in cell), None)
+    status = _status_from_cells(rest)
+    actual_score = _actual_score_from_cells(rest, predicted_score)
     return ForebetSourcePrediction(
         home_team=home_team,
         away_team=away_team,
         match_date=parsed_date,
         prediction=prediction,
         predicted_score=predicted_score,
+        actual_score=actual_score,
+        status=status,
         expected_goals=expected_goals,
         home_probability=probabilities[0] if len(probabilities) > 0 else None,
         draw_probability=probabilities[1] if len(probabilities) > 1 else None,
@@ -496,6 +513,38 @@ def _prediction_and_score(value: str) -> tuple[str | None, str | None]:
     if not score:
         score = next((part for part in parts if re.fullmatch(r"\d+\s*-\s*\d+", part)), None)
     return prediction, score
+
+
+def _actual_score_from_lines(lines: list[str], start_index: int) -> str | None:
+    return _actual_score_from_cells(lines[start_index : min(len(lines), start_index + 8)], None)
+
+
+def _actual_score_from_cells(cells: list[str], predicted_score: str | None) -> str | None:
+    status = _status_from_cells(cells)
+    if status not in {"live", "finished"}:
+        return None
+    scores = [match.group(0).replace(" ", "") for cell in cells for match in SCORE_RE.finditer(cell)]
+    if not scores:
+        return None
+    if predicted_score and len(scores) > 1:
+        non_predicted = [score for score in scores if score != predicted_score]
+        return non_predicted[0] if non_predicted else scores[-1]
+    return scores[-1] if status == "finished" else scores[0]
+
+
+def _status_from_lines(lines: list[str], start_index: int) -> str | None:
+    return _status_from_cells(lines[start_index : min(len(lines), start_index + 8)])
+
+
+def _status_from_cells(cells: list[str]) -> str | None:
+    text = normalize_name(" ".join(cells))
+    if any(token in text.split() for token in ("ft", "aet", "pen")) or any(token in text for token in ("finished", "finalizado", "terminado")):
+        return "finished"
+    if any(token in text for token in ("live", "in play", "half time", "1st half", "2nd half", "descanso")):
+        return "live"
+    if re.search(r"\b\d{1,3}\s*['’]", " ".join(cells)):
+        return "live"
+    return None
 
 
 def _parse_forebet_datetime(value: str) -> datetime | None:
@@ -591,6 +640,15 @@ def _get_or_create_forebet_match(db: Session, prediction: ForebetSourcePredictio
     db.add(match)
     db.flush()
     return match
+
+
+def _update_match_result_from_forebet(match: Match, prediction: ForebetSourcePrediction) -> None:
+    actual_home_score, actual_away_score = _split_score(prediction.actual_score)
+    if actual_home_score is not None and actual_away_score is not None:
+        match.home_score = actual_home_score
+        match.away_score = actual_away_score
+    if prediction.status in {"live", "finished"}:
+        match.status = prediction.status
 
 
 def _get_or_create_forebet_competition(db: Session) -> Competition:

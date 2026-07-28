@@ -189,7 +189,7 @@ def test_live_tracking_can_follow_all_or_selected_match() -> None:
     assert tuned.json() == {
         "follow_all_by_default": False,
         "tracked_match_ids": [match_id],
-        "refresh_seconds": 30,
+        "refresh_seconds": 600,
         "alert_level": "agresivo",
     }
     app.dependency_overrides.clear()

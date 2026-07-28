@@ -40,7 +40,7 @@ def set_match_tracking(db: Session, match_id: int, enabled: bool) -> LiveTrackin
 
 def _normalize(live_tracking: LiveTrackingSettings) -> LiveTrackingSettings:
     live_tracking.tracked_match_ids = sorted(set(live_tracking.tracked_match_ids))
-    live_tracking.refresh_seconds = max(15, live_tracking.refresh_seconds)
+    live_tracking.refresh_seconds = max(600, live_tracking.refresh_seconds)
     if live_tracking.alert_level not in {"conservador", "normal", "agresivo"}:
         live_tracking.alert_level = "normal"
     return live_tracking

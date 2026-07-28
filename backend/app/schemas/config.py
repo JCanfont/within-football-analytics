@@ -28,7 +28,7 @@ class GoalInterval(BaseModel):
 class LiveTrackingSettings(BaseModel):
     follow_all_by_default: bool = False
     tracked_match_ids: list[int] = Field(default_factory=list)
-    refresh_seconds: int = 60
+    refresh_seconds: int = 600
     alert_level: str = "normal"
 
 

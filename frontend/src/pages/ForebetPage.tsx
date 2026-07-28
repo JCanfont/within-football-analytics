@@ -13,7 +13,7 @@ const goalPredictionModes: Array<{ label: string; mode: GoalPredictionMode }> = 
 ];
 
 const FOREBET_WATCH_KEY = "within_forebet_watch";
-const LIVE_REFRESH_MS = 15 * 60 * 1000;
+const LIVE_REFRESH_MS = 10 * 60 * 1000;
 
 type ForebetWatchState = {
   autoRefresh: boolean;
@@ -173,7 +173,7 @@ export function ForebetPage() {
   }, [autoRefresh, forecastAlerts, watchedMatchIds, notifiedForecastIds, notifiedStartedIds]);
 
   useEffect(() => {
-    if (!autoRefresh || watchedMatchIds.length === 0) {
+    if (!autoRefresh) {
       setNextLiveRefresh(null);
       return;
     }
@@ -350,14 +350,14 @@ function ForebetLiveWatchPanel({
         <strong>{watchedCount} partidos con aviso</strong>
         <small>
           {autoRefresh && watchedCount > 0
-            ? `Actualizacion cada 15 minutos${nextRefresh ? `, proxima ${formatTimeOnly(nextRefresh)}` : ""}`
-            : "Marca un partido para activar el seguimiento"}
+            ? `Actualizacion cada 10 minutos${nextRefresh ? `, proxima ${formatTimeOnly(nextRefresh)}` : ""}`
+            : "Activa el seguimiento para revisar la jornada automaticamente"}
         </small>
       </div>
       <div className="forebet-live-actions">
         <button className={autoRefresh ? "active" : ""} type="button" onClick={onToggleAuto}>
           <RefreshCw size={16} aria-hidden="true" />
-          Cada 15 min
+          Cada 10 min
         </button>
         <button className={forecastAlerts ? "active" : ""} type="button" onClick={onToggleForecastAlerts}>
           <BellRing size={16} aria-hidden="true" />
@@ -634,7 +634,7 @@ function splitPredictedScore(value?: string | null) {
 
 function formatCurrentScore(item: ForebetRangeItem) {
   if (item.home_score == null || item.away_score == null) {
-    return "Resultado no disponible";
+    return isFinished(item) ? "Finalizado; marcador pendiente de captura" : "Marcador pendiente de captura";
   }
   return `Ahora ${item.home_score}-${item.away_score}`;
 }
@@ -731,11 +731,11 @@ function readForebetWatchState(): ForebetWatchState {
   try {
     const raw = localStorage.getItem(FOREBET_WATCH_KEY);
     if (!raw) {
-      return { autoRefresh: false, forecastAlerts: false, matchIds: [], notifiedForecastIds: [], notifiedStartedIds: [] };
+      return { autoRefresh: true, forecastAlerts: false, matchIds: [], notifiedForecastIds: [], notifiedStartedIds: [] };
     }
     const parsed = JSON.parse(raw) as Partial<ForebetWatchState>;
     return {
-      autoRefresh: Boolean(parsed.autoRefresh),
+      autoRefresh: parsed.autoRefresh == null ? true : Boolean(parsed.autoRefresh),
       forecastAlerts: Boolean(parsed.forecastAlerts),
       matchIds: Array.isArray(parsed.matchIds) ? parsed.matchIds.filter((id): id is number => typeof id === "number") : [],
       notifiedForecastIds: Array.isArray(parsed.notifiedForecastIds)
@@ -746,7 +746,7 @@ function readForebetWatchState(): ForebetWatchState {
         : [],
     };
   } catch {
-    return { autoRefresh: false, forecastAlerts: false, matchIds: [], notifiedForecastIds: [], notifiedStartedIds: [] };
+    return { autoRefresh: true, forecastAlerts: false, matchIds: [], notifiedForecastIds: [], notifiedStartedIds: [] };
   }
 }
 

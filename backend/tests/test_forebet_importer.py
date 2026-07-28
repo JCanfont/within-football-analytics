@@ -4,7 +4,13 @@ from decimal import Decimal
 from bs4 import BeautifulSoup
 
 from app.services import forebet_importer
-from app.services.forebet_importer import _parse_forebet_reader_predictions, _prediction_from_row, _split_reader_compact_teams
+from app.services.forebet_importer import (
+    _actual_score_from_cells,
+    _parse_forebet_reader_predictions,
+    _prediction_from_row,
+    _split_reader_compact_teams,
+    _status_from_cells,
+)
 
 
 def test_prediction_from_row_builds_match_from_visible_forebet_link() -> None:
@@ -103,3 +109,17 @@ def test_split_reader_compact_teams_handles_common_compound_names() -> None:
         "Argentinos Juniors",
         "Estudiantes Río Cuarto",
     )
+
+
+def test_forebet_cells_extract_finished_score() -> None:
+    cells = ["FT", "Getafe", "Osasuna", "1-0", "1", "1-1", "2.10"]
+
+    assert _status_from_cells(cells) == "finished"
+    assert _actual_score_from_cells(cells, "1-1") == "1-0"
+
+
+def test_forebet_cells_extract_live_score() -> None:
+    cells = ["62'", "Valencia", "Celta", "2-1", "X", "1-1", "2.60"]
+
+    assert _status_from_cells(cells) == "live"
+    assert _actual_score_from_cells(cells, "1-1") == "2-1"
