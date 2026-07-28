@@ -13,6 +13,12 @@
       }
     }
   ],
+  "crons": [
+    {
+      "path": "/api/live/forebet/tick",
+      "schedule": "*/10 * * * *"
+    }
+  ],
   "routes": [
     {
       "src": "/api/(.*)",

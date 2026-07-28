@@ -212,11 +212,56 @@ def _is_cloudflare_challenge(html: str) -> bool:
 def _parse_forebet_predictions(html: str, target_date: date) -> list[ForebetSourcePrediction]:
     soup = BeautifulSoup(html, "html.parser")
     predictions: list[ForebetSourcePrediction] = []
+    for card in soup.select(".rcnt"):
+        item = _prediction_from_card(card, target_date)
+        if item:
+            predictions.append(item)
+    if predictions:
+        return predictions
     for row in soup.select("tr"):
         item = _prediction_from_row(row, target_date)
         if item:
             predictions.append(item)
     return predictions
+
+
+def _prediction_from_card(card, target_date: date) -> ForebetSourcePrediction | None:
+    home_node = card.select_one(".homeTeam [itemprop='name'], .homeTeam")
+    away_node = card.select_one(".awayTeam [itemprop='name'], .awayTeam")
+    date_node = card.select_one(".date_bah")
+    if not home_node or not away_node or not date_node:
+        return None
+    parsed_date = _parse_forebet_datetime(date_node.get_text(" ", strip=True))
+    if not parsed_date or parsed_date.date() != target_date:
+        return None
+
+    probability_nodes = card.select(".fprc span")
+    probabilities = [_decimal(node.get_text(" ", strip=True)) for node in probability_nodes[:3]]
+    prediction = _text_or_none(card.select_one(".predict_y .forepr span, .forepr span"))
+    predicted_score = _text_or_none(card.select_one(".predict_y .scrmobpred, .scrmobpred"))
+    if predicted_score:
+        predicted_score = predicted_score.replace(" ", "")
+    correct_score = _text_or_none(card.select_one(".ex_sc.tabonly"))
+    expected_goals = _decimal(_text_or_none(card.select_one(".avg_sc")) or "")
+    status_text = _text_or_none(card.select_one(".lmin_td")) or ""
+    actual_score = _text_or_none(card.select_one(".lscr_td .l_scr"))
+    if actual_score:
+        actual_score = actual_score.replace(" ", "")
+    status = _status_from_cells([status_text, actual_score or ""])
+
+    return ForebetSourcePrediction(
+        home_team=home_node.get_text(" ", strip=True),
+        away_team=away_node.get_text(" ", strip=True),
+        match_date=parsed_date,
+        prediction=prediction,
+        predicted_score=predicted_score or (correct_score.replace(" ", "") if correct_score else None),
+        actual_score=actual_score if status in {"live", "finished"} else None,
+        status=status,
+        expected_goals=expected_goals,
+        home_probability=probabilities[0] if len(probabilities) > 0 else None,
+        draw_probability=probabilities[1] if len(probabilities) > 1 else None,
+        away_probability=probabilities[2] if len(probabilities) > 2 else None,
+    )
 
 
 def _parse_forebet_reader_predictions(markdown: str, target_date: date) -> list[ForebetSourcePrediction]:
@@ -516,13 +561,22 @@ def _prediction_and_score(value: str) -> tuple[str | None, str | None]:
 
 
 def _actual_score_from_lines(lines: list[str], start_index: int) -> str | None:
-    return _actual_score_from_cells(lines[start_index : min(len(lines), start_index + 8)], None)
+    return _actual_score_from_cells(lines[start_index : min(len(lines), start_index + 12)], None)
 
 
 def _actual_score_from_cells(cells: list[str], predicted_score: str | None) -> str | None:
     status = _status_from_cells(cells)
     if status not in {"live", "finished"}:
         return None
+    status_index = _status_cell_index(cells)
+    if status_index is not None:
+        scores_after_status = [
+            match.group(0).replace(" ", "")
+            for cell in cells[status_index + 1 : min(len(cells), status_index + 4)]
+            for match in SCORE_RE.finditer(cell)
+        ]
+        if scores_after_status:
+            return scores_after_status[0]
     scores = [match.group(0).replace(" ", "") for cell in cells for match in SCORE_RE.finditer(cell)]
     if not scores:
         return None
@@ -533,18 +587,57 @@ def _actual_score_from_cells(cells: list[str], predicted_score: str | None) -> s
 
 
 def _status_from_lines(lines: list[str], start_index: int) -> str | None:
-    return _status_from_cells(lines[start_index : min(len(lines), start_index + 8)])
+    return _status_from_cells(lines[start_index : min(len(lines), start_index + 12)])
 
 
 def _status_from_cells(cells: list[str]) -> str | None:
+    for cell in cells:
+        status = _status_from_cell(cell)
+        if status:
+            return status
+    for index, cell in enumerate(cells):
+        if _is_live_minute_cell(cell, cells[index + 1 : min(len(cells), index + 3)]):
+            return "live"
     text = normalize_name(" ".join(cells))
-    if any(token in text.split() for token in ("ft", "aet", "pen")) or any(token in text for token in ("finished", "finalizado", "terminado")):
+    if any(token in text for token in ("finished", "finalizado", "terminado")):
         return "finished"
     if any(token in text for token in ("live", "in play", "half time", "1st half", "2nd half", "descanso")):
         return "live"
-    if re.search(r"\b\d{1,3}\s*['’]", " ".join(cells)):
+    return None
+
+
+def _status_cell_index(cells: list[str]) -> int | None:
+    for index, cell in enumerate(cells):
+        if _status_from_cell(cell):
+            return index
+    for index, cell in enumerate(cells):
+        if _is_live_minute_cell(cell, cells[index + 1 : min(len(cells), index + 3)]):
+            return index
+    return None
+
+
+def _status_from_cell(cell: str) -> str | None:
+    normalized = normalize_name(cell)
+    tokens = normalized.split()
+    if any(token in tokens for token in ("ft", "aet", "pen")):
+        return "finished"
+    if any(token in normalized for token in ("finished", "finalizado", "terminado")):
+        return "finished"
+    if any(token in normalized for token in ("live", "in play", "half time", "1st half", "2nd half", "descanso")):
+        return "live"
+    if re.search(r"\b\d{1,3}\s*['’]", cell):
         return "live"
     return None
+
+
+def _is_live_minute_cell(cell: str, next_cells: list[str]) -> bool:
+    normalized = normalize_name(cell)
+    if not re.fullmatch(r"\d{1,3}", normalized):
+        return False
+    minute = int(normalized)
+    if minute < 1 or minute > 130:
+        return False
+    return any(SCORE_RE.search(next_cell) for next_cell in next_cells)
 
 
 def _parse_forebet_datetime(value: str) -> datetime | None:
@@ -647,8 +740,11 @@ def _update_match_result_from_forebet(match: Match, prediction: ForebetSourcePre
     if actual_home_score is not None and actual_away_score is not None:
         match.home_score = actual_home_score
         match.away_score = actual_away_score
-    if prediction.status in {"live", "finished"}:
         match.status = prediction.status
+    elif prediction.status == "finished":
+        match.status = "finished"
+    elif prediction.status == "live" and match.home_score is None and match.away_score is None:
+        match.status = "scheduled"
 
 
 def _get_or_create_forebet_competition(db: Session) -> Competition:
@@ -744,3 +840,10 @@ def _decimal(value: str) -> Decimal | None:
     if not re.fullmatch(r"-?\d+(\.\d+)?", cleaned):
         return None
     return Decimal(cleaned)
+
+
+def _text_or_none(node) -> str | None:
+    if not node:
+        return None
+    value = node.get_text(" ", strip=True)
+    return value or None

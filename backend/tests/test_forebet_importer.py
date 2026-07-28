@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from app.services import forebet_importer
 from app.services.forebet_importer import (
     _actual_score_from_cells,
+    _parse_forebet_predictions,
     _parse_forebet_reader_predictions,
     _prediction_from_row,
     _split_reader_compact_teams,
@@ -123,3 +124,81 @@ def test_forebet_cells_extract_live_score() -> None:
 
     assert _status_from_cells(cells) == "live"
     assert _actual_score_from_cells(cells, "1-1") == "2-1"
+
+
+def test_parse_forebet_card_extracts_actual_score_from_html() -> None:
+    html = """
+    <div class='rcnt tr_0'>
+      <div class="tnms">
+        <a class="tnmscn" href="/en/football/matches/kups-kuopio-sabah-2477553">
+          <span class="homeTeam"><span itemprop="name">KuPS Kuopio</span></span>
+          <span class="awayTeam"><span itemprop="name">Sabah</span></span>
+          <time><span class="date_bah">28/07/2026 17:00</span></time>
+        </a>
+      </div>
+      <div class='fprc'><span>28</span><span>24</span><span class="fpr">48</span></div>
+      <div class="predict_y"><span class="forepr"><span>2</span></span><span class="scrmobpred ex_sc">0<span>-</span>1</span></div>
+      <div class="ex_sc tabonly">0 - 1</div>
+      <div class="avg_sc exact_yes tabonly">2.07</div>
+      <div class="lmin_td"><div class="scoreLnk"><span>FT</span></div></div>
+      <div class="lscr_td"><span><b class="l_scr">0 - 2</b></span><span class="ht_scr">(0 - 0)</span></div>
+    </div>
+    """
+
+    predictions = _parse_forebet_predictions(html, date(2026, 7, 28))
+
+    assert len(predictions) == 1
+    assert predictions[0].home_team == "KuPS Kuopio"
+    assert predictions[0].away_team == "Sabah"
+    assert predictions[0].prediction == "2"
+    assert predictions[0].predicted_score == "0-1"
+    assert predictions[0].status == "finished"
+    assert predictions[0].actual_score == "0-2"
+
+
+def test_parse_forebet_reader_predictions_extracts_finished_result_after_ft() -> None:
+    markdown = """
+    KuPS Kuopio
+    Sabah
+    07/28/2026 3:00 PM
+    28 24 48
+    2 0-1
+    0 - 1
+    2.07
+    17°
+    2.40
+    2.75 3.20 3.00
+    FT
+    0 - 2(0 - 0)
+    """
+
+    predictions = _parse_forebet_reader_predictions(markdown, date(2026, 7, 28))
+
+    assert len(predictions) == 1
+    assert predictions[0].predicted_score == "0-1"
+    assert predictions[0].status == "finished"
+    assert predictions[0].actual_score == "0-2"
+
+
+def test_parse_forebet_reader_predictions_extracts_live_result_after_minute() -> None:
+    markdown = """
+    Caernarfon Town
+    The New Saints
+    07/28/2026 7:45 PM
+    5 13 82
+    2 0-2
+    0 - 2
+    3.56
+    18°
+    1.57
+    66
+    0 - 2
+    32
+    """
+
+    predictions = _parse_forebet_reader_predictions(markdown, date(2026, 7, 28))
+
+    assert len(predictions) == 1
+    assert predictions[0].predicted_score == "0-2"
+    assert predictions[0].status == "live"
+    assert predictions[0].actual_score == "0-2"
