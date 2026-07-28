@@ -277,6 +277,7 @@ class ForebetDateLoadResult(BaseModel):
     forebet_source_url: str | None = None
     forebet_fetched: int = 0
     forebet_matched: int = 0
+    forebet_created_matches: int = 0
     forebet_imported: int = 0
     forebet_unmatched: int = 0
     matches: list[ForebetRangeItem]

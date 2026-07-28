@@ -34,12 +34,16 @@ export function ForebetPage() {
       setError("Selecciona una fecha para cargar la jornada Forebet.");
       return;
     }
+    loadDateFor(targetDate);
+  }
+
+  function loadDateFor(selectedDate: string) {
     setIsLoading(true);
     setError(null);
     setLoadMessage(null);
     setForebetLoad(null);
     setExpandedMatchId(null);
-    loadForebetDate(targetDate)
+    loadForebetDate(selectedDate)
       .then((result) => {
         setItems(result.matches);
         setLoadMessage(result.message);
@@ -53,7 +57,7 @@ export function ForebetPage() {
   }
 
   useEffect(() => {
-    load();
+    loadDateFor(todayInputValue());
   }, []);
 
   const filteredItems = useMemo(() => {
@@ -150,6 +154,7 @@ function ForebetLoadSummary({ result }: { result: ForebetDateLoadResult }) {
       <span>Estado Forebet: {formatExternalStatus(result.external_fetch_status)}</span>
       <span>Extraidos: {result.forebet_fetched}</span>
       <span>Cruzados: {result.forebet_matched}</span>
+      <span>Creados: {result.forebet_created_matches}</span>
       <span>Importados: {result.forebet_imported}</span>
       {result.forebet_source_url ? (
         <a href={result.forebet_source_url} target="_blank" rel="noreferrer">
@@ -168,6 +173,7 @@ function formatExternalStatus(value: string) {
     http_error: "error HTTP",
     no_forebet_matches: "sin partidos extraidos",
     no_local_match: "sin cruce local",
+    storage_unavailable: "sin escritura persistente",
   };
   return labels[value] ?? value;
 }

@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import ForebetPrediction, Match, Team
+from app.models import Competition, ForebetPrediction, Match, Season, Team
 from app.utils.normalization import normalize_name
 
 
@@ -41,6 +41,7 @@ class ForebetImportOutcome:
     fetched: int = 0
     imported: int = 0
     matched: int = 0
+    created_matches: int = 0
     unmatched: int = 0
 
 
@@ -93,45 +94,67 @@ def import_forebet_jornada(db: Session, target_date: date) -> ForebetImportOutco
     local_matches = _local_matches_for_date(db, target_date)
     imported = 0
     matched = 0
+    created_matches = 0
     unmatched = 0
     captured_at = datetime.now(UTC)
-    for prediction in predictions:
-        match = _best_local_match(db, prediction, local_matches)
-        if not match:
-            unmatched += 1
-            continue
-        matched += 1
-        if _prediction_exists(db, match.id, prediction):
-            continue
-        predicted_home_score, predicted_away_score = _split_score(prediction.predicted_score)
-        db.add(
-            ForebetPrediction(
-                match_id=match.id,
-                captured_at=captured_at,
-                home_probability=prediction.home_probability,
-                draw_probability=prediction.draw_probability,
-                away_probability=prediction.away_probability,
-                prediction=prediction.prediction,
-                predicted_home_score=predicted_home_score,
-                predicted_away_score=predicted_away_score,
-                expected_goals=prediction.expected_goals,
-                source_url=source_url,
+    try:
+        for prediction in predictions:
+            match = _best_local_match(db, prediction, local_matches)
+            if match:
+                matched += 1
+            else:
+                match = _get_or_create_forebet_match(db, prediction)
+                local_matches.append(match)
+                created_matches += 1
+            if _prediction_exists(db, match.id, prediction):
+                continue
+            predicted_home_score, predicted_away_score = _split_score(prediction.predicted_score)
+            db.add(
+                ForebetPrediction(
+                    match_id=match.id,
+                    captured_at=captured_at,
+                    home_probability=prediction.home_probability,
+                    draw_probability=prediction.draw_probability,
+                    away_probability=prediction.away_probability,
+                    prediction=prediction.prediction,
+                    predicted_home_score=predicted_home_score,
+                    predicted_away_score=predicted_away_score,
+                    expected_goals=prediction.expected_goals,
+                    source_url=source_url,
+                )
             )
-        )
-        imported += 1
+            imported += 1
 
-    if imported:
         db.commit()
+    except Exception as exc:
+        db.rollback()
+        return ForebetImportOutcome(
+            status="storage_unavailable",
+            message=(
+                "Forebet devolvio partidos, pero no se pudieron guardar en la base de datos. "
+                f"Detalle: {exc}"
+            ),
+            source_url=source_url,
+            fetched=len(predictions),
+            imported=0,
+            matched=matched,
+            created_matches=created_matches,
+            unmatched=len(predictions) - matched - created_matches,
+        )
+
+    unmatched = len(predictions) - matched - created_matches
     return ForebetImportOutcome(
-        status="ok" if matched else "no_local_match",
+        status="ok",
         message=(
             f"Forebet devolvio {len(predictions)} partidos. "
-            f"Se cruzaron {matched} con partidos cargados y se importaron {imported} predicciones."
+            f"Se cruzaron {matched} con partidos cargados, se crearon {created_matches} partidos nuevos "
+            f"y se importaron {imported} predicciones."
         ),
         source_url=source_url,
         fetched=len(predictions),
         imported=imported,
         matched=matched,
+        created_matches=created_matches,
         unmatched=unmatched,
     )
 
@@ -224,6 +247,91 @@ def _best_local_match(db: Session, prediction: ForebetSourcePrediction, matches:
             best_score = score
             best_match = match
     return best_match if best_score >= 0.72 else None
+
+
+def _get_or_create_forebet_match(db: Session, prediction: ForebetSourcePrediction) -> Match:
+    external_id = _forebet_match_external_id(prediction)
+    existing = db.scalar(select(Match).where(Match.source == "forebet", Match.external_id == external_id))
+    if existing:
+        return existing
+    competition = _get_or_create_forebet_competition(db)
+    season = _get_or_create_forebet_season(db, competition, prediction.match_date.date())
+    home_team = _get_or_create_forebet_team(db, prediction.home_team)
+    away_team = _get_or_create_forebet_team(db, prediction.away_team)
+    match = Match(
+        competition_id=competition.id,
+        season_id=season.id,
+        matchday=None,
+        match_date=prediction.match_date,
+        home_team_id=home_team.id,
+        away_team_id=away_team.id,
+        status="scheduled",
+        is_friendly=False,
+        source="forebet",
+        external_id=external_id,
+    )
+    db.add(match)
+    db.flush()
+    return match
+
+
+def _get_or_create_forebet_competition(db: Session) -> Competition:
+    normalized = normalize_name("Forebet")
+    competition = db.scalar(select(Competition).where(Competition.normalized_name == normalized))
+    if competition:
+        return competition
+    competition = Competition(
+        name="Forebet",
+        normalized_name=normalized,
+        country=None,
+        competition_type="external_predictions",
+        source="forebet",
+        external_id="forebet",
+    )
+    db.add(competition)
+    db.flush()
+    return competition
+
+
+def _get_or_create_forebet_season(db: Session, competition: Competition, match_date: date) -> Season:
+    start_year = match_date.year if match_date.month >= 7 else match_date.year - 1
+    name = f"{start_year}/{start_year + 1}"
+    season = db.scalar(select(Season).where(Season.competition_id == competition.id, Season.name == name))
+    if season:
+        return season
+    season = Season(
+        competition_id=competition.id,
+        name=name,
+        start_date=date(start_year, 7, 1),
+        end_date=date(start_year + 1, 6, 30),
+        is_current=True,
+    )
+    db.add(season)
+    db.flush()
+    return season
+
+
+def _get_or_create_forebet_team(db: Session, name: str) -> Team:
+    normalized = normalize_name(name)
+    team = db.scalar(select(Team).where(Team.normalized_name == normalized))
+    if team:
+        return team
+    team = Team(name=name.strip(), normalized_name=normalized, country=None, external_id=f"forebet:{normalized}")
+    db.add(team)
+    db.flush()
+    return team
+
+
+def _forebet_match_external_id(prediction: ForebetSourcePrediction) -> str:
+    return normalize_name(
+        "|".join(
+            [
+                prediction.match_date.date().isoformat(),
+                prediction.home_team,
+                prediction.away_team,
+            ]
+        )
+    )
 
 
 def _prediction_exists(db: Session, match_id: int, prediction: ForebetSourcePrediction) -> bool:

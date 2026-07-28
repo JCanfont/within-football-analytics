@@ -142,6 +142,7 @@ def load_forebet_date(target_date: date, db: Session = Depends(get_db)) -> Foreb
         forebet_source_url=forebet_outcome.source_url,
         forebet_fetched=forebet_outcome.fetched,
         forebet_matched=forebet_outcome.matched,
+        forebet_created_matches=forebet_outcome.created_matches,
         forebet_imported=forebet_outcome.imported,
         forebet_unmatched=forebet_outcome.unmatched,
         matches=items,

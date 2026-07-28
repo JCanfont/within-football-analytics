@@ -243,6 +243,7 @@ export type ForebetDateLoadResult = {
   forebet_source_url?: string | null;
   forebet_fetched: number;
   forebet_matched: number;
+  forebet_created_matches: number;
   forebet_imported: number;
   forebet_unmatched: number;
   matches: ForebetRangeItem[];
