@@ -123,6 +123,49 @@ select {
   gap: 22px;
 }
 
+.dashboard-live-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.dashboard-live-list {
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-live-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #f9fbfc;
+}
+
+.dashboard-live-item div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dashboard-live-item span,
+.dashboard-live-item small {
+  color: #617083;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.dashboard-live-item strong {
+  color: #18212f;
+  font-size: 15px;
+}
+
+.dashboard-live-comparison {
+  margin: 0;
+}
+
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -1272,7 +1315,7 @@ td {
 
 .live-provider-card {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
   align-items: stretch;
   padding: 10px;
@@ -1298,8 +1341,137 @@ td {
   font-size: 16px;
 }
 
+.live-interest-badge {
+  width: fit-content;
+  padding: 4px 7px;
+  border: 1px solid #f2b84b;
+  border-radius: 7px;
+  background: #fff3d7;
+  color: #946200;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
 .live-provider-card .row-action {
   align-self: center;
+}
+
+.live-commentary {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  min-height: 86px;
+  padding: 12px;
+  border: 1px solid #e1e7ee;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.live-commentary span {
+  color: #18212f;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.live-commentary ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.live-commentary li,
+.live-commentary p {
+  margin: 0;
+  color: #405064;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.live-commentary-current {
+  min-height: 26px;
+  padding: 9px 10px;
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #f9fbfc;
+}
+
+.live-commentary-history {
+  display: grid;
+  gap: 8px;
+}
+
+.live-commentary-history summary {
+  cursor: pointer;
+  color: #1d4f91;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.live-commentary-history ul {
+  max-height: 170px;
+  overflow: auto;
+  padding: 8px 8px 8px 24px;
+  border: 1px solid #e1e7ee;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.live-comparison-panel {
+  display: grid;
+  gap: 14px;
+  margin: 0 18px 18px;
+  padding: 14px;
+  border: 1px solid #b8cde7;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.live-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.live-team-comparison {
+  display: grid;
+  gap: 6px;
+  min-height: 122px;
+  padding: 12px;
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.live-team-comparison span,
+.live-team-comparison small {
+  color: #617083;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.live-team-comparison strong {
+  color: #18212f;
+  font-size: 17px;
+}
+
+.live-interval-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.live-interval-strip span {
+  padding: 5px 7px;
+  border: 1px solid #d8e0e8;
+  border-radius: 7px;
+  background: #f9fbfc;
+  color: #18212f;
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .live-parameter-grid {

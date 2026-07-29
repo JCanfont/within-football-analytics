@@ -20,6 +20,9 @@ import type {
   MatchListItem,
   Player,
   PlayerStadiumAnalytics,
+  SofaScoreEventComparison,
+  SofaScoreLiveEventsResult,
+  SofaScoreStoredEventsResult,
   SofaScoreTeamEventsResult,
   Stadium,
   StatisticalConfig,
@@ -240,6 +243,26 @@ export async function fetchLiveMatchSnapshot(matchId: number): Promise<LiveMatch
 
 export async function fetchSofaScoreTeamEvents(teamId: number, direction: "next" | "last" = "next", page = 0): Promise<SofaScoreTeamEventsResult> {
   const response = await api.get<SofaScoreTeamEventsResult>(`/api/live/sofascore/teams/${teamId}/events?direction=${direction}&page=${page}`);
+  return response.data;
+}
+
+export async function fetchSofaScoreLiveEvents(sport = "football"): Promise<SofaScoreLiveEventsResult> {
+  const response = await api.get<SofaScoreLiveEventsResult>(`/api/live/sofascore/live-events?sport=${encodeURIComponent(sport)}`);
+  return response.data;
+}
+
+export async function storeSofaScoreLiveEvents(sport = "football"): Promise<SofaScoreStoredEventsResult> {
+  const response = await api.post<SofaScoreStoredEventsResult>(`/api/live/sofascore/live-events/store?sport=${encodeURIComponent(sport)}`);
+  return response.data;
+}
+
+export async function storeSofaScoreTeamEvents(teamId: number, direction: "next" | "last" = "next", page = 0): Promise<SofaScoreStoredEventsResult> {
+  const response = await api.post<SofaScoreStoredEventsResult>(`/api/live/sofascore/teams/${teamId}/events/store?direction=${direction}&page=${page}`);
+  return response.data;
+}
+
+export async function compareSofaScoreEvent(eventId: number): Promise<SofaScoreEventComparison> {
+  const response = await api.post<SofaScoreEventComparison>(`/api/live/sofascore/events/${eventId}/comparison`);
   return response.data;
 }
 

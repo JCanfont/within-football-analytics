@@ -6,7 +6,13 @@ from typing import Any
 import requests
 
 from app.config import get_settings
-from app.schemas.api import LiveMatchSnapshot, LiveProviderStatus, SofaScoreTeamEvent, SofaScoreTeamEventsResult
+from app.schemas.api import (
+    LiveMatchSnapshot,
+    LiveProviderStatus,
+    SofaScoreLiveEventsResult,
+    SofaScoreTeamEvent,
+    SofaScoreTeamEventsResult,
+)
 
 
 PROVIDER_NAME = "sofascore-crawlora"
@@ -44,6 +50,19 @@ def fetch_team_events(team_id: int, direction: str = "next", page: int = 0) -> S
         has_next_page=bool(data.get("has_next_page")),
         message=f"{len(data.get('events') or [])} eventos SofaScore encontrados.",
         events=[_team_event_from_payload(event) for event in data.get("events") or []],
+    )
+
+
+def fetch_live_events(sport: str = "football") -> SofaScoreLiveEventsResult:
+    sport = sport.strip().lower() or "football"
+    payload = _crawlora_get("sofascore/live-events", sport=sport)
+    data = payload.get("data") or {}
+    events = data.get("events") or []
+    return SofaScoreLiveEventsResult(
+        provider=PROVIDER_NAME,
+        sport=sport,
+        message=f"{len(events)} partidos en directo encontrados en SofaScore.",
+        events=[_team_event_from_payload(event) for event in events],
     )
 
 
@@ -107,6 +126,7 @@ def _team_event_from_payload(event: dict[str, Any]) -> SofaScoreTeamEvent:
         event_id=int(event.get("id")),
         start_time=_event_start_time(event),
         status=_status_type(event),
+        minute=_event_minute(event),
         competition=str(tournament.get("unique_tournament_name") or tournament.get("name") or ""),
         country=str(tournament.get("category") or ""),
         home_team=str(home.get("name") or ""),

@@ -393,6 +393,7 @@ export type SofaScoreTeamEvent = {
   event_id: number;
   start_time: string;
   status: string;
+  minute?: number | null;
   competition: string;
   country?: string | null;
   home_team: string;
@@ -401,6 +402,9 @@ export type SofaScoreTeamEvent = {
   away_team_id?: number | null;
   home_score?: number | null;
   away_score?: number | null;
+  is_interest?: boolean;
+  interest_label?: string | null;
+  interest_match_id?: number | null;
 };
 
 export type SofaScoreTeamEventsResult = {
@@ -411,6 +415,54 @@ export type SofaScoreTeamEventsResult = {
   has_next_page: boolean;
   message: string;
   events: SofaScoreTeamEvent[];
+};
+
+export type SofaScoreLiveEventsResult = {
+  provider: string;
+  sport: string;
+  message: string;
+  events: SofaScoreTeamEvent[];
+};
+
+export type SofaScoreStoredEventsResult = {
+  provider: string;
+  sport?: string | null;
+  processed: number;
+  created: number;
+  updated: number;
+  total_matches: number;
+  message: string;
+  events: SofaScoreTeamEvent[];
+};
+
+export type LiveTeamGoalComparison = {
+  team_id: number;
+  team: string;
+  matches: number;
+  goals_for: number;
+  goals_against: number;
+  goals_for_average: number;
+  goals_against_average: number;
+  interval_rows: GoalTimingSeriesRow[];
+};
+
+export type LiveCompetitionGoalComparison = {
+  competition_id: number;
+  competition: string;
+  matches: number;
+  total_goals: number;
+  goals_per_match: number;
+};
+
+export type SofaScoreEventComparison = {
+  provider: string;
+  event_id: number;
+  match_id?: number | null;
+  message: string;
+  event?: SofaScoreTeamEvent | null;
+  home?: LiveTeamGoalComparison | null;
+  away?: LiveTeamGoalComparison | null;
+  competition?: LiveCompetitionGoalComparison | null;
 };
 
 export type DashboardData = {

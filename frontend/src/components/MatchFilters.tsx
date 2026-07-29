@@ -7,6 +7,7 @@ export type AnalysisOutputMode = "screen" | "voice" | "both";
 type MatchFiltersProps = {
   filters: MatchFilterState;
   teams: string[];
+  teamGroups?: TeamOptionGroup[];
   competitionTypes: string[];
   totalMatches: number;
   visibleMatches: number;
@@ -20,9 +21,15 @@ type MatchFiltersProps = {
   onReset: () => void;
 };
 
+export type TeamOptionGroup = {
+  label: string;
+  teams: string[];
+};
+
 export function MatchFilters({
   filters,
   teams,
+  teamGroups = [],
   competitionTypes,
   totalMatches,
   visibleMatches,
@@ -37,6 +44,7 @@ export function MatchFilters({
 }: MatchFiltersProps) {
   const hasSelectedTeams = filters.homeTeam !== "all" && filters.awayTeam !== "all";
   const canAnalyzePair = hasSelectedTeams && pairMatches > 0;
+  const hasGroupedTeams = teamGroups.some((group) => group.teams.length > 0);
 
   return (
     <section className="panel filters-panel" aria-label="Filtros de partidos">
@@ -54,22 +62,14 @@ export function MatchFilters({
           <span>Equipo local</span>
           <select value={filters.homeTeam} onChange={(event) => onChange({ ...filters, homeTeam: event.target.value })}>
             <option value="all">Todos</option>
-            {teams.map((team) => (
-              <option key={team} value={team}>
-                {displayTeamName(team)}
-              </option>
-            ))}
+            <TeamOptions teams={teams} groups={teamGroups} useGroups={hasGroupedTeams} />
           </select>
         </label>
         <label>
           <span>Equipo visitante</span>
           <select value={filters.awayTeam} onChange={(event) => onChange({ ...filters, awayTeam: event.target.value })}>
             <option value="all">Todos</option>
-            {teams.map((team) => (
-              <option key={team} value={team}>
-                {displayTeamName(team)}
-              </option>
-            ))}
+            <TeamOptions teams={teams} groups={teamGroups} useGroups={hasGroupedTeams} />
           </select>
         </label>
         <label>
@@ -150,6 +150,33 @@ export function MatchFilters({
             : describeEquilibriumRange(filters.equilibriumRange)}
       </p>
     </section>
+  );
+}
+
+function TeamOptions({ groups, teams, useGroups }: { groups: TeamOptionGroup[]; teams: string[]; useGroups: boolean }) {
+  if (useGroups) {
+    return (
+      <>
+        {groups.map((group) => (
+          <optgroup key={group.label} label={group.label}>
+            {group.teams.map((team) => (
+              <option key={`${group.label}-${team}`} value={team}>
+                {displayTeamName(team)}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </>
+    );
+  }
+  return (
+    <>
+      {teams.map((team) => (
+        <option key={team} value={team}>
+          {displayTeamName(team)}
+        </option>
+      ))}
+    </>
   );
 }
 

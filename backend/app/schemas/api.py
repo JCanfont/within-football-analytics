@@ -430,6 +430,7 @@ class SofaScoreTeamEvent(BaseModel):
     event_id: int
     start_time: datetime
     status: str
+    minute: int | None = None
     competition: str
     country: str | None = None
     home_team: str
@@ -438,6 +439,9 @@ class SofaScoreTeamEvent(BaseModel):
     away_team_id: int | None = None
     home_score: int | None = None
     away_score: int | None = None
+    is_interest: bool = False
+    interest_label: str | None = None
+    interest_match_id: int | None = None
 
 
 class SofaScoreTeamEventsResult(BaseModel):
@@ -448,6 +452,54 @@ class SofaScoreTeamEventsResult(BaseModel):
     has_next_page: bool
     message: str
     events: list[SofaScoreTeamEvent]
+
+
+class SofaScoreLiveEventsResult(BaseModel):
+    provider: str
+    sport: str
+    message: str
+    events: list[SofaScoreTeamEvent]
+
+
+class SofaScoreStoredEventsResult(BaseModel):
+    provider: str
+    sport: str | None = None
+    processed: int
+    created: int
+    updated: int
+    total_matches: int
+    message: str
+    events: list[SofaScoreTeamEvent]
+
+
+class LiveTeamGoalComparison(BaseModel):
+    team_id: int
+    team: str
+    matches: int
+    goals_for: int
+    goals_against: int
+    goals_for_average: float
+    goals_against_average: float
+    interval_rows: list[GoalTimingSeriesRow] = Field(default_factory=list)
+
+
+class LiveCompetitionGoalComparison(BaseModel):
+    competition_id: int
+    competition: str
+    matches: int
+    total_goals: int
+    goals_per_match: float
+
+
+class SofaScoreEventComparison(BaseModel):
+    provider: str
+    event_id: int
+    match_id: int | None = None
+    message: str
+    event: SofaScoreTeamEvent | None = None
+    home: LiveTeamGoalComparison | None = None
+    away: LiveTeamGoalComparison | None = None
+    competition: LiveCompetitionGoalComparison | None = None
 
 
 class PlayerStadiumAnalytics(BaseModel):

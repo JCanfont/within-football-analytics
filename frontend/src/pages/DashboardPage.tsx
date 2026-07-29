@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { UnderSignalsChart } from "../charts/UnderSignalsChart";
 import { EmptyState } from "../components/EmptyState";
 import { MatchDetailPanel } from "../components/MatchDetailPanel";
-import { MatchFilters, type AnalysisOutputMode } from "../components/MatchFilters";
+import { MatchFilters, type AnalysisOutputMode, type TeamOptionGroup } from "../components/MatchFilters";
 import { MetricCard } from "../components/MetricCard";
 import { MatchTable } from "../components/MatchTable";
 import { LiveTrackingPanel } from "../components/LiveTrackingPanel";
@@ -12,10 +12,22 @@ import { useBackendHealth } from "../hooks/useBackendHealth";
 import { useDashboardData } from "../hooks/useDashboardData";
 import { useLiveTracking } from "../hooks/useLiveTracking";
 import { useMatchInsight } from "../hooks/useMatchInsight";
-import { deleteFavorite, fetchFavorites, saveFavorite } from "../services/api";
-import type { Favorite } from "../types/api";
+import { compareSofaScoreEvent, deleteFavorite, fetchFavorites, saveFavorite } from "../services/api";
+import type { Competition, Favorite, MatchListItem, SofaScoreEventComparison } from "../types/api";
 import { classifyUnderOver, emptyMatchFilters, filterMatches, findLatestMatchForTeamPair, isTeamPairMatch, teamsFromMatches } from "../utils/matchFilters";
 import { buildSpokenSummary } from "../utils/voiceAssistant";
+
+const DASHBOARD_HIGHLIGHTED_EVENTS_KEY = "within_dashboard_highlighted_sofascore_events";
+
+type HighlightedSofaScoreEvent = {
+  eventId: number;
+  label: string;
+  homeTeam: string;
+  awayTeam: string;
+  competition: string;
+  startTime: string;
+  interestMatchId?: number | null;
+};
 
 export function DashboardPage() {
   const { data, isLoading, isLoadingAnalytics, error, hydrateAnalytics } = useDashboardData();
@@ -28,6 +40,10 @@ export function DashboardPage() {
   const [isMatchListOpen, setIsMatchListOpen] = useState(false);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [favoriteTeamId, setFavoriteTeamId] = useState("");
+  const [highlightedEvents, setHighlightedEvents] = useState<HighlightedSofaScoreEvent[]>(readHighlightedSofaScoreEvents);
+  const [selectedLiveComparison, setSelectedLiveComparison] = useState<SofaScoreEventComparison | null>(null);
+  const [isLiveComparisonLoading, setIsLiveComparisonLoading] = useState(false);
+  const [liveComparisonMessage, setLiveComparisonMessage] = useState<string | null>(null);
   const filteredMatches = useMemo(() => filterMatches(matches, filters), [matches, filters]);
   const pairMatches = useMemo(() => {
     if (filters.homeTeam === "all" || filters.awayTeam === "all") {
@@ -62,6 +78,7 @@ export function DashboardPage() {
     [matches],
   );
   const teams = useMemo(() => teamsFromMatches(matches), [matches]);
+  const teamOptionGroups = useMemo(() => buildTeamOptionGroups(matches, data?.competitions ?? []), [data?.competitions, matches]);
   const teamOptions = useMemo(() => {
     const byName = new Map((data?.teams ?? []).map((team) => [team.name, team]));
     return teams.map((teamName) => byName.get(teamName) ?? { id: teamNameToFallbackId(teamName), name: teamName });
@@ -140,6 +157,33 @@ export function DashboardPage() {
     window.speechSynthesis.speak(utterance);
   }
 
+  function reloadHighlightedEvents() {
+    setHighlightedEvents(readHighlightedSofaScoreEvents());
+  }
+
+  function removeHighlightedEvent(eventId: number) {
+    const next = highlightedEvents.filter((event) => event.eventId !== eventId);
+    setHighlightedEvents(next);
+    localStorage.setItem(DASHBOARD_HIGHLIGHTED_EVENTS_KEY, JSON.stringify(next));
+    if (selectedLiveComparison?.event_id === eventId) {
+      setSelectedLiveComparison(null);
+    }
+  }
+
+  function analyzeHighlightedEvent(event: HighlightedSofaScoreEvent) {
+    setIsLiveComparisonLoading(true);
+    setLiveComparisonMessage(`Calculando comparativa de ${event.label}...`);
+    compareSofaScoreEvent(event.eventId)
+      .then((comparison) => {
+        setSelectedLiveComparison(comparison);
+        setLiveComparisonMessage(comparison.message);
+      })
+      .catch(() => {
+        setLiveComparisonMessage("No se pudo calcular la comparativa del partido destacado. Revisa que el evento siga disponible en directo.");
+      })
+      .finally(() => setIsLiveComparisonLoading(false));
+  }
+
   useEffect(() => {
     const previousScrollRestoration = window.history.scrollRestoration;
     window.history.scrollRestoration = "manual";
@@ -151,6 +195,16 @@ export function DashboardPage() {
 
   useEffect(() => {
     loadFavorites();
+  }, []);
+
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === DASHBOARD_HIGHLIGHTED_EVENTS_KEY) {
+        reloadHighlightedEvents();
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   useEffect(() => {
@@ -219,6 +273,42 @@ export function DashboardPage() {
         onUpdateSettings={liveTracking.updateSettings}
       />
 
+      <section className="panel dashboard-live-panel" aria-label="Partidos destacados live">
+        <div className="panel-heading">
+          <div>
+            <h2>Partidos destacados live</h2>
+            <p>Marca eventos desde Partidos en directo y analiza aqui la comparativa con historicos.</p>
+          </div>
+          <button className="panel-toggle" type="button" onClick={reloadHighlightedEvents}>
+            <Activity size={17} aria-hidden="true" />
+            Actualizar destacados
+          </button>
+        </div>
+        {highlightedEvents.length ? (
+          <div className="dashboard-live-list">
+            {highlightedEvents.map((event) => (
+              <article className="dashboard-live-item" key={event.eventId}>
+                <div>
+                  <span>{event.competition}</span>
+                  <strong>{event.label}</strong>
+                  <small>{formatTime(event.startTime)} {event.interestMatchId ? `- Forebet ID ${event.interestMatchId}` : ""}</small>
+                </div>
+                <button className="row-action" type="button" onClick={() => analyzeHighlightedEvent(event)} disabled={isLiveComparisonLoading}>
+                  {isLiveComparisonLoading ? "Analizando" : "Analizar"}
+                </button>
+                <button className="row-action muted" type="button" onClick={() => removeHighlightedEvent(event.eventId)}>
+                  Quitar
+                </button>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="detail-state">Aun no hay partidos live destacados. Entra en Partidos en directo y pulsa Destacar dashboard en el evento que quieras analizar.</div>
+        )}
+        {liveComparisonMessage ? <p className="live-match-note">{liveComparisonMessage}</p> : null}
+        {selectedLiveComparison ? <DashboardLiveComparisonPanel comparison={selectedLiveComparison} /> : null}
+      </section>
+
       <section className="panel favorites-panel" aria-label="Favoritos">
         <div className="panel-heading">
           <div>
@@ -259,6 +349,7 @@ export function DashboardPage() {
       <MatchFilters
         filters={filters}
         teams={teams}
+        teamGroups={teamOptionGroups}
         competitionTypes={competitionTypes}
         totalMatches={matches.length}
         visibleMatches={filteredMatches.length}
@@ -336,6 +427,109 @@ function teamNameToFallbackId(teamName: string) {
   return Array.from(teamName).reduce((sum, char) => sum + char.charCodeAt(0), 0);
 }
 
+function buildTeamOptionGroups(matches: MatchListItem[], competitions: Competition[]): TeamOptionGroup[] {
+  const competitionCountries = new Map(competitions.map((competition) => [normalizeKey(competition.name), competition.country?.trim() || ""]));
+  const groupedTeams = new Map<string, Set<string>>();
+
+  for (const match of matches) {
+    const competition = match.competition?.trim();
+    const country = competitionCountries.get(normalizeKey(competition ?? "")) ?? "";
+    const label = competition || country || "Sin competicion";
+    if (!groupedTeams.has(label)) {
+      groupedTeams.set(label, new Set());
+    }
+    groupedTeams.get(label)?.add(match.home_team);
+    groupedTeams.get(label)?.add(match.away_team);
+  }
+
+  return Array.from(groupedTeams.entries())
+    .map(([label, teamSet]) => ({
+      label,
+      teams: Array.from(teamSet).sort((a, b) => displaySortName(a).localeCompare(displaySortName(b), "es")),
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, "es"));
+}
+
+function normalizeKey(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function displaySortName(value: string) {
+  return value
+    .replace(/\b(cf|fc|cd|rcd|sd|ud|ath)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function formatNumber(value: number) {
   return new Intl.NumberFormat("es-ES").format(value);
+}
+
+function formatTime(value: string) {
+  return new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+}
+
+function readHighlightedSofaScoreEvents() {
+  try {
+    const raw = localStorage.getItem(DASHBOARD_HIGHLIGHTED_EVENTS_KEY);
+    const parsed = raw ? (JSON.parse(raw) as HighlightedSofaScoreEvent[]) : [];
+    return Array.isArray(parsed) ? parsed.filter((event) => Number.isFinite(event.eventId)) : [];
+  } catch {
+    return [];
+  }
+}
+
+function DashboardLiveComparisonPanel({ comparison }: { comparison: SofaScoreEventComparison }) {
+  return (
+    <article className="live-comparison-panel dashboard-live-comparison">
+      <div className="live-match-heading">
+        <div>
+          <span>Comparativa del destacado</span>
+          <strong>{comparison.event ? `${comparison.event.home_team} vs ${comparison.event.away_team}` : `Evento ${comparison.event_id}`}</strong>
+        </div>
+        <div>
+          <span>Partido base</span>
+          <strong>{comparison.match_id ? `ID ${comparison.match_id}` : "Sin cruce historico"}</strong>
+        </div>
+      </div>
+      <div className="live-comparison-grid">
+        {comparison.home ? <DashboardTeamComparisonBlock item={comparison.home} /> : null}
+        {comparison.away ? <DashboardTeamComparisonBlock item={comparison.away} /> : null}
+        {comparison.competition ? (
+          <div className="live-signal neutral">
+            <span>{comparison.competition.competition}</span>
+            <strong>{comparison.competition.goals_per_match.toFixed(2)} goles/partido</strong>
+            <small>
+              {comparison.competition.total_goals} goles en {comparison.competition.matches} partidos terminados de la competicion.
+            </small>
+          </div>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function DashboardTeamComparisonBlock({ item }: { item: NonNullable<SofaScoreEventComparison["home"]> }) {
+  return (
+    <div className="live-team-comparison">
+      <span>{item.team}</span>
+      <strong>
+        {item.goals_for_average.toFixed(2)} GF / {item.goals_against_average.toFixed(2)} GC
+      </strong>
+      <small>
+        {item.goals_for} marcados y {item.goals_against} recibidos en {item.matches} partidos.
+      </small>
+      {item.interval_rows.length ? (
+        <div className="live-interval-strip">
+          {item.interval_rows.map((row) => (
+            <span key={`${row.interval_start}-${row.interval_end}`}>
+              {row.interval_start}-{row.interval_end}: {row.goals_scored}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <small>Sin minutos de goles importados para intervalos.</small>
+      )}
+    </div>
+  );
 }
