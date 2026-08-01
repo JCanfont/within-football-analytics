@@ -511,7 +511,6 @@ function ForebetRangeRow({
         </td>
         <td>
           {formatGoalPrediction(item, predictionMode)}
-          <ForebetPredictionResults item={item} />
         </td>
         <td>{formatUnknown(item.expected_goals)}</td>
         {showRanges ? <td>{isCalculatingRanges ? "Calculando..." : formatRange(range)}</td> : null}
@@ -533,28 +532,6 @@ function ForebetRangeRow({
         </tr>
       ) : null}
     </>
-  );
-}
-
-function ForebetPredictionResults({ item }: { item: ForebetRangeItem }) {
-  const scores = buildForebetPredictionScores(item);
-  const likelyScore = predictedScoreLabel(item);
-  return (
-    <div className="forebet-score-strip" aria-label={`Posibles resultados ${item.home_team} contra ${item.away_team}`}>
-      <span>Posibles resultados</span>
-      <div>
-        {scores.map((score) => (
-          <span
-            className={score === likelyScore ? "very-likely" : ""}
-            key={score}
-            title={score === likelyScore ? "Muy probable segun resultado exacto Forebet" : "Encaja por goles y Over/Under"}
-          >
-            {score}
-          </span>
-        ))}
-      </div>
-      {likelyScore ? <small>Muy probable: {likelyScore}</small> : null}
-    </div>
   );
 }
 
@@ -660,39 +637,6 @@ function formatGoalPrediction(item: ForebetRangeItem, mode: GoalPredictionMode) 
 
 function formatOverUnder(value: string) {
   return value === "over_2_5" ? "Over 2.5" : "Under 2.5";
-}
-
-function buildForebetPredictionScores(item: ForebetRangeItem) {
-  const prediction = isRecord(item.goal_prediction) ? item.goal_prediction : {};
-  const predictedTotal = typeof prediction.predicted_total_goals === "number" ? prediction.predicted_total_goals : null;
-  const overUnder = typeof prediction.over_under_25 === "string" ? prediction.over_under_25 : null;
-  const likelyScore = predictedScoreLabel(item);
-  const scores: string[] = [];
-  for (let home = 0; home <= 9; home += 1) {
-    for (let away = 0; away <= 9; away += 1) {
-      if (matchesForebetGoalPrediction(home, away, predictedTotal, overUnder)) {
-        scores.push(`${home}-${away}`);
-      }
-    }
-  }
-  if (likelyScore && !scores.includes(likelyScore)) {
-    scores.push(likelyScore);
-  }
-  return scores;
-}
-
-function matchesForebetGoalPrediction(home: number, away: number, predictedTotal: number | null, overUnder: string | null) {
-  const total = home + away;
-  if (predictedTotal != null && total !== predictedTotal) {
-    return false;
-  }
-  if (overUnder === "over_2_5" && total < 3) {
-    return false;
-  }
-  if (overUnder === "under_2_5" && total >= 3) {
-    return false;
-  }
-  return true;
 }
 
 function predictedScoreLabel(item: ForebetRangeItem) {

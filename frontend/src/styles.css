@@ -2178,54 +2178,6 @@ td {
   opacity: 0.62;
 }
 
-.forebet-score-strip {
-  display: grid;
-  gap: 5px;
-  min-width: 260px;
-  margin-top: 7px;
-}
-
-.forebet-score-strip > span {
-  color: #617083;
-  font-size: 11px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.forebet-score-strip div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  max-width: 360px;
-}
-
-.forebet-score-strip div span {
-  display: inline-grid;
-  place-items: center;
-  min-width: 28px;
-  height: 22px;
-  padding: 0 5px;
-  border: 1px solid #d8e0e8;
-  border-radius: 6px;
-  background: #f4f7f9;
-  color: #536174;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.forebet-score-strip div span.very-likely {
-  border-color: #1f7a4d;
-  background: #d6f263;
-  color: #111827;
-  box-shadow: 0 0 0 2px rgba(214, 242, 99, 0.28), 0 0 12px rgba(47, 111, 115, 0.34);
-}
-
-.forebet-score-strip small {
-  color: #245c60;
-  font-size: 11px;
-  font-weight: 900;
-}
-
 .forecast-impossible-row td {
   background: #fff2f0;
 }
