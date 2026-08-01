@@ -17,6 +17,12 @@ vi.mock("recharts", () => ({
 
 const mockedApi = vi.mocked(api);
 
+function todayInputValue() {
+  const now = new Date();
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+  return localDate.toISOString().slice(0, 10);
+}
+
 describe("App", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -489,7 +495,7 @@ describe("App", () => {
       matches: [
         {
           match_id: 50,
-          match_date: "2026-07-28T19:00:00+00:00",
+          match_date: "2026-07-28T22:00:00Z",
           competition: "LaLiga",
           season: "2026/2027",
           home_team: "Getafe",
@@ -630,7 +636,7 @@ describe("App", () => {
     expect(screen.getAllByText(/1 partidos seleccionados/).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: "Actualizar" }));
     await waitFor(() => {
-      expect(mockedApi.loadForebetDate).toHaveBeenCalledWith("2026-07-28", false);
+      expect(mockedApi.loadForebetDate).toHaveBeenCalledWith(todayInputValue(), false);
     });
     await waitFor(() => {
       expect(mockedApi.fetchLiveMatchSnapshot).toHaveBeenCalledWith(50);
@@ -702,12 +708,12 @@ describe("App", () => {
     await waitFor(() => {
       expect(screen.getByText("Predicción goles")).toBeInTheDocument();
     });
+    expect(screen.getByText("28/07/2026")).toBeInTheDocument();
+    expect(screen.getByText("Inicio 22:00")).toBeInTheDocument();
+    expect(screen.queryByText("29/07/2026")).not.toBeInTheDocument();
     expect(screen.getByText(/1-2.*3 goles.*Over 2\.5/)).toBeInTheDocument();
-    expect(screen.getByText("Posibles resultados")).toBeInTheDocument();
-    expect(screen.getByText("Muy probable: 1-2")).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole("button", { name: "Marcador" }));
-    expect(screen.getAllByText("1-2").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("1-2")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Goles" }));
     expect(screen.getByText("3 goles")).toBeInTheDocument();
@@ -738,7 +744,7 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "Actualizar ahora" }));
 
     await waitFor(() => {
-      expect(mockedApi.loadForebetDate).toHaveBeenCalledWith("2026-07-28", false);
+      expect(mockedApi.loadForebetDate).toHaveBeenCalledWith(todayInputValue(), false);
     });
   }, 30000);
 

@@ -485,7 +485,7 @@ function ForebetRangeRow({
   return (
     <>
       <tr className={forecastState?.status === "impossible" ? "forecast-impossible-row" : undefined}>
-        <td>{formatDateOnly(item.match_date)}</td>
+        <td>{formatMatchDateOnly(item.match_date)}</td>
         <td>
           <strong>{item.home_team}</strong> vs <strong>{item.away_team}</strong>
           <span className="table-subtext">{item.competition} · {formatSeason(item.season)}</span>
@@ -495,7 +495,7 @@ function ForebetRangeRow({
             {isWatched ? <BellRing size={15} aria-hidden="true" /> : <Bell size={15} aria-hidden="true" />}
             {isWatched ? "Aviso activo" : "Avisar inicio"}
           </button>
-          <span className="table-subtext">{hasMatchStarted(item) ? "En curso o iniciado" : `Inicio ${formatTimeOnly(item.match_date)}`}</span>
+          <span className="table-subtext">{hasMatchStarted(item) ? "En curso o iniciado" : `Inicio ${formatMatchTimeOnly(item.match_date)}`}</span>
         </td>
         <td>{item.forebet_prediction ?? "Sin captura"}</td>
         <td>
@@ -594,6 +594,22 @@ function formatDateOnly(value: string) {
 
 function formatTimeOnly(value: string) {
   return new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+}
+
+function formatMatchDateOnly(value: string) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) {
+    return formatDateOnly(value);
+  }
+  return `${match[3]}/${match[2]}/${match[1]}`;
+}
+
+function formatMatchTimeOnly(value: string) {
+  const match = value.match(/T(\d{2}):(\d{2})/);
+  if (!match) {
+    return formatTimeOnly(value);
+  }
+  return `${match[1]}:${match[2]}`;
 }
 
 function formatSeason(value: string) {
