@@ -147,7 +147,12 @@ def load_forebet_date(target_date: date, include_ranges: bool = False, db: Sessi
         ).all()
     )
     items = [_forebet_range_item(db, match) if include_ranges else _forebet_basic_item(db, match) for match in matches]
-    if not items and forebet_outcome.predictions:
+    if forebet_outcome.status == "storage_unavailable" and forebet_outcome.predictions:
+        items = [
+            _forebet_source_item(index, prediction, include_ranges)
+            for index, prediction in enumerate(forebet_outcome.predictions, start=1)
+        ]
+    elif not items and forebet_outcome.predictions:
         items = [
             _forebet_source_item(index, prediction, include_ranges)
             for index, prediction in enumerate(forebet_outcome.predictions, start=1)

@@ -1,10 +1,13 @@
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from bs4 import BeautifulSoup
 
+from app.routers import analytics
+from app.schemas.api import ForebetRangeItem
 from app.services import forebet_importer
 from app.services.forebet_importer import (
+    ForebetImportOutcome,
     ForebetSourcePrediction,
     _actual_score_from_cells,
     _forebet_reader_url,
@@ -232,3 +235,63 @@ def test_update_match_result_keeps_live_status_without_score() -> None:
     _update_match_result_from_forebet(match, prediction)  # type: ignore[arg-type]
 
     assert match.status == "live"
+
+
+def test_load_forebet_date_shows_all_temporary_predictions_when_storage_unavailable(monkeypatch) -> None:
+    target_date = date(2026, 8, 2)
+    predictions = [
+        ForebetSourcePrediction(
+            home_team="Nacional",
+            away_team="Progreso",
+            match_date=datetime(2026, 8, 2, 21, 30, tzinfo=UTC),
+            prediction="1",
+            predicted_score="2-0",
+            expected_goals=Decimal("2.45"),
+        ),
+        ForebetSourcePrediction(
+            home_team="CA Tigre",
+            away_team="Banfield",
+            match_date=datetime(2026, 8, 2, 23, 0, tzinfo=UTC),
+            prediction="X",
+            predicted_score="1-1",
+            expected_goals=Decimal("2.10"),
+        ),
+    ]
+    outcome = ForebetImportOutcome(
+        status="storage_unavailable",
+        message="Forebet devolvio partidos y se mostraran como lectura temporal.",
+        source_url="https://www.forebet.com/en/football-predictions?lang=en",
+        fetched=len(predictions),
+        predictions=predictions,
+    )
+
+    class FakeScalars:
+        def all(self) -> list[object]:
+            return [object()]
+
+    class FakeDb:
+        def scalars(self, query: object) -> FakeScalars:
+            return FakeScalars()
+
+    monkeypatch.setattr(analytics, "import_forebet_jornada", lambda db, date_value: outcome)
+    monkeypatch.setattr(
+        analytics,
+        "_forebet_basic_item",
+        lambda db, match: ForebetRangeItem(
+            match_id=1,
+            match_date=datetime(2026, 8, 2, 21, 30, tzinfo=UTC),
+            competition="Local",
+            season="2026/2027",
+            home_team="Only local",
+            away_team="Match",
+            status="scheduled",
+            reliability="pending_range",
+        ),
+    )
+
+    result = analytics.load_forebet_date(target_date, include_ranges=False, db=FakeDb())
+
+    assert result.forebet_fetched == 2
+    assert len(result.matches) == 2
+    assert [match.home_team for match in result.matches] == ["Nacional", "CA Tigre"]
+    assert all(match.match_id < 0 for match in result.matches)
