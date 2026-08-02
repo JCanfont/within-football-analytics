@@ -709,7 +709,7 @@ describe("App", () => {
       expect(screen.getByText("Predicción goles")).toBeInTheDocument();
     });
     expect(screen.getByText("28/07/2026")).toBeInTheDocument();
-    expect(screen.getByText("Iniciado o jugado")).toBeInTheDocument();
+    expect(screen.getByText("Jugado")).toBeInTheDocument();
     expect(screen.queryByText("29/07/2026")).not.toBeInTheDocument();
     expect(screen.getByText(/1-2.*3 goles.*Over 2\.5/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Marcador" }));

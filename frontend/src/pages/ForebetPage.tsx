@@ -13,6 +13,7 @@ const goalPredictionModes: Array<{ label: string; mode: GoalPredictionMode }> = 
 ];
 
 const FOREBET_WATCH_KEY = "within_forebet_watch";
+const MATCH_SETTLED_AFTER_MINUTES = 135;
 const LIVE_REFRESH_MS = 10 * 60 * 1000;
 
 type ForebetWatchState = {
@@ -503,7 +504,7 @@ function ForebetRangeRow({
             {isWatched ? <BellRing size={15} aria-hidden="true" /> : <Bell size={15} aria-hidden="true" />}
             {isWatched ? "Aviso activo" : "Avisar inicio"}
           </button>
-          <span className="table-subtext">{hasMatchStarted(item) ? "Iniciado o jugado" : `Inicio ${formatMatchTimeOnly(item.match_date)}`}</span>
+          <span className="table-subtext">{formatMatchStartStatus(item)}</span>
         </td>
         <td>{item.forebet_prediction ?? "Sin captura"}</td>
         <td>
@@ -633,19 +634,24 @@ function matchDateTimeSortValue(value: string) {
 }
 
 function forebetTimingClass(item: ForebetRangeItem) {
-  if (isLiveMatch(item) || !hasLiteralMatchTimePassed(item.match_date)) {
-    return "forebet-time-pending";
-  }
-  return "forebet-time-past";
+  return matchTimingState(item) === "played" ? "forebet-time-past" : "forebet-time-pending";
 }
 
-function hasLiteralMatchTimePassed(value: string) {
+function literalMatchElapsedMinutes(value: string) {
+  const matchTime = parseLiteralMatchDate(value);
+  if (!matchTime) {
+    return null;
+  }
+  return Math.floor((Date.now() - matchTime.getTime()) / 60_000);
+}
+
+function parseLiteralMatchDate(value: string) {
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
   if (!match) {
-    return new Date(value).getTime() < Date.now();
+    const parsed = new Date(value);
+    return Number.isFinite(parsed.getTime()) ? parsed : null;
   }
-  const literalDate = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]));
-  return literalDate.getTime() < Date.now();
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]));
 }
 
 function formatSeason(value: string) {
@@ -730,6 +736,31 @@ function formatNonLiveForecastLabel(item: ForebetRangeItem) {
   return "Pendiente de inicio";
 }
 
+function formatMatchStartStatus(item: ForebetRangeItem) {
+  const timingState = matchTimingState(item);
+  if (timingState === "played") {
+    return "Jugado";
+  }
+  if (timingState === "live") {
+    return "En juego";
+  }
+  return `Inicio ${formatMatchTimeOnly(item.match_date)}`;
+}
+
+function matchTimingState(item: ForebetRangeItem): "scheduled" | "live" | "played" {
+  if (isFinished(item)) {
+    return "played";
+  }
+  if (isLiveMatch(item)) {
+    return "live";
+  }
+  const elapsedMinutes = literalMatchElapsedMinutes(item.match_date);
+  if (elapsedMinutes == null || elapsedMinutes < 0) {
+    return "scheduled";
+  }
+  return elapsedMinutes >= MATCH_SETTLED_AFTER_MINUTES ? "played" : "live";
+}
+
 function isLiveMatch(item: ForebetRangeItem) {
   const normalizedStatus = item.status.toLowerCase();
   return ["live", "in_play", "playing", "1h", "2h", "ht"].some((status) => normalizedStatus.includes(status));
@@ -772,10 +803,7 @@ function formatUnknown(value: unknown) {
 }
 
 function hasMatchStarted(item: ForebetRangeItem) {
-  if (isLiveMatch(item)) {
-    return true;
-  }
-  return hasLiteralMatchTimePassed(item.match_date);
+  return matchTimingState(item) !== "scheduled";
 }
 
 function isThirtyMinuteWarningWindow(item: ForebetRangeItem) {
@@ -784,11 +812,11 @@ function isThirtyMinuteWarningWindow(item: ForebetRangeItem) {
 }
 
 function estimatedMatchMinute(item: ForebetRangeItem) {
-  const matchStart = new Date(item.match_date).getTime();
-  if (!Number.isFinite(matchStart)) {
+  const elapsedMinutes = literalMatchElapsedMinutes(item.match_date);
+  if (elapsedMinutes == null) {
     return 0;
   }
-  return Math.max(0, Math.floor((Date.now() - matchStart) / 60_000));
+  return Math.max(0, elapsedMinutes);
 }
 
 function isFinished(item: ForebetRangeItem) {
