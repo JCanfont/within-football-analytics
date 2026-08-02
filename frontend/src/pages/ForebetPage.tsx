@@ -497,7 +497,7 @@ function ForebetRangeRow({
         <td>{formatMatchDateOnly(item.match_date)}</td>
         <td>
           <strong>{item.home_team}</strong> vs <strong>{item.away_team}</strong>
-          <span className="table-subtext">{item.competition} · {formatSeason(item.season)}</span>
+          <span className="table-subtext">{item.competition}</span>
         </td>
         <td>
           <button className={isWatched ? "row-action active" : "row-action"} type="button" onClick={onToggleWatch}>
@@ -652,11 +652,6 @@ function parseLiteralMatchDate(value: string) {
     return Number.isFinite(parsed.getTime()) ? parsed : null;
   }
   return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]));
-}
-
-function formatSeason(value: string) {
-  const match = value.match(/(\d{2})(\d{2})\D+(\d{2})(\d{2})/);
-  return match ? `${match[2]}-${match[4]}` : value;
 }
 
 function formatRange(range?: Record<string, unknown> | null) {
