@@ -503,7 +503,7 @@ function ForebetRangeRow({
             {isWatched ? <BellRing size={15} aria-hidden="true" /> : <Bell size={15} aria-hidden="true" />}
             {isWatched ? "Aviso activo" : "Avisar inicio"}
           </button>
-          <span className="table-subtext">{hasMatchStarted(item) ? "En curso o iniciado" : `Inicio ${formatMatchTimeOnly(item.match_date)}`}</span>
+          <span className="table-subtext">{hasMatchStarted(item) ? "Iniciado o jugado" : `Inicio ${formatMatchTimeOnly(item.match_date)}`}</span>
         </td>
         <td>{item.forebet_prediction ?? "Sin captura"}</td>
         <td>
@@ -775,9 +775,7 @@ function hasMatchStarted(item: ForebetRangeItem) {
   if (isLiveMatch(item)) {
     return true;
   }
-  const matchStart = new Date(item.match_date).getTime();
-  const now = Date.now();
-  return Number.isFinite(matchStart) && now >= matchStart && now <= matchStart + 150 * 60 * 1000;
+  return hasLiteralMatchTimePassed(item.match_date);
 }
 
 function isThirtyMinuteWarningWindow(item: ForebetRangeItem) {
