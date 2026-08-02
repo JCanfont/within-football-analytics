@@ -1997,6 +1997,15 @@ td {
   overflow: hidden;
 }
 
+.forebet-panel .panel-heading {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.forebet-panel .panel-heading > div {
+  min-width: 0;
+}
+
 .forebet-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2039,6 +2048,8 @@ td {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .forebet-mode-control {
@@ -3241,5 +3252,31 @@ button.analysis-card:disabled {
   .team-profile-heading span {
     margin-left: 0;
     text-align: left;
+  }
+
+  .forebet-actions,
+  .forebet-table-tools,
+  .forebet-live-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .forebet-date-form,
+  .forebet-date-form input,
+  .forebet-search,
+  .forebet-mode-control {
+    width: 100%;
+  }
+
+  .forebet-mode-control {
+    flex-wrap: wrap;
+  }
+
+  .forebet-mode-control button {
+    flex: 1 1 120px;
+  }
+
+  .forebet-live-watch {
+    grid-template-columns: 1fr;
   }
 }
