@@ -215,11 +215,13 @@ export function ForebetPage() {
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (!normalized) {
-      return items;
-    }
-    return items.filter((item) =>
-      `${item.home_team} ${item.away_team} ${item.competition} ${item.season}`.toLowerCase().includes(normalized),
+    const visibleItems = normalized
+      ? items.filter((item) =>
+          `${item.home_team} ${item.away_team} ${item.competition} ${item.season}`.toLowerCase().includes(normalized),
+        )
+      : items;
+    return [...visibleItems].sort((first, second) =>
+      compareMatchDateTime(first.match_date, second.match_date) || first.home_team.localeCompare(second.home_team),
     );
   }, [items, query]);
 
@@ -482,9 +484,15 @@ function ForebetRangeRow({
 }) {
   const range = item.score_range;
   const forecastState = isLiveMatch(item) ? evaluateForecastState(item) : null;
+  const rowClassName = [
+    forecastState?.status === "impossible" ? "forecast-impossible-row" : "",
+    forebetTimingClass(item),
+  ]
+    .filter(Boolean)
+    .join(" ");
   return (
     <>
-      <tr className={forecastState?.status === "impossible" ? "forecast-impossible-row" : undefined}>
+      <tr className={rowClassName || undefined}>
         <td>{formatMatchDateOnly(item.match_date)}</td>
         <td>
           <strong>{item.home_team}</strong> vs <strong>{item.away_team}</strong>
@@ -610,6 +618,34 @@ function formatMatchTimeOnly(value: string) {
     return formatTimeOnly(value);
   }
   return `${match[1]}:${match[2]}`;
+}
+
+function compareMatchDateTime(first: string, second: string) {
+  return matchDateTimeSortValue(first) - matchDateTimeSortValue(second);
+}
+
+function matchDateTimeSortValue(value: string) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!match) {
+    return new Date(value).getTime();
+  }
+  return Number(`${match[1]}${match[2]}${match[3]}${match[4]}${match[5]}`);
+}
+
+function forebetTimingClass(item: ForebetRangeItem) {
+  if (isLiveMatch(item) || !hasLiteralMatchTimePassed(item.match_date)) {
+    return "forebet-time-pending";
+  }
+  return "forebet-time-past";
+}
+
+function hasLiteralMatchTimePassed(value: string) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!match) {
+    return new Date(value).getTime() < Date.now();
+  }
+  const literalDate = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]));
+  return literalDate.getTime() < Date.now();
 }
 
 function formatSeason(value: string) {

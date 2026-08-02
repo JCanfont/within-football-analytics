@@ -2182,6 +2182,22 @@ td {
   background: #fff2f0;
 }
 
+.forebet-time-past td {
+  background: #f6efff;
+}
+
+.forebet-time-past td:first-child {
+  box-shadow: inset 4px 0 0 #8f5bd6;
+}
+
+.forebet-time-pending td {
+  background: #eef7ff;
+}
+
+.forebet-time-pending td:first-child {
+  box-shadow: inset 4px 0 0 #2f81f7;
+}
+
 .forecast-status {
   display: inline-flex;
   align-items: center;
