@@ -332,7 +332,7 @@ def _forebet_source_item(index: int, prediction: ForebetSourcePrediction, includ
     return ForebetRangeItem(
         match_id=-index,
         match_date=prediction.match_date,
-        competition="Forebet",
+        competition=prediction.competition_name or "Forebet",
         season=f"{start_year}/{start_year + 1}",
         home_team=prediction.home_team,
         away_team=prediction.away_team,

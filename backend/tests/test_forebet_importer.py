@@ -77,12 +77,14 @@ def test_parse_forebet_reader_predictions_builds_rows_from_markdown() -> None:
     assert len(predictions) == 2
     assert predictions[0].home_team == "KuPS Kuopio"
     assert predictions[0].away_team == "Sabah"
+    assert predictions[0].competition_name == "Champions League"
     assert predictions[0].prediction == "2"
     assert predictions[0].predicted_score == "0-1"
     assert predictions[0].expected_goals == Decimal("2.07")
     assert predictions[1].home_team == "Lincoln Red Imps"
     assert predictions[1].away_team == "Mjällby AIF"
     assert predictions[1].prediction == "2"
+    assert predictions[1].competition_name == "Champions League"
     assert predictions[1].predicted_score == "1-3"
 
 
@@ -142,6 +144,7 @@ def test_forebet_cells_extract_live_score() -> None:
 def test_parse_forebet_card_extracts_actual_score_from_html() -> None:
     html = """
     <div class='rcnt tr_0'>
+      <div class="schemaName">Champions League</div>
       <div class="tnms">
         <a class="tnmscn" href="/en/football/matches/kups-kuopio-sabah-2477553">
           <span class="homeTeam"><span itemprop="name">KuPS Kuopio</span></span>
@@ -163,6 +166,7 @@ def test_parse_forebet_card_extracts_actual_score_from_html() -> None:
     assert len(predictions) == 1
     assert predictions[0].home_team == "KuPS Kuopio"
     assert predictions[0].away_team == "Sabah"
+    assert predictions[0].competition_name == "Champions League"
     assert predictions[0].prediction == "2"
     assert predictions[0].predicted_score == "0-1"
     assert predictions[0].status == "finished"
@@ -244,6 +248,7 @@ def test_load_forebet_date_shows_all_temporary_predictions_when_storage_unavaila
             home_team="Nacional",
             away_team="Progreso",
             match_date=datetime(2026, 8, 2, 21, 30, tzinfo=UTC),
+            competition_name="Uruguay Primera Division",
             prediction="1",
             predicted_score="2-0",
             expected_goals=Decimal("2.45"),
@@ -252,6 +257,7 @@ def test_load_forebet_date_shows_all_temporary_predictions_when_storage_unavaila
             home_team="CA Tigre",
             away_team="Banfield",
             match_date=datetime(2026, 8, 2, 23, 0, tzinfo=UTC),
+            competition_name="Argentina Liga Profesional",
             prediction="X",
             predicted_score="1-1",
             expected_goals=Decimal("2.10"),
@@ -294,4 +300,5 @@ def test_load_forebet_date_shows_all_temporary_predictions_when_storage_unavaila
     assert result.forebet_fetched == 2
     assert len(result.matches) == 2
     assert [match.home_team for match in result.matches] == ["Nacional", "CA Tigre"]
+    assert [match.competition for match in result.matches] == ["Uruguay Primera Division", "Argentina Liga Profesional"]
     assert all(match.match_id < 0 for match in result.matches)

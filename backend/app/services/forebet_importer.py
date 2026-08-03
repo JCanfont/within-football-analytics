@@ -43,6 +43,7 @@ class ForebetSourcePrediction:
     home_team: str
     away_team: str
     match_date: datetime
+    competition_name: str | None = None
     prediction: str | None = None
     predicted_score: str | None = None
     actual_score: str | None = None
@@ -266,6 +267,7 @@ def _prediction_from_card(card, target_date: date) -> ForebetSourcePrediction | 
         home_team=home_node.get_text(" ", strip=True),
         away_team=away_node.get_text(" ", strip=True),
         match_date=parsed_date,
+        competition_name=_competition_from_card(card),
         prediction=prediction,
         predicted_score=predicted_score or (correct_score.replace(" ", "") if correct_score else None),
         actual_score=actual_score if status in {"live", "finished"} else None,
@@ -281,6 +283,7 @@ def _parse_forebet_reader_predictions(markdown: str, target_date: date) -> list[
     raw_lines = [line.strip() for line in markdown.splitlines() if line.strip()]
     lines = [_clean_reader_line(line) for line in raw_lines]
     predictions: list[ForebetSourcePrediction] = []
+    last_competition: str | None = None
     for index, line in enumerate(lines):
         parsed_date = _parse_forebet_reader_datetime(line)
         if not parsed_date or parsed_date.date() != target_date:
@@ -291,18 +294,24 @@ def _parse_forebet_reader_predictions(markdown: str, target_date: date) -> list[
         if match_label:
             teams = _split_reader_compact_teams(match_label)
             stats = _reader_stats_from_lines(lines, index + 1)
+            competition_start_index = index
         else:
             if index < 2:
                 continue
             teams = (lines[index - 2], lines[index - 1])
             stats = _reader_stats_from_lines(lines, index + 1)
+            competition_start_index = index - 2
         if not teams or not stats:
             continue
+        detected_competition = _reader_competition_from_lines(lines, competition_start_index)
+        if detected_competition:
+            last_competition = detected_competition
         predictions.append(
             ForebetSourcePrediction(
                 home_team=teams[0],
                 away_team=teams[1],
                 match_date=parsed_date,
+                competition_name=detected_competition or last_competition,
                 prediction=stats["prediction"],
                 predicted_score=stats["predicted_score"],
                 actual_score=stats.get("actual_score"),
@@ -336,6 +345,37 @@ def _reader_match_reference(line: str) -> tuple[str, str | None]:
     if not label:
         return "", href
     return label, href
+
+
+def _reader_competition_from_lines(lines: list[str], team_start_index: int) -> str | None:
+    for index in range(team_start_index - 1, -1, -1):
+        line = lines[index].strip()
+        if not line:
+            continue
+        if _parse_forebet_reader_datetime(line):
+            return None
+        if _is_reader_competition_noise(line):
+            continue
+        return line
+    return None
+
+
+def _is_reader_competition_noise(line: str) -> bool:
+    normalized = line.strip()
+    compact = normalized.replace(" ", "")
+    if normalized.upper() in {"PRE", "VIEW", "PREVIEW", "FT", "HT"}:
+        return True
+    if len(normalized) <= 5 and normalized.isupper():
+        return True
+    if READER_STATS_RE.search(compact):
+        return True
+    if SCORE_RE.search(normalized):
+        return True
+    if _decimal(normalized) is not None:
+        return True
+    if re.fullmatch(r"\d+\s+\d+\s+\d+", normalized):
+        return True
+    return False
 
 
 def _reader_stats_from_lines(lines: list[str], start_index: int) -> dict[str, Decimal | str | None] | None:
@@ -466,6 +506,7 @@ def _prediction_from_row(row, target_date: date) -> ForebetSourcePrediction | No
         home_team=teams[0],
         away_team=teams[1],
         match_date=parsed_date,
+        competition_name=_competition_from_row(row, cells, date_index),
         prediction=prediction,
         predicted_score=predicted_score or correct_score,
         actual_score=actual_score,
@@ -501,6 +542,7 @@ def _prediction_from_cells(cells: list[str], target_date: date) -> ForebetSource
         home_team=home_team,
         away_team=away_team,
         match_date=parsed_date,
+        competition_name=cells[date_index - 3] if date_index >= 3 else None,
         prediction=prediction,
         predicted_score=predicted_score,
         actual_score=actual_score,
@@ -510,6 +552,39 @@ def _prediction_from_cells(cells: list[str], target_date: date) -> ForebetSource
         draw_probability=probabilities[1] if len(probabilities) > 1 else None,
         away_probability=probabilities[2] if len(probabilities) > 2 else None,
     )
+
+
+def _competition_from_card(card) -> str | None:
+    for selector in (".schemaName", ".cname", ".league", ".competition", ".comp", ".country_part"):
+        value = _text_or_none(card.select_one(selector))
+        if value:
+            return value
+    for sibling in card.find_previous_siblings(limit=8):
+        value = _text_or_none(sibling)
+        if value and _looks_like_competition_label(value):
+            return value
+    return None
+
+
+def _competition_from_row(row, cells: list[str], date_index: int) -> str | None:
+    if date_index >= 3:
+        return cells[date_index - 3]
+    for sibling in row.find_previous_siblings(limit=8):
+        value = _text_or_none(sibling)
+        if value and _looks_like_competition_label(value):
+            return value
+    return None
+
+
+def _looks_like_competition_label(value: str) -> bool:
+    compact = re.sub(r"\s+", " ", value).strip()
+    if not compact or len(compact) > 80:
+        return False
+    if DATE_RE.search(compact) or READER_DATE_RE.search(compact) or READER_EU_DATE_RE.search(compact):
+        return False
+    if SCORE_RE.search(compact) or READER_STATS_RE.search(compact.replace(" ", "")):
+        return False
+    return True
 
 
 def _teams_from_anchor(anchor, match_text: str) -> tuple[str, str] | None:
@@ -724,11 +799,14 @@ def _best_local_match(db: Session, prediction: ForebetSourcePrediction, matches:
 
 def _get_or_create_forebet_match(db: Session, prediction: ForebetSourcePrediction) -> Match:
     external_id = _forebet_match_external_id(prediction)
+    competition = _get_or_create_forebet_competition(db, prediction.competition_name)
+    season = _get_or_create_forebet_season(db, competition, prediction.match_date.date())
     existing = db.scalar(select(Match).where(Match.source == "forebet", Match.external_id == external_id))
     if existing:
+        if existing.competition_id != competition.id:
+            existing.competition_id = competition.id
+            existing.season_id = season.id
         return existing
-    competition = _get_or_create_forebet_competition(db)
-    season = _get_or_create_forebet_season(db, competition, prediction.match_date.date())
     home_team = _get_or_create_forebet_team(db, prediction.home_team)
     away_team = _get_or_create_forebet_team(db, prediction.away_team)
     match = Match(
@@ -760,18 +838,19 @@ def _update_match_result_from_forebet(match: Match, prediction: ForebetSourcePre
         match.status = "live"
 
 
-def _get_or_create_forebet_competition(db: Session) -> Competition:
-    normalized = normalize_name("Forebet")
+def _get_or_create_forebet_competition(db: Session, name: str | None = None) -> Competition:
+    competition_name = (name or "Forebet").strip() or "Forebet"
+    normalized = normalize_name(competition_name)
     competition = db.scalar(select(Competition).where(Competition.normalized_name == normalized))
     if competition:
         return competition
     competition = Competition(
-        name="Forebet",
+        name=competition_name,
         normalized_name=normalized,
         country=None,
         competition_type="external_predictions",
         source="forebet",
-        external_id="forebet",
+        external_id=f"forebet:{normalized}",
     )
     db.add(competition)
     db.flush()
