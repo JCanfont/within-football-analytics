@@ -296,7 +296,11 @@ def _forebet_range_item(db: Session, match: Match) -> ForebetRangeItem:
         forebet_prediction=latest.prediction if latest else None,
         expected_goals=latest.expected_goals if latest else None,
         predicted_score=_prediction_score_from_latest(latest),
-        goal_prediction=_goal_prediction(_prediction_score_from_latest(latest), latest.expected_goals if latest else None),
+        goal_prediction=_goal_prediction(
+            _prediction_score_from_latest(latest),
+            latest.expected_goals if latest else None,
+            latest.over_under_prediction if latest else None,
+        ),
         score_range=analytics.inputs.get("score_range") if analytics else None,
         reliability=analytics.reliability if analytics else "insufficient",
     )
@@ -321,7 +325,11 @@ def _forebet_basic_item(db: Session, match: Match) -> ForebetRangeItem:
         forebet_prediction=latest.prediction if latest else None,
         expected_goals=latest.expected_goals if latest else None,
         predicted_score=_prediction_score_from_latest(latest),
-        goal_prediction=_goal_prediction(_prediction_score_from_latest(latest), latest.expected_goals if latest else None),
+        goal_prediction=_goal_prediction(
+            _prediction_score_from_latest(latest),
+            latest.expected_goals if latest else None,
+            latest.over_under_prediction if latest else None,
+        ),
         score_range=None,
         reliability="pending_range",
     )
@@ -366,18 +374,27 @@ def _prediction_score_from_latest(latest) -> str | None:
     return f"{latest.predicted_home_score}-{latest.predicted_away_score}"
 
 
-def _goal_prediction(predicted_score: str | None, expected_goals) -> dict | None:
+def _goal_prediction(predicted_score: str | None, expected_goals, over_under_prediction: str | None = None) -> dict | None:
     home_goals, away_goals = _split_predicted_score(predicted_score)
     total_goals = home_goals + away_goals if home_goals is not None and away_goals is not None else None
     expected = float(expected_goals) if expected_goals is not None else None
     reference_total = total_goals if total_goals is not None else expected
-    if reference_total is None:
+    over_under = None
+    if over_under_prediction:
+        normalized = over_under_prediction.lower()
+        if "under" in normalized:
+            over_under = over_under_prediction
+        elif "over" in normalized:
+            over_under = over_under_prediction
+    if over_under is None and reference_total is not None:
+        over_under = "over_2_5" if reference_total > 2.5 else "under_2_5"
+    if predicted_score is None and expected is None and over_under is None:
         return None
     return {
         "predicted_score": predicted_score,
         "predicted_total_goals": total_goals,
         "expected_goals": expected,
-        "over_under_25": "over_2_5" if reference_total > 2.5 else "under_2_5",
+        "over_under_25": over_under,
     }
 
 

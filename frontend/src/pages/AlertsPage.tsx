@@ -64,7 +64,14 @@ export function AlertsPage() {
 }
 
 function formatAlertType(value: string) {
-  return value.replaceAll("_", " ");
+  const labels: Record<string, string> = {
+    forebet_under_signal: "Forebet Under",
+    forebet_over_signal: "Forebet Over",
+    muestra_historica_solida: "Muestra historica solida",
+    equipo_encaja_especialmente_al_final: "Encaje tardio",
+    jugador_con_buen_historial_en_el_estadio: "Historial en estadio",
+  };
+  return labels[value] ?? value.replaceAll("_", " ");
 }
 
 function formatDate(value: string) {

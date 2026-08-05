@@ -9,6 +9,15 @@ import {
   storeSofaScoreTeamEvents,
 } from "../services/api";
 import type { ForebetRangeItem, LiveMatchSnapshot, LiveProviderStatus, SofaScoreTeamEvent } from "../types/api";
+import {
+  evaluateForecastState,
+  formatCurrentScore,
+  formatMatchStartStatus,
+  formatOverUnderSignal,
+  isLiveMatch,
+  overUnderSignal,
+  predictedScoreLabel,
+} from "../utils/forebetSignals";
 
 const FOREBET_WATCH_KEY = "within_forebet_watch";
 const LIVE_PARAMS_KEY = "within_live_match_parameters";
@@ -599,6 +608,9 @@ function LiveMatchCard({
 }) {
   const homeSignal = buildPressureSignal(parameters.homeShotsOnTarget, parameters.homeExpectedByMinute, parameters.competitionExpectedByMinute);
   const awaySignal = buildPressureSignal(parameters.awayShotsOnTarget, parameters.awayExpectedByMinute, parameters.competitionExpectedByMinute);
+  const ouSignal = overUnderSignal(match);
+  const forecastState = isLiveMatch(match) ? evaluateForecastState(match) : null;
+  const predictedScore = predictedScoreLabel(match);
 
   return (
     <article className="live-match-card">
@@ -608,10 +620,31 @@ function LiveMatchCard({
           <strong>
             {match.home_team} vs {match.away_team}
           </strong>
+          <small>{formatMatchStartStatus(match)}</small>
         </div>
         <div>
           <span>{formatTime(match.match_date)}</span>
           <strong>{formatScore(match)}</strong>
+        </div>
+      </div>
+
+      <div className="live-provider-card forebet-live-signals">
+        <div>
+          <span>Senal Over/Under</span>
+          <strong className={`ou-signal ${ouSignal ?? "pending"}`}>{formatOverUnderSignal(match)}</strong>
+          <small>{predictedScore ? `Marcador Forebet ${predictedScore}` : "Sin marcador Forebet"}</small>
+        </div>
+        <div>
+          <span>Estado pronostico</span>
+          <strong className={`forecast-status ${forecastState?.status ?? "pending"}`}>
+            {forecastState?.label ?? formatMatchStartStatus(match)}
+          </strong>
+          <small>{forecastState?.detail ?? formatCurrentScore(match)}</small>
+        </div>
+        <div>
+          <span>Marcador actual</span>
+          <strong>{formatScore(match)}</strong>
+          <small>{formatCurrentScore(match)}</small>
         </div>
       </div>
 

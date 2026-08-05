@@ -642,8 +642,11 @@ describe("App", () => {
       expect(mockedApi.fetchLiveMatchSnapshot).toHaveBeenCalledWith(50);
     });
     expect(screen.getByText("Getafe vs Celta")).toBeInTheDocument();
-    expect(screen.getByText("0-1")).toBeInTheDocument();
+    expect(screen.getAllByText("0-1").length).toBeGreaterThan(0);
     expect(screen.getByText("Snapshot Sofascore")).toBeInTheDocument();
+    expect(screen.getByText("Senal Over/Under")).toBeInTheDocument();
+    expect(screen.getAllByText("Over 2.5").length).toBeGreaterThan(0);
+    expect(screen.getByText("Estado pronostico")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Getafe tiros a puerta"), { target: { value: "1" } });
     expect(screen.getAllByText("Dificultad alta").length).toBeGreaterThan(0);
   }, 30000);
@@ -712,15 +715,21 @@ describe("App", () => {
     expect(screen.getByText("Jugado")).toBeInTheDocument();
     expect(screen.queryByText("29/07/2026")).not.toBeInTheDocument();
     expect(screen.getByText(/1-2.*3 goles.*Over 2\.5/)).toBeInTheDocument();
+    expect(screen.getAllByText("Over 2.5").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: /Over \(/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Marcador" }));
     expect(screen.getByText("1-2")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Goles" }));
     expect(screen.getByText("3 goles")).toBeInTheDocument();
-    expect(screen.queryByText("Over 2.5")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Over/Under" }));
-    expect(screen.getByText("Over 2.5")).toBeInTheDocument();
+    expect(screen.getAllByText("Over 2.5").length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole("button", { name: /Under \(/ }));
+    expect(screen.queryByText("Getafe")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Over \(/ }));
+    expect(screen.getByText("Getafe")).toBeInTheDocument();
   }, 30000);
 
   it("can watch a Forebet match start and refresh live results", async () => {
@@ -799,7 +808,7 @@ describe("App", () => {
       expect(screen.getByRole("heading", { name: "Alertas" })).toBeInTheDocument();
     });
 
-    expect(screen.getByText("forebet under signal")).toBeInTheDocument();
+    expect(screen.getByText("Forebet Under")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Generar ultimo partido" }));
 
     await waitFor(() => {

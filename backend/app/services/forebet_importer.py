@@ -150,6 +150,9 @@ def _store_forebet_predictions(
                     predicted_home_score=predicted_home_score,
                     predicted_away_score=predicted_away_score,
                     expected_goals=prediction.expected_goals,
+                    over_under_prediction=_over_under_from_prediction(
+                        predicted_home_score, predicted_away_score, prediction.expected_goals
+                    ),
                     source_url=source_url,
                 )
             )
@@ -921,6 +924,18 @@ def _split_score(value: str | None) -> tuple[int | None, int | None]:
     if not match:
         return None, None
     return int(match.group("home")), int(match.group("away"))
+
+
+def _over_under_from_prediction(
+    predicted_home_score: int | None,
+    predicted_away_score: int | None,
+    expected_goals: Decimal | None,
+) -> str | None:
+    if predicted_home_score is not None and predicted_away_score is not None:
+        return "over_2_5" if predicted_home_score + predicted_away_score > 2.5 else "under_2_5"
+    if expected_goals is not None:
+        return "over_2_5" if float(expected_goals) > 2.5 else "under_2_5"
+    return None
 
 
 def _similarity(left: str, right: str) -> float:

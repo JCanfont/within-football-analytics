@@ -16,7 +16,7 @@ def generate_match_alerts(db: Session, match_id: int) -> list[Alert]:
     settings = get_statistical_config(db).value
     generated: list[Alert] = []
     generated.extend(_closed_midtable_alert(db, match, settings.alert_threshold))
-    generated.extend(_forebet_under_alert(db, match))
+    generated.extend(_forebet_over_under_alerts(db, match))
     generated.extend(_late_conceding_alerts(db, match, settings.minimum_sample_size))
     generated.extend(_stadium_player_alerts(db, match, settings.minimum_sample_size))
     db.commit()
@@ -49,27 +49,49 @@ def _closed_midtable_alert(db: Session, match: Match, threshold: float) -> list[
     ]
 
 
-def _forebet_under_alert(db: Session, match: Match) -> list[Alert]:
+def _forebet_over_under_alerts(db: Session, match: Match) -> list[Alert]:
     prediction = latest_forebet_prediction(db, match.id)
-    if not prediction or not prediction.over_under_prediction:
+    if not prediction:
         return []
-    if "under" not in prediction.over_under_prediction.lower():
+    signal = _resolve_over_under_signal(prediction)
+    if not signal:
         return []
+    alert_type = "forebet_under_signal" if signal.startswith("under") else "forebet_over_signal"
+    predicted_score = None
+    if prediction.predicted_home_score is not None and prediction.predicted_away_score is not None:
+        predicted_score = f"{prediction.predicted_home_score}-{prediction.predicted_away_score}"
     return [
         _upsert_alert(
             db,
             match.id,
-            "forebet_under_signal",
-            f"Forebet marca una senal {prediction.over_under_prediction} en la captura mas reciente.",
+            alert_type,
+            f"Forebet marca una senal {signal} en la captura mas reciente.",
             {
                 "captured_at": prediction.captured_at.isoformat(),
                 "prediction": prediction.prediction,
+                "predicted_score": predicted_score,
+                "over_under_prediction": signal,
                 "expected_goals": float(prediction.expected_goals) if prediction.expected_goals is not None else None,
             },
             sample_size=None,
             reliability="provisional",
         )
     ]
+
+
+def _resolve_over_under_signal(prediction) -> str | None:
+    if prediction.over_under_prediction:
+        normalized = prediction.over_under_prediction.lower()
+        if "under" in normalized:
+            return prediction.over_under_prediction
+        if "over" in normalized:
+            return prediction.over_under_prediction
+    if prediction.predicted_home_score is not None and prediction.predicted_away_score is not None:
+        total = prediction.predicted_home_score + prediction.predicted_away_score
+        return "over_2_5" if total > 2.5 else "under_2_5"
+    if prediction.expected_goals is not None:
+        return "over_2_5" if float(prediction.expected_goals) > 2.5 else "under_2_5"
+    return None
 
 
 def _late_conceding_alerts(db: Session, match: Match, minimum_sample_size: int) -> list[Alert]:

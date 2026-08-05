@@ -11,6 +11,7 @@ from app.services.forebet_importer import (
     ForebetSourcePrediction,
     _actual_score_from_cells,
     _forebet_reader_url,
+    _over_under_from_prediction,
     _parse_forebet_predictions,
     _parse_forebet_reader_predictions,
     _prediction_from_row,
@@ -302,3 +303,10 @@ def test_load_forebet_date_shows_all_temporary_predictions_when_storage_unavaila
     assert [match.home_team for match in result.matches] == ["Nacional", "CA Tigre"]
     assert [match.competition for match in result.matches] == ["Uruguay Primera Division", "Argentina Liga Profesional"]
     assert all(match.match_id < 0 for match in result.matches)
+
+
+def test_over_under_from_prediction_uses_score_then_expected_goals() -> None:
+    assert _over_under_from_prediction(1, 2, Decimal("2.10")) == "over_2_5"
+    assert _over_under_from_prediction(0, 1, Decimal("2.90")) == "under_2_5"
+    assert _over_under_from_prediction(None, None, Decimal("2.90")) == "over_2_5"
+    assert _over_under_from_prediction(None, None, None) is None
