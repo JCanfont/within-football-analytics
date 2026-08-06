@@ -254,7 +254,7 @@ export function formatMatchStartStatus(item: ForebetRangeItem) {
     return "Jugado";
   }
   if (timingState === "live") {
-    return "En juego";
+    return "Iniciado";
   }
   const match = item.match_date.match(/T(\d{2}):(\d{2})/);
   if (match) {

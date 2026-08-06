@@ -4,6 +4,8 @@ import {
   evaluateForecastState,
   formatFinalScore,
   formatForecastColumn,
+  formatMatchStartStatus,
+  formatCurrentScore,
   formatOverUnderSignal,
   hasMatchStarted,
   isLiveMatch,
@@ -93,6 +95,8 @@ describe("forebetSignals", () => {
     });
     expect(hasMatchStarted(item)).toBe(true);
     expect(isLiveMatch(item)).toBe(true);
+    expect(formatMatchStartStatus(item)).toBe("Iniciado");
+    expect(formatCurrentScore(makeItem({ ...item, home_score: 1, away_score: 0 }))).toBe("Ahora 1-0");
   });
 
   it("never keeps finished matches as pendiente de inicio", () => {

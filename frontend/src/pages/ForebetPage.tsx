@@ -1,7 +1,7 @@
 import { Bell, BellRing, Calculator, CalendarDays, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { loadForebetDate } from "../services/api";
-import type { ForebetDateLoadResult, ForebetRangeItem } from "../types/api";
+import { fetchSofaScoreLiveEvents, loadForebetDate } from "../services/api";
+import type { ForebetDateLoadResult, ForebetRangeItem, SofaScoreTeamEvent } from "../types/api";
 import { saveForebetHistory } from "../utils/forebetHistory";
 import {
   evaluateForecastState,
@@ -126,16 +126,23 @@ export function ForebetPage() {
     liveRefreshInFlightRef.current = true;
     setIsLiveRefreshing(true);
     setLiveMessage(manual ? "Actualizando Forebet ahora..." : "Actualizacion automatica de Forebet en curso...");
-    loadForebetDate(targetDate, false)
-      .then((result) => {
-        setItems((current) => mergeForebetItems(current, result.matches));
-        saveForebetHistory(result.matches);
+    Promise.allSettled([loadForebetDate(targetDate, false), fetchSofaScoreLiveEvents()])
+      .then(([forebetResult, liveResult]) => {
+        if (forebetResult.status === "rejected") {
+          throw forebetResult.reason;
+        }
+        const result = forebetResult.value;
+        const liveEvents = liveResult.status === "fulfilled" ? liveResult.value?.events ?? [] : [];
+        const refreshedMatches = mergeLiveScores(result.matches, liveEvents);
+        setItems((current) => mergeForebetItems(current, refreshedMatches));
+        saveForebetHistory(refreshedMatches);
         setForebetLoad(result);
         setLastLiveRefresh(new Date().toISOString());
         setNextLiveRefresh(new Date(Date.now() + LIVE_REFRESH_MS).toISOString());
-        checkStartedAlerts(result.matches);
-        checkForecastAlerts(result.matches);
-        setLiveMessage(`Forebet actualizado: ${result.matches.length} partidos revisados.`);
+        checkStartedAlerts(refreshedMatches);
+        checkForecastAlerts(refreshedMatches);
+        const liveWithScore = refreshedMatches.filter((item) => isLiveMatch(item) && item.home_score != null && item.away_score != null).length;
+        setLiveMessage(`Forebet actualizado: ${refreshedMatches.length} partidos revisados · ${liveWithScore} resultados en curso.`);
       })
       .catch(() => {
         setLiveMessage("No se pudo actualizar Forebet en este intento.");
@@ -594,6 +601,7 @@ function ForebetRangeRow({
             {isWatched ? "Aviso activo" : "Avisar inicio"}
           </button>
           <span className="table-subtext">{formatMatchStartStatus(item)}</span>
+          {isLiveMatch(item) ? <span className="table-subtext">{formatCurrentScore(item)}</span> : null}
         </td>
         <td>{item.forebet_prediction ?? "Sin captura"}</td>
         <td>
@@ -785,6 +793,42 @@ function mergeForebetItems(current: ForebetRangeItem[], incoming: ForebetRangeIt
       reliability: previous.score_range ? previous.reliability : item.reliability,
     };
   });
+}
+
+function mergeLiveScores(matches: ForebetRangeItem[], events: SofaScoreTeamEvent[]) {
+  return matches.map((match) => {
+    const event = events.find((candidate) =>
+      sameTeam(match.home_team, candidate.home_team) &&
+      sameTeam(match.away_team, candidate.away_team) &&
+      candidate.home_score != null &&
+      candidate.away_score != null
+    );
+    if (!event) {
+      return match;
+    }
+    return {
+      ...match,
+      status: "live",
+      home_score: event.home_score,
+      away_score: event.away_score,
+    };
+  });
+}
+
+function sameTeam(left: string, right: string) {
+  const normalizedLeft = normalizeTeam(left);
+  const normalizedRight = normalizeTeam(right);
+  return normalizedLeft === normalizedRight ||
+    (Math.min(normalizedLeft.length, normalizedRight.length) >= 5 &&
+      (normalizedLeft.includes(normalizedRight) || normalizedRight.includes(normalizedLeft)));
+}
+
+function normalizeTeam(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
 }
 
 function requestNotificationPermission() {

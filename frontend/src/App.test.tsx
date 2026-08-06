@@ -798,6 +798,62 @@ describe("App", () => {
     });
   }, 30000);
 
+  it("shows Iniciado and the current score after a ten-minute refresh", async () => {
+    const matchDate = new Date(Date.now() - 20 * 60_000).toISOString();
+    mockedApi.loadForebetDate.mockResolvedValue({
+      target_date: todayInputValue(),
+      status: "ok",
+      message: "Partidos Forebet cargados.",
+      external_fetch_status: "reader_fallback",
+      forebet_fetched: 1,
+      forebet_matched: 0,
+      forebet_created_matches: 0,
+      forebet_imported: 0,
+      forebet_unmatched: 1,
+      matches: [{
+        match_id: -1,
+        match_date: matchDate,
+        competition: "LaLiga",
+        season: "2026/2027",
+        home_team: "Getafe",
+        away_team: "Celta",
+        status: "scheduled",
+        home_score: null,
+        away_score: null,
+        forebet_prediction: "1",
+        expected_goals: "2.9",
+        predicted_score: "2-1",
+        goal_prediction: { predicted_score: "2-1", predicted_total_goals: 3, over_under_25: "over_2_5" },
+        score_range: null,
+        reliability: "pending_range",
+      }],
+    });
+    mockedApi.fetchSofaScoreLiveEvents.mockResolvedValue({
+      provider: "sofascore",
+      sport: "football",
+      message: "1 partido en directo.",
+      events: [{
+        event_id: 99,
+        start_time: matchDate,
+        status: "inprogress",
+        minute: 20,
+        competition: "LaLiga",
+        home_team: "Getafe",
+        away_team: "Celta",
+        home_score: 1,
+        away_score: 0,
+      }],
+    });
+    renderApp("/forebet");
+
+    await screen.findByText("Getafe");
+    fireEvent.click(screen.getByRole("button", { name: "Actualizar ahora" }));
+
+    expect(await screen.findByText("Iniciado")).toBeInTheDocument();
+    expect(screen.getByText("Ahora 1-0")).toBeInTheDocument();
+    expect(screen.getByText(/1 resultados en curso/)).toBeInTheDocument();
+  }, 30000);
+
   it("enables live tracking globally and for the selected match", async () => {
     renderApp();
 
