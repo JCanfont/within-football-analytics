@@ -1,6 +1,6 @@
 import { Bell, BellRing, Calculator, CalendarDays, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchSofaScoreLiveEvents, loadForebetDate } from "../services/api";
+import { fetchSofaScoreLiveEvents, loadForebetDate, sendForebetStartEmail } from "../services/api";
 import type { ForebetDateLoadResult, ForebetRangeItem, SofaScoreTeamEvent } from "../types/api";
 import { saveForebetHistory } from "../utils/forebetHistory";
 import {
@@ -181,6 +181,9 @@ export function ForebetPage() {
     setLiveMessage(`Avisaremos cuando comience ${item.home_team} - ${item.away_team}.`);
     if (hasMatchStarted(item)) {
       notifyMatchStarted(item);
+      if (isLiveMatch(item)) {
+        emailMatchStarted(item, setLiveMessage);
+      }
       setNotifiedStartedIds((current) => [...new Set([...current, item.match_id])]);
     }
   }
@@ -193,6 +196,9 @@ export function ForebetPage() {
         continue;
       }
       notifyMatchStarted(item);
+      if (isLiveMatch(item)) {
+        emailMatchStarted(item, setLiveMessage);
+      }
       startedLabels.push(`${item.home_team} - ${item.away_team}`);
       nextNotified.add(item.match_id);
     }
@@ -846,6 +852,26 @@ function notifyMatchStarted(item: ForebetRangeItem) {
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification(title, { body });
   }
+}
+
+function emailMatchStarted(item: ForebetRangeItem, setMessage: (message: string) => void) {
+  sendForebetStartEmail({
+    home_team: item.home_team,
+    away_team: item.away_team,
+    match_date: item.match_date,
+    competition: item.competition,
+    home_score: item.home_score,
+    away_score: item.away_score,
+    over_under: formatOverUnderSignal(item),
+  })
+    .then((result) => {
+      if (result.sent) {
+        setMessage(`${item.home_team} - ${item.away_team}: aviso de inicio enviado por email.`);
+      } else if (!result.configured) {
+        setMessage("Partido iniciado. El aviso por email esta pendiente de configurar en Vercel.");
+      }
+    })
+    .catch(() => setMessage("Partido iniciado, pero no se pudo enviar el aviso por email."));
 }
 
 function notifyForecastStillPossible(item: ForebetRangeItem, forecastState: { label: string; detail: string }) {

@@ -485,6 +485,23 @@ export type Alert = {
   updated_at: string;
 };
 
+export type ForebetStartEmailRequest = {
+  home_team: string;
+  away_team: string;
+  match_date: string;
+  competition?: string | null;
+  home_score?: number | null;
+  away_score?: number | null;
+  over_under?: string | null;
+};
+
+export type ForebetStartEmailResult = {
+  configured: boolean;
+  sent: boolean;
+  status: string;
+  message: string;
+};
+
 export type MatchInsightData = {
   detail: MatchDetail;
   analytics: MatchAnalytics;

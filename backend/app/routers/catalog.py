@@ -4,8 +4,9 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Alert, Competition, Player, PlayerTeamHistory, Stadium, Team, UserFavorite
-from app.schemas.api import AlertRead, CompetitionRead, FavoriteCreate, FavoriteRead, PlayerRead, StadiumRead, TeamRead, TeamSquadRead
+from app.schemas.api import AlertRead, CompetitionRead, FavoriteCreate, FavoriteRead, ForebetStartEmailRequest, ForebetStartEmailResult, PlayerRead, StadiumRead, TeamRead, TeamSquadRead
 from app.services.alert_service import generate_match_alerts
+from app.services.email_alerts import send_forebet_start_email
 from app.services.transfermarkt_provider import get_team_squad, import_team_squad, provider_status as transfermarkt_provider_status
 
 
@@ -131,3 +132,8 @@ def list_alerts(db: Session = Depends(get_db), limit: int = 100) -> list[Alert]:
 @router.post("/alerts/generate/matches/{match_id}", response_model=list[AlertRead])
 def generate_alerts_for_match(match_id: int, db: Session = Depends(get_db)) -> list[Alert]:
     return generate_match_alerts(db, match_id)
+
+
+@router.post("/alerts/forebet-start/email", response_model=ForebetStartEmailResult)
+def email_forebet_start(payload: ForebetStartEmailRequest) -> ForebetStartEmailResult:
+    return send_forebet_start_email(payload)

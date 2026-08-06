@@ -160,6 +160,23 @@ class AlertRead(BaseModel):
     updated_at: datetime
 
 
+class ForebetStartEmailRequest(BaseModel):
+    home_team: str
+    away_team: str
+    match_date: datetime
+    competition: str | None = None
+    home_score: int | None = None
+    away_score: int | None = None
+    over_under: str | None = None
+
+
+class ForebetStartEmailResult(BaseModel):
+    configured: bool
+    sent: bool
+    status: str
+    message: str
+
+
 class TeamGoalParameter(BaseModel):
     team_id: int
     team: str

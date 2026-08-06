@@ -799,7 +799,7 @@ describe("App", () => {
   }, 30000);
 
   it("shows Iniciado and the current score after a ten-minute refresh", async () => {
-    const matchDate = new Date(Date.now() - 20 * 60_000).toISOString();
+    const matchDate = new Date(Date.now() + 20 * 60_000).toISOString();
     mockedApi.loadForebetDate.mockResolvedValue({
       target_date: todayInputValue(),
       status: "ok",
@@ -844,14 +844,29 @@ describe("App", () => {
         away_score: 0,
       }],
     });
+    mockedApi.sendForebetStartEmail.mockResolvedValue({
+      configured: true,
+      sent: true,
+      status: "sent",
+      message: "Aviso de inicio enviado por email.",
+    });
     renderApp("/forebet");
 
     await screen.findByText("Getafe");
+    fireEvent.click(screen.getByRole("button", { name: "Avisar inicio" }));
+    expect(screen.getByRole("button", { name: "Aviso activo" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Actualizar ahora" }));
 
     expect(await screen.findByText("Iniciado")).toBeInTheDocument();
     expect(screen.getByText("Ahora 1-0")).toBeInTheDocument();
-    expect(screen.getByText(/1 resultados en curso/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockedApi.sendForebetStartEmail).toHaveBeenCalledWith(expect.objectContaining({
+        home_team: "Getafe",
+        away_team: "Celta",
+        home_score: 1,
+        away_score: 0,
+      }));
+    });
   }, 30000);
 
   it("enables live tracking globally and for the selected match", async () => {

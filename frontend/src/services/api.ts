@@ -6,6 +6,8 @@ import type {
   Favorite,
   ForebetDateLoadResult,
   ForebetRangeItem,
+  ForebetStartEmailRequest,
+  ForebetStartEmailResult,
   GoalTiming,
   GoalTimingContext,
   GoalMoment,
@@ -212,6 +214,11 @@ export async function fetchAlerts(): Promise<Alert[]> {
 
 export async function generateMatchAlerts(matchId: number): Promise<Alert[]> {
   const response = await api.post<Alert[]>(`/api/alerts/generate/matches/${matchId}`);
+  return response.data;
+}
+
+export async function sendForebetStartEmail(payload: ForebetStartEmailRequest): Promise<ForebetStartEmailResult> {
+  const response = await api.post<ForebetStartEmailResult>("/api/alerts/forebet-start/email", payload);
   return response.data;
 }
 

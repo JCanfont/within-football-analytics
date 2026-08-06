@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     crawlora_api_key: str | None = Field(default=None, alias="CRAWLORA_API_KEY")
     transfermarkt_squad_url_template: str | None = Field(default=None, alias="TRANSFERMARKT_SQUAD_URL_TEMPLATE")
     transfermarkt_api_token: str | None = Field(default=None, alias="TRANSFERMARKT_API_TOKEN")
+    resend_api_key: str | None = Field(default=None, alias="RESEND_API_KEY")
+    forebet_alert_email: str | None = Field(default=None, alias="FOREBET_ALERT_EMAIL")
+    forebet_alert_from: str = Field(default="WITHIN Football Alerts <onboarding@resend.dev>", alias="FOREBET_ALERT_FROM")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
