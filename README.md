@@ -511,6 +511,12 @@ npm run build
 - Se exporta como texto plano por compatibilidad y facilidad de lectura.
 - El archivo conserva el enfoque conservador del producto: patrones historicos, no certeza predictiva.
 
+## Avisos de inicio por email
+
+El envio se configura en el entorno de produccion con `RESEND_API_KEY` y
+`FOREBET_ALERT_EMAIL`. Opcionalmente, `FOREBET_ALERT_FROM` permite usar un
+remitente verificado propio en lugar del remitente de pruebas de Resend.
+
 ## Formatos CSV fase 3
 
 ### Clasificaciones
