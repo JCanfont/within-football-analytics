@@ -2,8 +2,24 @@ import { Bell, BellRing, Calculator, CalendarDays, ChevronDown, ChevronRight, Re
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadForebetDate } from "../services/api";
 import type { ForebetDateLoadResult, ForebetRangeItem } from "../types/api";
+import {
+  evaluateForecastState,
+  formatCurrentScore,
+  formatForecastColumn,
+  formatMatchStartStatus,
+  formatOverUnder,
+  formatOverUnderSignal,
+  hasMatchStarted,
+  isLiveMatch,
+  isRecord,
+  isThirtyMinuteWarningWindow,
+  matchTimingState,
+  overUnderSignal,
+  predictedScoreLabel,
+} from "../utils/forebetSignals";
 
 type GoalPredictionMode = "full" | "score" | "total" | "overUnder";
+type OverUnderFilter = "all" | "over" | "under";
 
 const goalPredictionModes: Array<{ label: string; mode: GoalPredictionMode }> = [
   { label: "Todo", mode: "full" },
@@ -12,8 +28,13 @@ const goalPredictionModes: Array<{ label: string; mode: GoalPredictionMode }> = 
   { label: "Over/Under", mode: "overUnder" },
 ];
 
+const overUnderFilters: Array<{ label: string; value: OverUnderFilter }> = [
+  { label: "Todos", value: "all" },
+  { label: "Over", value: "over" },
+  { label: "Under", value: "under" },
+];
+
 const FOREBET_WATCH_KEY = "within_forebet_watch";
-const MATCH_SETTLED_AFTER_MINUTES = 135;
 const LIVE_REFRESH_MS = 10 * 60 * 1000;
 
 type ForebetWatchState = {
@@ -38,6 +59,7 @@ export function ForebetPage() {
   const [hasCalculatedRanges, setHasCalculatedRanges] = useState(false);
   const [loadingMode, setLoadingMode] = useState<"matches" | "ranges">("matches");
   const [goalPredictionMode, setGoalPredictionMode] = useState<GoalPredictionMode>("full");
+  const [overUnderFilter, setOverUnderFilter] = useState<OverUnderFilter>("all");
   const [watchedMatchIds, setWatchedMatchIds] = useState<number[]>(() => readForebetWatchState().matchIds);
   const [notifiedStartedIds, setNotifiedStartedIds] = useState<number[]>(() => readForebetWatchState().notifiedStartedIds);
   const [notifiedForecastIds, setNotifiedForecastIds] = useState<number[]>(() => readForebetWatchState().notifiedForecastIds);
@@ -154,15 +176,20 @@ export function ForebetPage() {
 
   function checkStartedAlerts(nextItems: ForebetRangeItem[]) {
     const nextNotified = new Set(notifiedStartedIdsRef.current);
+    const startedLabels: string[] = [];
     for (const item of nextItems) {
       if (!watchedMatchIdsRef.current.includes(item.match_id) || nextNotified.has(item.match_id) || !hasMatchStarted(item)) {
         continue;
       }
       notifyMatchStarted(item);
+      startedLabels.push(`${item.home_team} - ${item.away_team}`);
       nextNotified.add(item.match_id);
     }
     if (nextNotified.size !== notifiedStartedIdsRef.current.length) {
       setNotifiedStartedIds(Array.from(nextNotified));
+      if (startedLabels.length) {
+        setLiveMessage(`Ha comenzado: ${startedLabels.join(", ")}.`);
+      }
     }
   }
 
@@ -171,19 +198,28 @@ export function ForebetPage() {
       return;
     }
     const nextNotified = new Set(notifiedForecastIdsRef.current);
+    const possibleLabels: string[] = [];
     for (const item of nextItems) {
-      if (!watchedMatchIdsRef.current.includes(item.match_id) || nextNotified.has(item.match_id) || !isLiveMatch(item) || !isThirtyMinuteWarningWindow(item)) {
+      if (!watchedMatchIdsRef.current.includes(item.match_id) || nextNotified.has(item.match_id) || !isLiveMatch(item)) {
         continue;
       }
       const forecastState = evaluateForecastState(item);
       if (forecastState.status !== "possible") {
         continue;
       }
-      notifyForecastStillPossible(item, forecastState.label);
+      const shouldAlertNow = isThirtyMinuteWarningWindow(item) || hasMatchStarted(item);
+      if (!shouldAlertNow) {
+        continue;
+      }
+      notifyForecastStillPossible(item, forecastState);
+      possibleLabels.push(`${item.home_team} - ${item.away_team}: ${forecastState.detail}`);
       nextNotified.add(item.match_id);
     }
     if (nextNotified.size !== notifiedForecastIdsRef.current.length) {
       setNotifiedForecastIds(Array.from(nextNotified));
+      if (possibleLabels.length) {
+        setLiveMessage(`Pronostico Forebet aun posible: ${possibleLabels.join(" · ")}`);
+      }
     }
   }
 
@@ -216,15 +252,36 @@ export function ForebetPage() {
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    const visibleItems = normalized
-      ? items.filter((item) =>
-          `${item.home_team} ${item.away_team} ${item.competition} ${item.season}`.toLowerCase().includes(normalized),
-        )
-      : items;
+    const visibleItems = items.filter((item) => {
+      const matchesQuery = !normalized
+        || `${item.home_team} ${item.away_team} ${item.competition} ${item.season}`.toLowerCase().includes(normalized);
+      if (!matchesQuery) {
+        return false;
+      }
+      if (overUnderFilter === "all") {
+        return true;
+      }
+      return overUnderSignal(item) === overUnderFilter;
+    });
     return [...visibleItems].sort((first, second) =>
       compareMatchDateTime(first.match_date, second.match_date) || first.home_team.localeCompare(second.home_team),
     );
-  }, [items, query]);
+  }, [items, overUnderFilter, query]);
+
+  const overUnderCounts = useMemo(() => {
+    return items.reduce(
+      (counts, item) => {
+        const signal = overUnderSignal(item);
+        if (signal === "over") {
+          counts.over += 1;
+        } else if (signal === "under") {
+          counts.under += 1;
+        }
+        return counts;
+      },
+      { over: 0, under: 0 },
+    );
+  }, [items]);
 
   return (
     <section className="forebet-page">
@@ -278,6 +335,20 @@ export function ForebetPage() {
                 </button>
               ))}
             </div>
+            <div className="forebet-mode-control" aria-label="Filtro Over Under Forebet">
+              {overUnderFilters.map((option) => (
+                <button
+                  className={overUnderFilter === option.value ? "active" : ""}
+                  key={option.value}
+                  type="button"
+                  onClick={() => setOverUnderFilter(option.value)}
+                >
+                  {option.label}
+                  {option.value === "over" ? ` (${overUnderCounts.over})` : ""}
+                  {option.value === "under" ? ` (${overUnderCounts.under})` : ""}
+                </button>
+              ))}
+            </div>
             <input
               className="forebet-search"
               aria-label="Buscar partido Forebet"
@@ -301,7 +372,16 @@ export function ForebetPage() {
           onRefreshNow={() => refreshLiveResults(true)}
           onToggleForecastAlerts={() => {
             requestNotificationPermission();
-            setForecastAlerts((current) => !current);
+            setForecastAlerts((current) => {
+              const next = !current;
+              if (next) {
+                setLiveMessage("Avisos de pronostico vivo activados. Revisando partidos seguidos...");
+                window.setTimeout(() => refreshLiveResults(true), 0);
+              } else {
+                setLiveMessage("Avisos de pronostico vivo desactivados.");
+              }
+              return next;
+            });
           }}
           onToggleAuto={toggleAutoRefresh}
           watchedCount={watchedMatchIds.length}
@@ -316,6 +396,7 @@ export function ForebetPage() {
                   <th>Partido</th>
                   <th>Seguimiento</th>
                   <th>Forebet</th>
+                  <th>Over/Under</th>
                   <th>Estado pronostico</th>
                   <th>Predicción goles</th>
                   <th>Goles esperados</th>
@@ -380,11 +461,11 @@ function ForebetLiveWatchPanel({
   return (
     <div className="forebet-live-watch">
       <div>
-        <span>Seguimiento de inicio y directo</span>
+        <span>Seguimiento de inicio, Over/Under y pronostico</span>
         <strong>{watchedCount} partidos con aviso</strong>
         <small>
           {autoRefresh
-            ? `Actualizacion cada 10 minutos${nextRefresh ? `, proxima ${formatTimeOnly(nextRefresh)}` : ""}`
+            ? `Actualizacion cada 10 minutos${nextRefresh ? `, proxima ${formatTimeOnly(nextRefresh)}` : ""}${forecastAlerts ? ". Aviso si el marcador Forebet sigue posible" : ""}`
             : "Activa el seguimiento para revisar la jornada automaticamente"}
         </small>
       </div>
@@ -484,9 +565,12 @@ function ForebetRangeRow({
   showRanges: boolean;
 }) {
   const range = item.score_range;
-  const forecastState = isLiveMatch(item) ? evaluateForecastState(item) : null;
+  const forecastState = formatForecastColumn(item);
+  const ouSignal = overUnderSignal(item);
   const rowClassName = [
-    forecastState?.status === "impossible" ? "forecast-impossible-row" : "",
+    forecastState.status === "impossible" ? "forecast-impossible-row" : "",
+    forecastState.status === "possible" && isLiveMatch(item) ? "forecast-possible-row" : "",
+    forecastState.label === "Cumplido" ? "forecast-possible-row" : "",
     forebetTimingClass(item),
   ]
     .filter(Boolean)
@@ -508,14 +592,14 @@ function ForebetRangeRow({
         </td>
         <td>{item.forebet_prediction ?? "Sin captura"}</td>
         <td>
-          {forecastState ? (
-            <span className={`forecast-status ${forecastState.status}`}>{forecastState.label}</span>
-          ) : (
-            <span className="table-subtext">{formatNonLiveForecastLabel(item)}</span>
-          )}
+          <span className={`ou-signal ${ouSignal ?? "pending"}`}>{formatOverUnderSignal(item)}</span>
+        </td>
+        <td>
+          <span className={`forecast-status ${forecastState.status}`}>{forecastState.label}</span>
+          <span className="table-subtext">{forecastState.detail}</span>
           <span className="table-subtext">
             {formatCurrentScore(item)}
-            {forecastAlerts && isWatched ? " · aviso min 60" : ""}
+            {forecastAlerts && isWatched ? " · aviso vivo" : ""}
           </span>
         </td>
         <td>
@@ -535,7 +619,7 @@ function ForebetRangeRow({
       </tr>
       {showRanges && isExpanded ? (
         <tr className="forebet-calculation-row">
-          <td colSpan={10}>
+          <td colSpan={11}>
             <ForebetCalculation range={range} reliability={item.reliability} />
           </td>
         </tr>
@@ -613,14 +697,6 @@ function formatMatchDateOnly(value: string) {
   return `${match[3]}/${match[2]}/${match[1]}`;
 }
 
-function formatMatchTimeOnly(value: string) {
-  const match = value.match(/T(\d{2}):(\d{2})/);
-  if (!match) {
-    return formatTimeOnly(value);
-  }
-  return `${match[1]}:${match[2]}`;
-}
-
 function compareMatchDateTime(first: string, second: string) {
   return matchDateTimeSortValue(first) - matchDateTimeSortValue(second);
 }
@@ -635,23 +711,6 @@ function matchDateTimeSortValue(value: string) {
 
 function forebetTimingClass(item: ForebetRangeItem) {
   return matchTimingState(item) === "played" ? "forebet-time-past" : "forebet-time-pending";
-}
-
-function literalMatchElapsedMinutes(value: string) {
-  const matchTime = parseLiteralMatchDate(value);
-  if (!matchTime) {
-    return null;
-  }
-  return Math.floor((Date.now() - matchTime.getTime()) / 60_000);
-}
-
-function parseLiteralMatchDate(value: string) {
-  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
-  if (!match) {
-    const parsed = new Date(value);
-    return Number.isFinite(parsed.getTime()) ? parsed : null;
-  }
-  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]));
 }
 
 function formatRange(range?: Record<string, unknown> | null) {
@@ -688,103 +747,11 @@ function formatGoalPrediction(item: ForebetRangeItem, mode: GoalPredictionMode) 
   return parts.join(" · ");
 }
 
-function formatOverUnder(value: string) {
-  return value === "over_2_5" ? "Over 2.5" : "Under 2.5";
-}
-
-function predictedScoreLabel(item: ForebetRangeItem) {
-  const prediction = isRecord(item.goal_prediction) ? item.goal_prediction : {};
-  const score = item.predicted_score ?? (typeof prediction.predicted_score === "string" ? prediction.predicted_score : null);
-  const parsed = splitPredictedScore(score);
-  return parsed ? `${parsed.home}-${parsed.away}` : null;
-}
-
-function evaluateForecastState(item: ForebetRangeItem): { status: "possible" | "impossible" | "pending"; label: string } {
-  if (item.home_score == null || item.away_score == null) {
-    return { status: "pending", label: "Sin marcador" };
-  }
-  const score = splitPredictedScore(item.predicted_score);
-  const overUnder = isRecord(item.goal_prediction) && typeof item.goal_prediction.over_under_25 === "string" ? item.goal_prediction.over_under_25 : null;
-  const currentTotal = item.home_score + item.away_score;
-  if (score && (item.home_score > score.home || item.away_score > score.away)) {
-    return { status: "impossible", label: "Ya no es posible" };
-  }
-  if (overUnder === "under_2_5" && currentTotal >= 3) {
-    return { status: "impossible", label: "Ya no es posible" };
-  }
-  if (overUnder === "over_2_5" && isFinished(item) && currentTotal < 3) {
-    return { status: "impossible", label: "Ya no es posible" };
-  }
-  if (score || overUnder) {
-    return { status: "possible", label: "Aun posible" };
-  }
-  return { status: "pending", label: "Sin regla" };
-}
-
-function formatNonLiveForecastLabel(item: ForebetRangeItem) {
-  if (isFinished(item)) {
-    return "Finalizado";
-  }
-  if (item.home_score != null && item.away_score != null) {
-    return "Resultado capturado";
-  }
-  return "Pendiente de inicio";
-}
-
-function formatMatchStartStatus(item: ForebetRangeItem) {
-  const timingState = matchTimingState(item);
-  if (timingState === "played") {
-    return "Jugado";
-  }
-  if (timingState === "live") {
-    return "En juego";
-  }
-  return `Inicio ${formatMatchTimeOnly(item.match_date)}`;
-}
-
-function matchTimingState(item: ForebetRangeItem): "scheduled" | "live" | "played" {
-  if (isFinished(item)) {
-    return "played";
-  }
-  if (isLiveMatch(item)) {
-    return "live";
-  }
-  const elapsedMinutes = literalMatchElapsedMinutes(item.match_date);
-  if (elapsedMinutes == null || elapsedMinutes < 0) {
-    return "scheduled";
-  }
-  return elapsedMinutes >= MATCH_SETTLED_AFTER_MINUTES ? "played" : "live";
-}
-
-function isLiveMatch(item: ForebetRangeItem) {
-  const normalizedStatus = item.status.toLowerCase();
-  return ["live", "in_play", "playing", "1h", "2h", "ht"].some((status) => normalizedStatus.includes(status));
-}
-
-function splitPredictedScore(value?: string | null) {
-  const match = value?.match(/(\d+)\s*-\s*(\d+)/);
-  if (!match) {
-    return null;
-  }
-  return { home: Number(match[1]), away: Number(match[2]) };
-}
-
-function formatCurrentScore(item: ForebetRangeItem) {
-  if (item.home_score == null || item.away_score == null) {
-    return isFinished(item) ? "Finalizado; marcador pendiente de captura" : "Marcador pendiente de captura";
-  }
-  return `Ahora ${item.home_score}-${item.away_score}`;
-}
-
 function formatPossibleScores(range?: Record<string, unknown> | null) {
   if (!Array.isArray(range?.possible_scores)) {
     return "Sin rango";
   }
   return range.possible_scores.length > 0 ? range.possible_scores.map(String).join(" | ") : "Sin prediccion";
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 function formatUnknown(value: unknown) {
@@ -795,28 +762,6 @@ function formatUnknown(value: unknown) {
     return value;
   }
   return "n/d";
-}
-
-function hasMatchStarted(item: ForebetRangeItem) {
-  return matchTimingState(item) !== "scheduled";
-}
-
-function isThirtyMinuteWarningWindow(item: ForebetRangeItem) {
-  const minute = estimatedMatchMinute(item);
-  return minute >= 60 && minute <= 70 && !isFinished(item);
-}
-
-function estimatedMatchMinute(item: ForebetRangeItem) {
-  const elapsedMinutes = literalMatchElapsedMinutes(item.match_date);
-  if (elapsedMinutes == null) {
-    return 0;
-  }
-  return Math.max(0, elapsedMinutes);
-}
-
-function isFinished(item: ForebetRangeItem) {
-  const normalizedStatus = item.status.toLowerCase();
-  return ["finished", "ft", "ended", "final"].some((status) => normalizedStatus.includes(status));
 }
 
 function mergeForebetItems(current: ForebetRangeItem[], incoming: ForebetRangeItem[]) {
@@ -844,15 +789,17 @@ function requestNotificationPermission() {
 
 function notifyMatchStarted(item: ForebetRangeItem) {
   const title = "Ha comenzado el partido";
-  const body = `${item.home_team} - ${item.away_team}`;
+  const signal = formatOverUnderSignal(item);
+  const score = predictedScoreLabel(item);
+  const body = `${item.home_team} - ${item.away_team}${score ? ` · Pronostico ${score}` : ""}${signal !== "Sin Over/Under" ? ` · ${signal}` : ""}`;
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification(title, { body });
   }
 }
 
-function notifyForecastStillPossible(item: ForebetRangeItem, label: string) {
+function notifyForecastStillPossible(item: ForebetRangeItem, forecastState: { label: string; detail: string }) {
   const title = "Pronostico Forebet aun posible";
-  const body = `${item.home_team} - ${item.away_team}: ${label}. ${formatCurrentScore(item)}.`;
+  const body = `${item.home_team} - ${item.away_team}: ${forecastState.detail}. ${formatCurrentScore(item)}.`;
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification(title, { body });
   }

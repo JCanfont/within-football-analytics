@@ -1,5 +1,5 @@
 import { Bell, CalendarDays, DatabaseZap, Gauge, Goal, HelpCircle, ListChecks, SearchCheck, Settings, Shield, Scale, Trophy, UsersRound } from "lucide-react";
-import { useState } from "react";
+import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { AlertsPage } from "./pages/AlertsPage";
 import { CompetitionsPage, TeamsPage } from "./pages/CatalogPages";
 import { ContraPage } from "./pages/ContraPage";
@@ -12,22 +12,20 @@ import { QuestionsPage } from "./pages/QuestionsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
 const navigation = [
-  { label: "Dashboard", icon: Gauge, view: "dashboard" },
-  { label: "Partidos en directo", icon: CalendarDays, view: "live-matches" },
-  { label: "Competiciones", icon: Trophy, view: "competitions" },
-  { label: "Equipos", icon: Shield, view: "teams" },
-  { label: "Jugadores", icon: UsersRound, view: "players" },
-  { label: "Forebet", icon: SearchCheck, view: "forebet" },
-  { label: "A la contra", icon: Scale, view: "contra" },
-  { label: "Preguntas", icon: HelpCircle, view: "questions" },
-  { label: "Importaciones", icon: DatabaseZap, view: "imports" },
-  { label: "Alertas", icon: Bell, view: "alerts" },
-  { label: "Configuracion", icon: Settings, view: "settings" },
+  { label: "Dashboard", icon: Gauge, path: "/" },
+  { label: "Partidos en directo", icon: CalendarDays, path: "/live-matches" },
+  { label: "Competiciones", icon: Trophy, path: "/competitions" },
+  { label: "Equipos", icon: Shield, path: "/teams" },
+  { label: "Jugadores", icon: UsersRound, path: "/players" },
+  { label: "Forebet", icon: SearchCheck, path: "/forebet" },
+  { label: "A la contra", icon: Scale, path: "/contra" },
+  { label: "Preguntas", icon: HelpCircle, path: "/questions" },
+  { label: "Importaciones", icon: DatabaseZap, path: "/imports" },
+  { label: "Alertas", icon: Bell, path: "/alerts" },
+  { label: "Configuracion", icon: Settings, path: "/settings" },
 ];
 
 export default function App() {
-  const [activeView, setActiveView] = useState("dashboard");
-
   return (
     <div className="app-shell">
       <aside className="sidebar" aria-label="Main navigation">
@@ -44,18 +42,16 @@ export default function App() {
         <nav className="nav-list">
           {navigation.map((item) => {
             const Icon = item.icon;
-            const isActive = item.view === activeView || (!item.view && activeView === "dashboard" && item.label === "Dashboard");
             return (
-              <button
-                className={isActive ? "nav-item active" : "nav-item"}
-                key={item.label}
-                type="button"
-                onClick={() => item.view && setActiveView(item.view)}
-                disabled={!item.view}
+              <NavLink
+                className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
+                end={item.path === "/"}
+                key={item.path}
+                to={item.path}
               >
                 <Icon size={18} aria-hidden="true" />
                 <span>{item.label}</span>
-              </button>
+              </NavLink>
             );
           })}
         </nav>
@@ -67,29 +63,21 @@ export default function App() {
       </aside>
 
       <main className="main-panel">
-        {activeView === "settings" ? (
-          <SettingsPage />
-        ) : activeView === "alerts" ? (
-          <AlertsPage />
-        ) : activeView === "forebet" ? (
-          <ForebetPage />
-        ) : activeView === "contra" ? (
-          <ContraPage />
-        ) : activeView === "questions" ? (
-          <QuestionsPage />
-        ) : activeView === "imports" ? (
-          <ImportsPage />
-        ) : activeView === "players" ? (
-          <PlayersPage />
-        ) : activeView === "live-matches" ? (
-          <LiveMatchesPage />
-        ) : activeView === "competitions" ? (
-          <CompetitionsPage />
-        ) : activeView === "teams" ? (
-          <TeamsPage />
-        ) : (
-          <DashboardPage />
-        )}
+        <Routes>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
+          <Route path="/live-matches" element={<LiveMatchesPage />} />
+          <Route path="/competitions" element={<CompetitionsPage />} />
+          <Route path="/teams" element={<TeamsPage />} />
+          <Route path="/players" element={<PlayersPage />} />
+          <Route path="/forebet" element={<ForebetPage />} />
+          <Route path="/contra" element={<ContraPage />} />
+          <Route path="/questions" element={<QuestionsPage />} />
+          <Route path="/imports" element={<ImportsPage />} />
+          <Route path="/alerts" element={<AlertsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
     </div>
   );

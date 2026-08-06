@@ -296,7 +296,11 @@ def _forebet_range_item(db: Session, match: Match) -> ForebetRangeItem:
         forebet_prediction=latest.prediction if latest else None,
         expected_goals=latest.expected_goals if latest else None,
         predicted_score=_prediction_score_from_latest(latest),
-        goal_prediction=_goal_prediction(_prediction_score_from_latest(latest), latest.expected_goals if latest else None),
+        goal_prediction=_goal_prediction(
+            _prediction_score_from_latest(latest),
+            latest.expected_goals if latest else None,
+            latest.over_under_prediction if latest else None,
+        ),
         score_range=analytics.inputs.get("score_range") if analytics else None,
         reliability=analytics.reliability if analytics else "insufficient",
     )
@@ -321,7 +325,11 @@ def _forebet_basic_item(db: Session, match: Match) -> ForebetRangeItem:
         forebet_prediction=latest.prediction if latest else None,
         expected_goals=latest.expected_goals if latest else None,
         predicted_score=_prediction_score_from_latest(latest),
-        goal_prediction=_goal_prediction(_prediction_score_from_latest(latest), latest.expected_goals if latest else None),
+        goal_prediction=_goal_prediction(
+            _prediction_score_from_latest(latest),
+            latest.expected_goals if latest else None,
+            latest.over_under_prediction if latest else None,
+        ),
         score_range=None,
         reliability="pending_range",
     )
@@ -329,6 +337,8 @@ def _forebet_basic_item(db: Session, match: Match) -> ForebetRangeItem:
 
 def _forebet_source_item(index: int, prediction: ForebetSourcePrediction, include_range: bool) -> ForebetRangeItem:
     start_year = prediction.match_date.year if prediction.match_date.month >= 7 else prediction.match_date.year - 1
+    home_score, away_score = _split_predicted_score(prediction.actual_score)
+    status = _forebet_source_status(prediction, home_score, away_score)
     return ForebetRangeItem(
         match_id=-index,
         match_date=prediction.match_date,
@@ -336,9 +346,9 @@ def _forebet_source_item(index: int, prediction: ForebetSourcePrediction, includ
         season=f"{start_year}/{start_year + 1}",
         home_team=prediction.home_team,
         away_team=prediction.away_team,
-        status="scheduled",
-        home_score=None,
-        away_score=None,
+        status=status,
+        home_score=home_score,
+        away_score=away_score,
         forebet_prediction=prediction.prediction,
         expected_goals=prediction.expected_goals,
         predicted_score=prediction.predicted_score,
@@ -346,6 +356,20 @@ def _forebet_source_item(index: int, prediction: ForebetSourcePrediction, includ
         score_range=_forebet_source_score_range(prediction) if include_range else None,
         reliability="forebet_external" if include_range else "pending_range",
     )
+
+
+def _forebet_source_status(prediction: ForebetSourcePrediction, home_score: int | None, away_score: int | None) -> str:
+    if prediction.status in {"finished", "live", "scheduled"}:
+        return prediction.status
+    if prediction.status:
+        normalized = prediction.status.lower()
+        if any(token in normalized for token in ("finished", "ft", "ended", "final", "aet", "pen")):
+            return "finished"
+        if any(token in normalized for token in ("live", "in_play", "playing", "1h", "2h", "ht")):
+            return "live"
+    if home_score is not None and away_score is not None:
+        return "finished"
+    return "scheduled"
 
 
 def _forebet_source_score_range(prediction: ForebetSourcePrediction) -> dict | None:
@@ -366,18 +390,27 @@ def _prediction_score_from_latest(latest) -> str | None:
     return f"{latest.predicted_home_score}-{latest.predicted_away_score}"
 
 
-def _goal_prediction(predicted_score: str | None, expected_goals) -> dict | None:
+def _goal_prediction(predicted_score: str | None, expected_goals, over_under_prediction: str | None = None) -> dict | None:
     home_goals, away_goals = _split_predicted_score(predicted_score)
     total_goals = home_goals + away_goals if home_goals is not None and away_goals is not None else None
     expected = float(expected_goals) if expected_goals is not None else None
     reference_total = total_goals if total_goals is not None else expected
-    if reference_total is None:
+    over_under = None
+    if over_under_prediction:
+        normalized = over_under_prediction.lower()
+        if "under" in normalized:
+            over_under = over_under_prediction
+        elif "over" in normalized:
+            over_under = over_under_prediction
+    if over_under is None and reference_total is not None:
+        over_under = "over_2_5" if reference_total > 2.5 else "under_2_5"
+    if predicted_score is None and expected is None and over_under is None:
         return None
     return {
         "predicted_score": predicted_score,
         "predicted_total_goals": total_goals,
         "expected_goals": expected,
-        "over_under_25": "over_2_5" if reference_total > 2.5 else "under_2_5",
+        "over_under_25": over_under,
     }
 
 

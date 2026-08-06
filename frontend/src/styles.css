@@ -88,6 +88,7 @@ select {
   color: #b9c3d2;
   cursor: pointer;
   text-align: left;
+  text-decoration: none;
 }
 
 .nav-item:disabled {
@@ -2191,6 +2192,39 @@ td {
 
 .forecast-impossible-row td {
   background: #fff2f0;
+}
+
+.forecast-possible-row td {
+  background: #eef8f3;
+}
+
+.ou-signal {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.ou-signal.over {
+  background: #ffe8d8;
+  color: #9a4a16;
+}
+
+.ou-signal.under {
+  background: #e4eefc;
+  color: #1f4f8a;
+}
+
+.ou-signal.pending {
+  background: #edf2f6;
+  color: #536174;
+}
+
+.forebet-live-signals {
+  margin-bottom: 10px;
 }
 
 .forebet-time-past td {

@@ -11,6 +11,7 @@ from app.services.forebet_importer import (
     ForebetSourcePrediction,
     _actual_score_from_cells,
     _forebet_reader_url,
+    _over_under_from_prediction,
     _parse_forebet_predictions,
     _parse_forebet_reader_predictions,
     _prediction_from_row,
@@ -23,8 +24,50 @@ from app.services.forebet_importer import (
 def test_forebet_reader_url_uses_single_reader_prefix() -> None:
     url = _forebet_reader_url(date(2026, 7, 28))
 
-    assert url.startswith("https://r.jina.ai/https://www.forebet.com/")
+    assert url.startswith("https://r.jina.ai/http")
     assert "r.jina.ai/http://r.jina.ai" not in url
+    assert "date=2026-07-28" in url
+
+
+def test_parse_forebet_reader_predictions_keeps_finished_scores_for_zero_home_prediction() -> None:
+    markdown = """
+    African Championship Women
+     ACW
+    Egypt W
+    Nigeria W
+    08/05/2026 8:00 PM
+    6207420 - 33.1877°F-2500
+    FT
+     2 - 6
+    (1 - 2)
+    -
+     ACW
+    Malawi W
+    Zambia W
+    08/05/2026 8:00 PM
+    28294321 - 22.8859°F+110
+    FT
+     1 - 2
+    (0 - 2)
+    -
+    """
+
+    predictions = _parse_forebet_reader_predictions(markdown, date(2026, 8, 5))
+
+    assert len(predictions) == 2
+    assert predictions[0].home_team == "Egypt W"
+    assert predictions[0].status == "finished"
+    assert predictions[0].actual_score == "2-6"
+    assert predictions[0].predicted_score == "0-3"
+    assert predictions[1].home_team == "Malawi W"
+    assert predictions[1].status == "finished"
+    assert predictions[1].actual_score == "1-2"
+
+
+def test_forebet_url_includes_requested_date() -> None:
+    from app.services.forebet_importer import _forebet_url
+
+    assert _forebet_url(date(2026, 8, 5)) == "https://www.forebet.com/en/football-predictions?date=2026-08-05&lang=en"
 
 
 def test_prediction_from_row_builds_match_from_visible_forebet_link() -> None:
@@ -251,6 +294,8 @@ def test_load_forebet_date_shows_all_temporary_predictions_when_storage_unavaila
             competition_name="Uruguay Primera Division",
             prediction="1",
             predicted_score="2-0",
+            actual_score="2-1",
+            status="finished",
             expected_goals=Decimal("2.45"),
         ),
         ForebetSourcePrediction(
@@ -302,3 +347,36 @@ def test_load_forebet_date_shows_all_temporary_predictions_when_storage_unavaila
     assert [match.home_team for match in result.matches] == ["Nacional", "CA Tigre"]
     assert [match.competition for match in result.matches] == ["Uruguay Primera Division", "Argentina Liga Profesional"]
     assert all(match.match_id < 0 for match in result.matches)
+    assert result.matches[0].status == "finished"
+    assert result.matches[0].home_score == 2
+    assert result.matches[0].away_score == 1
+    assert result.matches[1].status == "scheduled"
+    assert result.matches[1].home_score is None
+    assert result.matches[1].away_score is None
+
+
+def test_forebet_source_item_infers_finished_from_actual_score() -> None:
+    prediction = ForebetSourcePrediction(
+        home_team="Getafe",
+        away_team="Celta",
+        match_date=datetime(2026, 8, 5, 20, 0, tzinfo=UTC),
+        competition_name="LaLiga",
+        prediction="2",
+        predicted_score="1-2",
+        actual_score="0-2",
+        status=None,
+    )
+
+    item = analytics._forebet_source_item(1, prediction, include_range=False)
+
+    assert item.status == "finished"
+    assert item.home_score == 0
+    assert item.away_score == 2
+    assert item.predicted_score == "1-2"
+
+
+def test_over_under_from_prediction_uses_score_then_expected_goals() -> None:
+    assert _over_under_from_prediction(1, 2, Decimal("2.10")) == "over_2_5"
+    assert _over_under_from_prediction(0, 1, Decimal("2.90")) == "under_2_5"
+    assert _over_under_from_prediction(None, None, Decimal("2.90")) == "over_2_5"
+    assert _over_under_from_prediction(None, None, None) is None
