@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import requests
 
 from app.schemas.api import ForebetStartEmailRequest
-from app.services.email_alerts import send_forebet_start_email
+from app.services.email_alerts import forebet_email_status, send_forebet_start_email
 
 
 def payload() -> ForebetStartEmailRequest:
@@ -31,6 +31,22 @@ def test_start_email_reports_missing_configuration() -> None:
     assert result.configured is False
     assert result.sent is False
     assert result.status == "not_configured"
+
+
+def test_email_status_does_not_expose_configuration_values() -> None:
+    settings = SimpleNamespace(
+        resend_api_key="secret-key",
+        forebet_alert_email="private@example.com",
+        forebet_alert_from="WITHIN <onboarding@resend.dev>",
+    )
+
+    result = forebet_email_status(settings)
+
+    assert result.configured is True
+    assert result.sent is False
+    assert result.status == "configured"
+    assert "secret-key" not in result.message
+    assert "private@example.com" not in result.message
 
 
 def test_start_email_sends_to_server_configured_recipient(monkeypatch) -> None:

@@ -9,6 +9,17 @@ from app.schemas.api import ForebetStartEmailRequest, ForebetStartEmailResult
 RESEND_EMAIL_URL = "https://api.resend.com/emails"
 
 
+def forebet_email_status(settings: Settings | None = None) -> ForebetStartEmailResult:
+    settings = settings or get_settings()
+    configured = bool(settings.resend_api_key and settings.forebet_alert_email)
+    return ForebetStartEmailResult(
+        configured=configured,
+        sent=False,
+        status="configured" if configured else "not_configured",
+        message="Avisos por email configurados." if configured else "Faltan RESEND_API_KEY o FOREBET_ALERT_EMAIL.",
+    )
+
+
 def send_forebet_start_email(
     payload: ForebetStartEmailRequest,
     settings: Settings | None = None,

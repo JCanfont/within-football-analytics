@@ -6,7 +6,7 @@ from app.database import get_db
 from app.models import Alert, Competition, Player, PlayerTeamHistory, Stadium, Team, UserFavorite
 from app.schemas.api import AlertRead, CompetitionRead, FavoriteCreate, FavoriteRead, ForebetStartEmailRequest, ForebetStartEmailResult, PlayerRead, StadiumRead, TeamRead, TeamSquadRead
 from app.services.alert_service import generate_match_alerts
-from app.services.email_alerts import send_forebet_start_email
+from app.services.email_alerts import forebet_email_status, send_forebet_start_email
 from app.services.transfermarkt_provider import get_team_squad, import_team_squad, provider_status as transfermarkt_provider_status
 
 
@@ -137,3 +137,8 @@ def generate_alerts_for_match(match_id: int, db: Session = Depends(get_db)) -> l
 @router.post("/alerts/forebet-start/email", response_model=ForebetStartEmailResult)
 def email_forebet_start(payload: ForebetStartEmailRequest) -> ForebetStartEmailResult:
     return send_forebet_start_email(payload)
+
+
+@router.get("/alerts/forebet-start/email/status", response_model=ForebetStartEmailResult)
+def get_forebet_email_status() -> ForebetStartEmailResult:
+    return forebet_email_status()
