@@ -515,7 +515,8 @@ npm run build
 
 El envio se configura en el entorno de produccion con `RESEND_API_KEY` y
 `FOREBET_ALERT_EMAIL`. Opcionalmente, `FOREBET_ALERT_FROM` permite usar un
-remitente verificado propio en lugar del remitente de pruebas de Resend.
+remitente verificado propio en lugar del remitente de pruebas de Resend. La
+clave de envio se crea en `https://resend.com/api-keys`.
 
 ## Formatos CSV fase 3
 
