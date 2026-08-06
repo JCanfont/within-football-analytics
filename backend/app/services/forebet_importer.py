@@ -28,6 +28,11 @@ READER_STATS_RE = re.compile(
     r"(?P<prediction>[12X])(?P<home_score>\d+)\s*-\s*(?P<away_score>\d+)"
     r"(?P<expected_goals>\d+\.\d{2})"
 )
+READER_STATS_OPTIONAL_PRED_RE = re.compile(
+    r"^(?P<home_probability>\d{2})(?P<draw_probability>\d{2})(?P<away_probability>\d{2})"
+    r"(?P<home_score>\d+)\s*-\s*(?P<away_score>\d+)"
+    r"(?P<expected_goals>\d+\.\d{2})"
+)
 SCORE_RE = re.compile(r"\b(?P<home>\d+)\s*-\s*(?P<away>\d+)\b")
 REQUEST_HEADERS = {
     "User-Agent": (
@@ -69,17 +74,28 @@ class ForebetImportOutcome:
 
 def import_forebet_jornada(db: Session, target_date: date) -> ForebetImportOutcome:
     source_url = _forebet_url(target_date)
-    try:
-        response = requests.get(
-            source_url,
-            timeout=15,
-            headers=REQUEST_HEADERS,
-        )
-    except requests.RequestException as exc:
+    response = None
+    for candidate_url in _forebet_date_urls(target_date):
+        try:
+            candidate = requests.get(
+                candidate_url,
+                timeout=15,
+                headers=REQUEST_HEADERS,
+            )
+        except requests.RequestException:
+            continue
+        source_url = candidate_url
+        response = candidate
+        if not _is_cloudflare_challenge(candidate.text) and candidate.status_code < 400:
+            predictions = _parse_forebet_predictions(candidate.text, target_date)
+            if predictions:
+                return _store_forebet_predictions(db, target_date, source_url, predictions, "ok")
+
+    if response is None:
         predictions = _fetch_forebet_reader_predictions(target_date)
         if predictions:
             return _store_forebet_predictions(db, target_date, source_url, predictions, "reader_fallback")
-        return ForebetImportOutcome(status="request_failed", message=f"No se pudo conectar con Forebet: {exc}", source_url=source_url)
+        return ForebetImportOutcome(status="request_failed", message="No se pudo conectar con Forebet.", source_url=source_url)
 
     if _is_cloudflare_challenge(response.text):
         predictions = _fetch_forebet_reader_predictions(target_date)
@@ -110,7 +126,7 @@ def import_forebet_jornada(db: Session, target_date: date) -> ForebetImportOutco
             source_url=source_url,
         )
 
-    return _store_forebet_predictions(db, target_date, source_url, predictions, "ok")
+    return _store_forebet_predictions(db, target_date, source_url, predictions, "ok" if not _is_cloudflare_challenge(response.text) else "reader_fallback")
 
 
 def _store_forebet_predictions(
@@ -195,30 +211,83 @@ def _store_forebet_predictions(
 
 
 def _forebet_url(target_date: date) -> str:
-    return f"{FOREBET_PREDICTIONS_URL}?lang=en"
+    return f"{FOREBET_PREDICTIONS_URL}?date={target_date.isoformat()}&lang=en"
+
+
+def _forebet_date_urls(target_date: date) -> list[str]:
+    iso = target_date.isoformat()
+    return [
+        f"{FOREBET_PREDICTIONS_URL}?date={iso}&lang=en",
+        f"{FOREBET_PREDICTIONS_URL}/predictions-1x2/{iso}",
+        f"{FOREBET_PREDICTIONS_URL}?lang=en",
+    ]
 
 
 def _fetch_forebet_reader_predictions(target_date: date) -> list[ForebetSourcePrediction]:
-    try:
-        response = requests.get(_forebet_reader_url(target_date), timeout=20, headers=_reader_headers())
-    except requests.RequestException:
-        return []
-    if response.status_code >= 400:
-        return []
-    return _parse_forebet_reader_predictions(response.text, target_date)
+    best: list[ForebetSourcePrediction] = []
+    attempted: set[tuple[str, str]] = set()
+    for source_url in _forebet_date_urls(target_date):
+        for reader_url in _reader_proxy_urls(source_url):
+            for headers in _reader_header_variants():
+                attempt_key = (reader_url, headers.get("User-Agent", ""))
+                if attempt_key in attempted:
+                    continue
+                attempted.add(attempt_key)
+                try:
+                    response = requests.get(reader_url, timeout=25, headers=headers)
+                except requests.RequestException:
+                    continue
+                if response.status_code >= 400 or _is_cloudflare_challenge(response.text):
+                    continue
+                predictions = _parse_forebet_reader_predictions(response.text, target_date)
+                if not predictions:
+                    continue
+                if len(predictions) > len(best):
+                    best = predictions
+                if any(item.actual_score for item in predictions) or any(item.status in {"finished", "live"} for item in predictions):
+                    return predictions
+                # Prefer a dated page result even without scores over continuing forever.
+                if "date=" in source_url or "/predictions-1x2/" in source_url:
+                    return predictions
+    return best
 
 
 def _forebet_reader_url(target_date: date) -> str:
-    return f"{FOREBET_READER_PREFIX}{_forebet_url(target_date)}"
+    return _reader_proxy_urls(_forebet_url(target_date))[0]
+
+
+def _reader_proxy_urls(source_url: str) -> list[str]:
+    https_url = source_url if source_url.startswith("http") else f"https://{source_url}"
+    http_url = https_url.replace("https://", "http://", 1)
+    return [
+        f"{FOREBET_READER_PREFIX}{http_url}",
+        f"{FOREBET_READER_PREFIX}{https_url}",
+    ]
 
 
 def _reader_headers() -> dict[str, str]:
-    return {
-        **REQUEST_HEADERS,
-        "X-No-Cache": "true",
-        "X-Respond-With": "markdown",
-        "X-Timeout": "15",
-    }
+    return _reader_header_variants()[0]
+
+
+def _reader_header_variants() -> list[dict[str, str]]:
+    return [
+        {
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "text/markdown,text/plain,*/*",
+        },
+        {
+            "User-Agent": REQUEST_HEADERS["User-Agent"],
+            "Accept": "text/markdown,text/plain,*/*",
+            "Accept-Language": REQUEST_HEADERS["Accept-Language"],
+        },
+        {
+            **REQUEST_HEADERS,
+            "X-No-Cache": "true",
+            "X-Respond-With": "markdown",
+            "X-Timeout": "15",
+        },
+        REQUEST_HEADERS,
+    ]
 
 
 def _is_cloudflare_challenge(html: str) -> bool:
@@ -383,22 +452,41 @@ def _is_reader_competition_noise(line: str) -> bool:
 
 def _reader_stats_from_lines(lines: list[str], start_index: int) -> dict[str, Decimal | str | None] | None:
     compact_line = lines[start_index].replace(" ", "") if start_index < len(lines) else ""
-    compact_match = READER_STATS_RE.search(compact_line)
-    if compact_match:
-        return {
-            "prediction": compact_match.group("prediction"),
-            "predicted_score": f"{compact_match.group('home_score')}-{compact_match.group('away_score')}",
-            "actual_score": _actual_score_from_lines(lines, start_index),
-            "status": _status_from_lines(lines, start_index),
-            "expected_goals": Decimal(compact_match.group("expected_goals")),
-            "home_probability": Decimal(compact_match.group("home_probability")),
-            "draw_probability": Decimal(compact_match.group("draw_probability")),
-            "away_probability": Decimal(compact_match.group("away_probability")),
-        }
+    compact_stats = _compact_reader_stats(compact_line)
+    if compact_stats:
+        compact_stats["actual_score"] = _actual_score_from_lines(lines, start_index)
+        compact_stats["status"] = _status_from_lines(lines, start_index) or (
+            "finished" if compact_stats.get("actual_score") else compact_stats.get("status")
+        )
+        return compact_stats
 
     probabilities = _probabilities_from_text(lines[start_index] if start_index < len(lines) else "")
     if len(probabilities) < 3:
-        return None
+        # Still allow FT/result extraction when the compact probability blob is malformed.
+        status = _status_from_lines(lines, start_index)
+        actual_score = _actual_score_from_lines(lines, start_index)
+        if status not in {"live", "finished"} and not actual_score:
+            return None
+        predicted_score = None
+        prediction = None
+        expected_goals = None
+        for index in range(start_index, min(len(lines), start_index + 4)):
+            maybe_prediction, maybe_score = _prediction_and_score(lines[index])
+            prediction = prediction or maybe_prediction
+            predicted_score = predicted_score or maybe_score
+            expected_goals = expected_goals or (
+                _decimal(lines[index]) if _decimal(lines[index]) is not None and "." in lines[index] else None
+            )
+        return {
+            "prediction": prediction,
+            "predicted_score": predicted_score,
+            "actual_score": actual_score,
+            "status": status or ("finished" if actual_score else None),
+            "expected_goals": expected_goals,
+            "home_probability": None,
+            "draw_probability": None,
+            "away_probability": None,
+        }
     prediction, predicted_score = _prediction_and_score(lines[start_index + 1] if start_index + 1 < len(lines) else "")
     if not predicted_score and start_index + 2 < len(lines):
         _, predicted_score = _prediction_and_score(lines[start_index + 2])
@@ -410,16 +498,46 @@ def _reader_stats_from_lines(lines: list[str], start_index: int) -> dict[str, De
         ),
         None,
     )
+    status = _status_from_lines(lines, start_index)
+    actual_score = _actual_score_from_lines(lines, start_index)
     return {
         "prediction": prediction,
         "predicted_score": predicted_score,
-        "actual_score": _actual_score_from_lines(lines, start_index),
-        "status": _status_from_lines(lines, start_index),
+        "actual_score": actual_score,
+        "status": status or ("finished" if actual_score else None),
         "expected_goals": expected_goals,
         "home_probability": probabilities[0],
         "draw_probability": probabilities[1],
         "away_probability": probabilities[2],
     }
+
+
+def _compact_reader_stats(compact_line: str) -> dict[str, Decimal | str | None] | None:
+    compact_match = READER_STATS_RE.search(compact_line)
+    if compact_match:
+        return {
+            "prediction": compact_match.group("prediction"),
+            "predicted_score": f"{compact_match.group('home_score')}-{compact_match.group('away_score')}",
+            "expected_goals": Decimal(compact_match.group("expected_goals")),
+            "home_probability": Decimal(compact_match.group("home_probability")),
+            "draw_probability": Decimal(compact_match.group("draw_probability")),
+            "away_probability": Decimal(compact_match.group("away_probability")),
+        }
+
+    optional_match = READER_STATS_OPTIONAL_PRED_RE.search(compact_line)
+    if optional_match:
+        predicted_score = f"{optional_match.group('home_score')}-{optional_match.group('away_score')}"
+        home_goals, away_goals = predicted_score.split("-")
+        inferred_prediction = "1" if int(home_goals) > int(away_goals) else "2" if int(away_goals) > int(home_goals) else "X"
+        return {
+            "prediction": inferred_prediction,
+            "predicted_score": predicted_score,
+            "expected_goals": Decimal(optional_match.group("expected_goals")),
+            "home_probability": Decimal(optional_match.group("home_probability")),
+            "draw_probability": Decimal(optional_match.group("draw_probability")),
+            "away_probability": Decimal(optional_match.group("away_probability")),
+        }
+    return None
 
 
 def _teams_from_reader_detail_page(href: str | None) -> tuple[str, str] | None:

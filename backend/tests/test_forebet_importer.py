@@ -24,8 +24,50 @@ from app.services.forebet_importer import (
 def test_forebet_reader_url_uses_single_reader_prefix() -> None:
     url = _forebet_reader_url(date(2026, 7, 28))
 
-    assert url.startswith("https://r.jina.ai/https://www.forebet.com/")
+    assert url.startswith("https://r.jina.ai/http")
     assert "r.jina.ai/http://r.jina.ai" not in url
+    assert "date=2026-07-28" in url
+
+
+def test_parse_forebet_reader_predictions_keeps_finished_scores_for_zero_home_prediction() -> None:
+    markdown = """
+    African Championship Women
+     ACW
+    Egypt W
+    Nigeria W
+    08/05/2026 8:00 PM
+    6207420 - 33.1877°F-2500
+    FT
+     2 - 6
+    (1 - 2)
+    -
+     ACW
+    Malawi W
+    Zambia W
+    08/05/2026 8:00 PM
+    28294321 - 22.8859°F+110
+    FT
+     1 - 2
+    (0 - 2)
+    -
+    """
+
+    predictions = _parse_forebet_reader_predictions(markdown, date(2026, 8, 5))
+
+    assert len(predictions) == 2
+    assert predictions[0].home_team == "Egypt W"
+    assert predictions[0].status == "finished"
+    assert predictions[0].actual_score == "2-6"
+    assert predictions[0].predicted_score == "0-3"
+    assert predictions[1].home_team == "Malawi W"
+    assert predictions[1].status == "finished"
+    assert predictions[1].actual_score == "1-2"
+
+
+def test_forebet_url_includes_requested_date() -> None:
+    from app.services.forebet_importer import _forebet_url
+
+    assert _forebet_url(date(2026, 8, 5)) == "https://www.forebet.com/en/football-predictions?date=2026-08-05&lang=en"
 
 
 def test_prediction_from_row_builds_match_from_visible_forebet_link() -> None:
