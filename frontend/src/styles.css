@@ -88,6 +88,7 @@ select {
   color: #b9c3d2;
   cursor: pointer;
   text-align: left;
+  text-decoration: none;
 }
 
 .nav-item:disabled {

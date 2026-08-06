@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import App from "./App";
 import * as api from "./services/api";
 
@@ -21,6 +22,14 @@ function todayInputValue() {
   const now = new Date();
   const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
   return localDate.toISOString().slice(0, 10);
+}
+
+function renderApp(initialPath = "/") {
+  return render(
+    <MemoryRouter initialEntries={[initialPath]}>
+      <App />
+    </MemoryRouter>,
+  );
 }
 
 describe("App", () => {
@@ -519,7 +528,7 @@ describe("App", () => {
   });
 
   it("renders the dashboard with imported match data", async () => {
-    render(<App />);
+    renderApp();
 
     expect(screen.getByRole("heading", { name: "WITHIN Football Analytics" })).toBeInTheDocument();
     await waitFor(() => {
@@ -581,7 +590,7 @@ describe("App", () => {
   }, 30000);
 
   it("saves favorite teams from the dashboard", async () => {
-    render(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByLabelText("Equipo favorito")).toBeInTheDocument();
@@ -598,7 +607,7 @@ describe("App", () => {
   it("shows an updating backend status when maintenance flag is active", async () => {
     localStorage.setItem("within_backend_status", "updating");
 
-    render(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByText("Sistema actualizandose")).toBeInTheDocument();
@@ -606,9 +615,9 @@ describe("App", () => {
   }, 30000);
 
   it("shows player information in the players list", async () => {
-    render(<App />);
+    renderApp();
 
-    fireEvent.click(screen.getByRole("button", { name: "Jugadores" }));
+    fireEvent.click(screen.getByRole("link", { name: "Jugadores" }));
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Jugadores" })).toBeInTheDocument();
@@ -625,10 +634,10 @@ describe("App", () => {
   }, 30000);
 
   it("opens live matches and compares selected Forebet parameters", async () => {
-    render(<App />);
+    renderApp();
     localStorage.setItem("within_forebet_watch", JSON.stringify({ autoRefresh: true, forecastAlerts: false, matchIds: [50] }));
 
-    fireEvent.click(screen.getByRole("button", { name: "Partidos en directo" }));
+    fireEvent.click(screen.getByRole("link", { name: "Partidos en directo" }));
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Partidos en directo", level: 1 })).toBeInTheDocument();
     });
@@ -652,9 +661,9 @@ describe("App", () => {
   }, 30000);
 
   it("opens competitions and teams catalog pages", async () => {
-    render(<App />);
+    renderApp();
 
-    fireEvent.click(screen.getByRole("button", { name: "Competiciones" }));
+    fireEvent.click(screen.getByRole("link", { name: "Competiciones" }));
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Competiciones", level: 1 })).toBeInTheDocument();
     });
@@ -667,7 +676,7 @@ describe("App", () => {
     expect(screen.getByText("Menos goles")).toBeInTheDocument();
     expect(screen.getByText("Rachas under y over")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Equipos" }));
+    fireEvent.click(screen.getByRole("link", { name: "Equipos" }));
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Equipos", level: 1 })).toBeInTheDocument();
     });
@@ -687,9 +696,9 @@ describe("App", () => {
   }, 30000);
 
   it("opens the contrarian picks workspace and records a pick", async () => {
-    render(<App />);
+    renderApp();
 
-    fireEvent.click(screen.getByRole("button", { name: "A la contra" }));
+    fireEvent.click(screen.getByRole("link", { name: "A la contra" }));
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "A la contra", level: 1 })).toBeInTheDocument();
     });
@@ -703,10 +712,30 @@ describe("App", () => {
     expect(screen.getAllByText("+1.10 u")[0]).toBeInTheDocument();
   }, 30000);
 
-  it("lets the user choose the Forebet goal prediction view", async () => {
-    render(<App />);
+  it("updates the browser path when navigating to Forebet", async () => {
+    renderApp();
 
-    fireEvent.click(screen.getByRole("button", { name: "Forebet" }));
+    fireEvent.click(screen.getByRole("link", { name: "Forebet" }));
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Forebet", level: 1 })).toBeInTheDocument();
+    });
+    expect(screen.getByRole("link", { name: "Forebet" })).toHaveAttribute("href", "/forebet");
+    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/");
+  }, 30000);
+
+  it("opens the Forebet page from a deep link", async () => {
+    renderApp("/forebet");
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Forebet", level: 1 })).toBeInTheDocument();
+    });
+    expect(screen.getByRole("link", { name: "Forebet" })).toHaveClass("active");
+  }, 30000);
+
+  it("lets the user choose the Forebet goal prediction view", async () => {
+    renderApp();
+
+    fireEvent.click(screen.getByRole("link", { name: "Forebet" }));
 
     await waitFor(() => {
       expect(screen.getByText("Predicción goles")).toBeInTheDocument();
@@ -733,9 +762,9 @@ describe("App", () => {
   }, 30000);
 
   it("can watch a Forebet match start and refresh live results", async () => {
-    render(<App />);
+    renderApp();
 
-    fireEvent.click(screen.getByRole("button", { name: "Forebet" }));
+    fireEvent.click(screen.getByRole("link", { name: "Forebet" }));
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Avisar inicio" })).toBeInTheDocument();
@@ -758,7 +787,7 @@ describe("App", () => {
   }, 30000);
 
   it("enables live tracking globally and for the selected match", async () => {
-    render(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Activar todos" })).toBeInTheDocument();
@@ -781,9 +810,9 @@ describe("App", () => {
   }, 30000);
 
   it("opens settings and saves statistical configuration", async () => {
-    render(<App />);
+    renderApp();
 
-    fireEvent.click(screen.getByRole("button", { name: "Configuracion" }));
+    fireEvent.click(screen.getByRole("link", { name: "Configuracion" }));
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Configuracion" })).toBeInTheDocument();
@@ -800,9 +829,9 @@ describe("App", () => {
   }, 30000);
 
   it("opens alerts and generates explainable match alerts", async () => {
-    render(<App />);
+    renderApp();
 
-    fireEvent.click(screen.getByRole("button", { name: "Alertas" }));
+    fireEvent.click(screen.getByRole("link", { name: "Alertas" }));
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Alertas" })).toBeInTheDocument();
@@ -817,9 +846,9 @@ describe("App", () => {
   }, 30000);
 
   it("opens imports and uploads a csv file", async () => {
-    render(<App />);
+    renderApp();
 
-    fireEvent.click(screen.getByRole("button", { name: "Importaciones" }));
+    fireEvent.click(screen.getByRole("link", { name: "Importaciones" }));
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Importaciones CSV" })).toBeInTheDocument();
