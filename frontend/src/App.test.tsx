@@ -740,6 +740,7 @@ describe("App", () => {
     await waitFor(() => {
       expect(screen.getByText("Predicción goles")).toBeInTheDocument();
     });
+    expect(screen.getByText("RF")).toBeInTheDocument();
     expect(screen.getByText("28/07/2026")).toBeInTheDocument();
     expect(screen.getByText("Jugado")).toBeInTheDocument();
     expect(screen.queryByText("29/07/2026")).not.toBeInTheDocument();
@@ -775,7 +776,7 @@ describe("App", () => {
     expect(screen.getByText("1 partidos con aviso")).toBeInTheDocument();
     expect(screen.queryByText("Aun posible")).not.toBeInTheDocument();
     expect(screen.getByText("No cumplido")).toBeInTheDocument();
-    expect(screen.getByText("Ahora 0-1")).toBeInTheDocument();
+    expect(screen.getByText("0-1")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Pronostico vivo" }));
 
     mockedApi.loadForebetDate.mockClear();

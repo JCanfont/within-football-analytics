@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ForebetRangeItem } from "../types/api";
 import {
   evaluateForecastState,
+  formatFinalScore,
   formatForecastColumn,
   formatOverUnderSignal,
   hasMatchStarted,
@@ -70,7 +71,7 @@ describe("forebetSignals", () => {
     expect(state.label).toBe("Aun posible");
   });
 
-  it("marks forecast impossible when a side already exceeds the predicted score", () => {
+  it("does not settle a live Over/Under forecast from the predicted exact score", () => {
     const state = evaluateForecastState(
       makeItem({
         status: "live",
@@ -80,8 +81,8 @@ describe("forebetSignals", () => {
         match_date: new Date().toISOString().slice(0, 16),
       }),
     );
-    expect(state.status).toBe("impossible");
-    expect(state.label).toBe("Ya no es posible");
+    expect(state.status).toBe("possible");
+    expect(state.label).toBe("Aun posible");
   });
 
   it("treats kickoff-elapsed matches as live even without a live status", () => {
@@ -121,7 +122,7 @@ describe("forebetSignals", () => {
     expect(playedByTime.label).not.toBe("Pendiente de inicio");
   });
 
-  it("marks exact finished score predictions as cumplido", () => {
+  it("marks a finished Over forecast as fulfilled from RF only", () => {
     const state = formatForecastColumn(
       makeItem({
         status: "finished",
@@ -132,10 +133,11 @@ describe("forebetSignals", () => {
       }),
     );
     expect(state.label).toBe("Cumplido");
-    expect(state.detail).toContain("1-2");
+    expect(state.detail).toBe("Over 2.5 acertado");
+    expect(formatFinalScore(makeItem({ status: "finished", home_score: 1, away_score: 2 }))).toBe("1-2");
   });
 
-  it("marks finished mismatches as no cumplido", () => {
+  it("ignores the predicted exact score when settling a finished Over forecast", () => {
     const state = formatForecastColumn(
       makeItem({
         status: "finished",
@@ -145,6 +147,30 @@ describe("forebetSignals", () => {
         match_date: "2026-08-05T18:00:00",
       }),
     );
-    expect(state.label).toBe("No cumplido");
+    expect(state.label).toBe("Cumplido");
+  });
+
+  it("settles Under and Over forecasts exclusively against RF total goals", () => {
+    const underHit = formatForecastColumn(
+      makeItem({
+        status: "finished",
+        home_score: 1,
+        away_score: 1,
+        predicted_score: "0-0",
+        goal_prediction: { predicted_score: "0-0", predicted_total_goals: 0, over_under_25: "under_2_5" },
+      }),
+    );
+    const overMiss = formatForecastColumn(
+      makeItem({
+        status: "finished",
+        home_score: 0,
+        away_score: 1,
+        predicted_score: "0-1",
+        goal_prediction: { predicted_score: "0-1", predicted_total_goals: 1, over_under_25: "over_2_5" },
+      }),
+    );
+
+    expect(underHit.label).toBe("Cumplido");
+    expect(overMiss.label).toBe("No cumplido");
   });
 });

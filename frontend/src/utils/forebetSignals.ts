@@ -148,59 +148,47 @@ export function evaluateForecastState(item: ForebetRangeItem): ForecastState {
     return evaluateFinishedForecast(item);
   }
 
-  const scoreLabel = predictedScoreLabel(item);
   const overUnder = overUnderSignal(item);
-  const marketLabel = [scoreLabel ? `marcador ${scoreLabel}` : null, overUnder ? formatOverUnder(`${overUnder}_2_5`) : null]
-    .filter(Boolean)
-    .join(" / ");
+  const marketLabel = overUnder ? formatOverUnder(`${overUnder}_2_5`) : null;
 
   const hasCapturedScore = item.home_score != null && item.away_score != null;
   if (!hasCapturedScore && timing !== "live") {
     return {
       status: "pending",
       label: "Pendiente de inicio",
-      detail: marketLabel ? `Esperando inicio · ${marketLabel}` : "Esperando inicio del partido",
+      detail: marketLabel ? `Esperando inicio · ${marketLabel}` : "Sin pronostico Over/Under",
     };
+  }
+  if (!overUnder) {
+    return { status: "pending", label: "Sin regla", detail: "Sin pronostico Over/Under" };
   }
   if (!hasCapturedScore && timing === "live") {
     return {
       status: "possible",
       label: "Aun posible",
-      detail: marketLabel ? `En juego · ${marketLabel}` : "En juego; esperando marcador",
+      detail: `En juego · ${marketLabel}`,
     };
   }
 
   const homeScore = item.home_score ?? 0;
   const awayScore = item.away_score ?? 0;
-  const score = splitPredictedScore(scoreLabel);
   const currentTotal = homeScore + awayScore;
 
-  if (score && (homeScore > score.home || awayScore > score.away)) {
-    return {
-      status: "impossible",
-      label: "Ya no es posible",
-      detail: marketLabel || "Pronostico Forebet invalidado",
-    };
-  }
   if (overUnder === "under" && currentTotal >= 3) {
     return {
       status: "impossible",
       label: "Ya no es posible",
-      detail: marketLabel || "Under 2.5 invalidado",
+      detail: `${marketLabel} invalidado`,
     };
   }
-  if (score || overUnder) {
-    return {
-      status: "possible",
-      label: "Aun posible",
-      detail: marketLabel || "Pronostico Forebet vigente",
-    };
-  }
-  return { status: "pending", label: "Sin regla", detail: "Sin marcador ni Over/Under Forebet" };
+  return {
+    status: "possible",
+    label: "Aun posible",
+    detail: `${marketLabel} vigente`,
+  };
 }
 
 export function evaluateFinishedForecast(item: ForebetRangeItem): ForecastState {
-  const scoreLabel = predictedScoreLabel(item);
   const overUnder = overUnderSignal(item);
   const hasCapturedScore = item.home_score != null && item.away_score != null;
 
@@ -212,33 +200,27 @@ export function evaluateFinishedForecast(item: ForebetRangeItem): ForecastState 
     };
   }
 
-  const actual = `${item.home_score}-${item.away_score}`;
   const total = (item.home_score ?? 0) + (item.away_score ?? 0);
-  const score = splitPredictedScore(scoreLabel);
-  const scoreHit = score ? score.home === item.home_score && score.away === item.away_score : null;
   const overHit = overUnder === "over" ? total > 2.5 : overUnder === "under" ? total < 2.5 : null;
 
-  if (scoreHit === true && (overHit == null || overHit)) {
+  if (overHit === true) {
     return {
       status: "possible",
       label: "Cumplido",
-      detail: `Resultado final ${actual}${overUnder ? ` · ${formatOverUnder(`${overUnder}_2_5`)}` : ""}`,
+      detail: `${formatOverUnder(`${overUnder}_2_5`)} acertado`,
     };
   }
-  if (scoreHit === false || overHit === false) {
-    const expected = [scoreLabel ? `prev. ${scoreLabel}` : null, overUnder ? formatOverUnder(`${overUnder}_2_5`) : null]
-      .filter(Boolean)
-      .join(" / ");
+  if (overHit === false) {
     return {
       status: "impossible",
       label: "No cumplido",
-      detail: `Final ${actual}${expected ? ` · ${expected}` : ""}`,
+      detail: `${formatOverUnder(`${overUnder}_2_5`)} no acertado`,
     };
   }
   return {
     status: "pending",
     label: "Finalizado",
-    detail: `Resultado final ${actual}`,
+    detail: "Sin pronostico Over/Under",
   };
 }
 
@@ -257,6 +239,13 @@ export function formatCurrentScore(item: ForebetRangeItem) {
     return "Marcador pendiente de captura";
   }
   return `Ahora ${item.home_score}-${item.away_score}`;
+}
+
+export function formatFinalScore(item: ForebetRangeItem) {
+  if (matchTimingState(item) !== "played" || item.home_score == null || item.away_score == null) {
+    return "—";
+  }
+  return `${item.home_score}-${item.away_score}`;
 }
 
 export function formatMatchStartStatus(item: ForebetRangeItem) {

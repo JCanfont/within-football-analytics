@@ -5,6 +5,7 @@ import type { ForebetDateLoadResult, ForebetRangeItem } from "../types/api";
 import {
   evaluateForecastState,
   formatCurrentScore,
+  formatFinalScore,
   formatForecastColumn,
   formatMatchStartStatus,
   formatOverUnder,
@@ -397,6 +398,7 @@ export function ForebetPage() {
                   <th>Seguimiento</th>
                   <th>Forebet</th>
                   <th>Over/Under</th>
+                  <th>RF</th>
                   <th>Estado pronostico</th>
                   <th>Predicción goles</th>
                   <th>Goles esperados</th>
@@ -595,10 +597,12 @@ function ForebetRangeRow({
           <span className={`ou-signal ${ouSignal ?? "pending"}`}>{formatOverUnderSignal(item)}</span>
         </td>
         <td>
+          <strong>{formatFinalScore(item)}</strong>
+        </td>
+        <td>
           <span className={`forecast-status ${forecastState.status}`}>{forecastState.label}</span>
           <span className="table-subtext">{forecastState.detail}</span>
           <span className="table-subtext">
-            {formatCurrentScore(item)}
             {forecastAlerts && isWatched ? " · aviso vivo" : ""}
           </span>
         </td>
@@ -619,7 +623,7 @@ function ForebetRangeRow({
       </tr>
       {showRanges && isExpanded ? (
         <tr className="forebet-calculation-row">
-          <td colSpan={11}>
+          <td colSpan={12}>
             <ForebetCalculation range={range} reliability={item.reliability} />
           </td>
         </tr>
