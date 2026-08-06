@@ -27,6 +27,7 @@ export type ForebetAccuracyStats = {
   byMarket: ForebetAccuracyBreakdown[];
   byActualGoals: ForebetAccuracyBreakdown[];
   byMonth: ForebetAccuracyBreakdown[];
+  byWeekday: ForebetAccuracyBreakdown[];
   byPredictedScore: ForebetAccuracyBreakdown[];
 };
 
@@ -40,6 +41,7 @@ type EvaluatedMatch = {
 };
 
 const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+const WEEKDAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
 export function calculateForebetAccuracy(items: ForebetRangeItem[]): ForebetAccuracyStats {
   const matches = items.flatMap(evaluateMatch);
@@ -72,6 +74,10 @@ export function calculateForebetAccuracy(items: ForebetRangeItem[]): ForebetAccu
       const year = date?.getFullYear() ?? 0;
       return { key: `${String(year).padStart(4, "0")}-${String(month + 1).padStart(2, "0")}`, label: `${MONTHS[month]} ${year}` };
     }, (left, right) => left.key.localeCompare(right.key)),
+    byWeekday: groupMatches(matches, (match) => {
+      const weekday = parseMatchDate(match.item.match_date)?.getDay() ?? 0;
+      return { key: String(weekday), label: WEEKDAYS[weekday] };
+    }, weekdayOrder),
     byPredictedScore: groupMatches(matches.filter((match) => match.predictedScore), (match) => ({
       key: match.predictedScore ?? "Sin marcador",
       label: match.predictedScore ?? "Sin marcador",
@@ -151,4 +157,12 @@ function sampleOrder(left: ForebetAccuracyBreakdown, right: ForebetAccuracyBreak
 function goalBucketOrder(left: ForebetAccuracyBreakdown, right: ForebetAccuracyBreakdown) {
   const numeric = (value: string) => value === "5+" ? 5 : Number(value);
   return numeric(left.key) - numeric(right.key);
+}
+
+function weekdayOrder(left: ForebetAccuracyBreakdown, right: ForebetAccuracyBreakdown) {
+  const mondayFirst = (value: string) => {
+    const day = Number(value);
+    return day === 0 ? 7 : day;
+  };
+  return mondayFirst(left.key) - mondayFirst(right.key);
 }

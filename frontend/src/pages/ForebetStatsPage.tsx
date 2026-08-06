@@ -155,6 +155,7 @@ export function ForebetStatsPage() {
           <BreakdownTable title="Resultados exactos pronosticados" description="Porcentaje de veces que cada marcador previsto coincide exactamente con RF." rows={stats.byPredictedScore} />
           <BreakdownTable title="Por número de goles en RF" description="Distribución y acierto según los goles reales del partido." rows={stats.byActualGoals} />
           <BreakdownTable title="Por momento del año" description="Acierto mensual para localizar periodos más y menos fiables." rows={stats.byMonth} />
+          <BreakdownTable title="Por día de la semana" description="Compara el rendimiento de Forebet de lunes a domingo." rows={stats.byWeekday} />
         </div>
       )}
     </section>

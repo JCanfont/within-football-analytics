@@ -29,7 +29,7 @@ describe("calculateForebetAccuracy", () => {
       item({ match_id: 1 }),
       item({
         match_id: 2,
-        match_date: "2026-08-12T18:00:00",
+        match_date: "2026-08-13T18:00:00",
         competition: "Premier League",
         home_score: 1,
         away_score: 1,
@@ -57,6 +57,10 @@ describe("calculateForebetAccuracy", () => {
       ["Premier League", 1],
     ]);
     expect(stats.byMonth.map((row) => row.label)).toEqual(["Agosto 2026", "Septiembre 2026"]);
+    expect(stats.byWeekday.map((row) => [row.label, row.sampleSize, row.overUnderAccuracy])).toEqual([
+      ["Miércoles", 2, 50],
+      ["Jueves", 1, 100],
+    ]);
     expect(stats.byActualGoals.map((row) => row.key)).toEqual(["1", "2", "3"]);
   });
 
