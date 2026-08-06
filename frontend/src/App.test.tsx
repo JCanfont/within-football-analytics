@@ -732,6 +732,17 @@ describe("App", () => {
     expect(screen.getByRole("link", { name: "Forebet" })).toHaveClass("active");
   }, 30000);
 
+  it("opens Forebet accuracy statistics from the left menu", async () => {
+    renderApp();
+
+    fireEvent.click(screen.getByRole("link", { name: "Estadisticas Forebet" }));
+
+    expect(await screen.findByRole("heading", { name: "Estadisticas Forebet", level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Estadisticas Forebet" })).toHaveAttribute("href", "/forebet-stats");
+    expect(screen.getByText("Acierto Over/Under")).toBeInTheDocument();
+    expect(screen.getByText("Resultados exactos")).toBeInTheDocument();
+  }, 30000);
+
   it("lets the user choose the Forebet goal prediction view", async () => {
     renderApp();
 

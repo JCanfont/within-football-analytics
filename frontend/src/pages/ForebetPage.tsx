@@ -2,6 +2,7 @@ import { Bell, BellRing, Calculator, CalendarDays, ChevronDown, ChevronRight, Re
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadForebetDate } from "../services/api";
 import type { ForebetDateLoadResult, ForebetRangeItem } from "../types/api";
+import { saveForebetHistory } from "../utils/forebetHistory";
 import {
   evaluateForecastState,
   formatCurrentScore,
@@ -106,6 +107,7 @@ export function ForebetPage() {
     loadForebetDate(selectedDate, includeRanges)
       .then((result) => {
         setItems(result.matches);
+        saveForebetHistory(result.matches);
         setLoadMessage(result.message);
         setForebetLoad(result);
         setHasCalculatedRanges(includeRanges);
@@ -127,6 +129,7 @@ export function ForebetPage() {
     loadForebetDate(targetDate, false)
       .then((result) => {
         setItems((current) => mergeForebetItems(current, result.matches));
+        saveForebetHistory(result.matches);
         setForebetLoad(result);
         setLastLiveRefresh(new Date().toISOString());
         setNextLiveRefresh(new Date(Date.now() + LIVE_REFRESH_MS).toISOString());

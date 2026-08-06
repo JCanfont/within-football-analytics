@@ -1148,6 +1148,49 @@ td {
   gap: 22px;
 }
 
+.forebet-stats-page {
+  display: grid;
+  gap: 22px;
+}
+
+.forebet-stats-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.forebet-stats-controls .forebet-load-message,
+.forebet-stats-note {
+  margin-right: 18px;
+  margin-left: 18px;
+}
+
+.forebet-stats-note {
+  margin-bottom: 18px;
+  color: #637080;
+  font-size: 13px;
+}
+
+.forebet-stats-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 44px 22px;
+  color: #637080;
+  text-align: center;
+}
+
+.forebet-stats-empty svg {
+  color: #2f6f73;
+}
+
+.forebet-stats-empty h2 {
+  color: #18212f;
+}
+
+.forebet-stats-breakdown table {
+  min-width: 920px;
+}
+
 .players-page {
   display: grid;
   gap: 22px;
@@ -2024,7 +2067,8 @@ td {
   text-transform: uppercase;
 }
 
-.forebet-date-form input {
+.forebet-date-form input,
+.forebet-date-form select {
   min-height: 38px;
   padding: 0 11px;
   border: 1px solid #cbd5df;
