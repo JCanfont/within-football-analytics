@@ -337,6 +337,8 @@ def _forebet_basic_item(db: Session, match: Match) -> ForebetRangeItem:
 
 def _forebet_source_item(index: int, prediction: ForebetSourcePrediction, include_range: bool) -> ForebetRangeItem:
     start_year = prediction.match_date.year if prediction.match_date.month >= 7 else prediction.match_date.year - 1
+    home_score, away_score = _split_predicted_score(prediction.actual_score)
+    status = _forebet_source_status(prediction, home_score, away_score)
     return ForebetRangeItem(
         match_id=-index,
         match_date=prediction.match_date,
@@ -344,9 +346,9 @@ def _forebet_source_item(index: int, prediction: ForebetSourcePrediction, includ
         season=f"{start_year}/{start_year + 1}",
         home_team=prediction.home_team,
         away_team=prediction.away_team,
-        status="scheduled",
-        home_score=None,
-        away_score=None,
+        status=status,
+        home_score=home_score,
+        away_score=away_score,
         forebet_prediction=prediction.prediction,
         expected_goals=prediction.expected_goals,
         predicted_score=prediction.predicted_score,
@@ -354,6 +356,20 @@ def _forebet_source_item(index: int, prediction: ForebetSourcePrediction, includ
         score_range=_forebet_source_score_range(prediction) if include_range else None,
         reliability="forebet_external" if include_range else "pending_range",
     )
+
+
+def _forebet_source_status(prediction: ForebetSourcePrediction, home_score: int | None, away_score: int | None) -> str:
+    if prediction.status in {"finished", "live", "scheduled"}:
+        return prediction.status
+    if prediction.status:
+        normalized = prediction.status.lower()
+        if any(token in normalized for token in ("finished", "ft", "ended", "final", "aet", "pen")):
+            return "finished"
+        if any(token in normalized for token in ("live", "in_play", "playing", "1h", "2h", "ht")):
+            return "live"
+    if home_score is not None and away_score is not None:
+        return "finished"
+    return "scheduled"
 
 
 def _forebet_source_score_range(prediction: ForebetSourcePrediction) -> dict | None:

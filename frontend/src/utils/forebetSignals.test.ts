@@ -78,4 +78,27 @@ describe("forebetSignals", () => {
     expect(hasMatchStarted(item)).toBe(true);
     expect(isLiveMatch(item)).toBe(true);
   });
+
+  it("marks finished source matches with scores as played", () => {
+    const item = makeItem({
+      status: "finished",
+      home_score: 2,
+      away_score: 1,
+      match_date: "2026-08-05T18:00:00",
+    });
+    expect(hasMatchStarted(item)).toBe(true);
+    expect(isLiveMatch(item)).toBe(false);
+    expect(evaluateForecastState(item).status).not.toBe("pending");
+  });
+
+  it("marks scheduled matches with final scores as played after kickoff window", () => {
+    const item = makeItem({
+      status: "scheduled",
+      home_score: 1,
+      away_score: 0,
+      match_date: "2026-08-05T12:00:00",
+    });
+    expect(hasMatchStarted(item)).toBe(true);
+    expect(isLiveMatch(item)).toBe(false);
+  });
 });

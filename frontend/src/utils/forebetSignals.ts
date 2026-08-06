@@ -107,11 +107,18 @@ export function matchTimingState(item: ForebetRangeItem): MatchTimingState {
   if (isLiveByStatus(item)) {
     return "live";
   }
+  const hasScore = item.home_score != null && item.away_score != null;
   const elapsedMinutes = literalMatchElapsedMinutes(item.match_date);
+  if (hasScore && (elapsedMinutes == null || elapsedMinutes >= MATCH_SETTLED_AFTER_MINUTES)) {
+    return "played";
+  }
   if (elapsedMinutes == null || elapsedMinutes < 0) {
     return "scheduled";
   }
-  return elapsedMinutes >= MATCH_SETTLED_AFTER_MINUTES ? "played" : "live";
+  if (elapsedMinutes >= MATCH_SETTLED_AFTER_MINUTES) {
+    return "played";
+  }
+  return "live";
 }
 
 export function hasMatchStarted(item: ForebetRangeItem) {
@@ -210,7 +217,7 @@ export function formatMatchStartStatus(item: ForebetRangeItem) {
 }
 
 export function formatNonLiveForecastLabel(item: ForebetRangeItem) {
-  if (isFinished(item)) {
+  if (isFinished(item) || matchTimingState(item) === "played") {
     return "Finalizado";
   }
   if (item.home_score != null && item.away_score != null) {

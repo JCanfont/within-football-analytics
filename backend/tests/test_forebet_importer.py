@@ -252,6 +252,8 @@ def test_load_forebet_date_shows_all_temporary_predictions_when_storage_unavaila
             competition_name="Uruguay Primera Division",
             prediction="1",
             predicted_score="2-0",
+            actual_score="2-1",
+            status="finished",
             expected_goals=Decimal("2.45"),
         ),
         ForebetSourcePrediction(
@@ -303,6 +305,32 @@ def test_load_forebet_date_shows_all_temporary_predictions_when_storage_unavaila
     assert [match.home_team for match in result.matches] == ["Nacional", "CA Tigre"]
     assert [match.competition for match in result.matches] == ["Uruguay Primera Division", "Argentina Liga Profesional"]
     assert all(match.match_id < 0 for match in result.matches)
+    assert result.matches[0].status == "finished"
+    assert result.matches[0].home_score == 2
+    assert result.matches[0].away_score == 1
+    assert result.matches[1].status == "scheduled"
+    assert result.matches[1].home_score is None
+    assert result.matches[1].away_score is None
+
+
+def test_forebet_source_item_infers_finished_from_actual_score() -> None:
+    prediction = ForebetSourcePrediction(
+        home_team="Getafe",
+        away_team="Celta",
+        match_date=datetime(2026, 8, 5, 20, 0, tzinfo=UTC),
+        competition_name="LaLiga",
+        prediction="2",
+        predicted_score="1-2",
+        actual_score="0-2",
+        status=None,
+    )
+
+    item = analytics._forebet_source_item(1, prediction, include_range=False)
+
+    assert item.status == "finished"
+    assert item.home_score == 0
+    assert item.away_score == 2
+    assert item.predicted_score == "1-2"
 
 
 def test_over_under_from_prediction_uses_score_then_expected_goals() -> None:
