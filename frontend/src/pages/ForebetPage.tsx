@@ -42,6 +42,8 @@ const LIVE_REFRESH_MS = 10 * 60 * 1000;
 type ForebetWatchState = {
   autoRefresh: boolean;
   forecastAlerts: boolean;
+  defaultStartAlerts: boolean;
+  mutedMatchIds: number[];
   matchIds: number[];
   notifiedForecastIds: number[];
   notifiedStartedIds: number[];
@@ -62,7 +64,7 @@ export function ForebetPage() {
   const [loadingMode, setLoadingMode] = useState<"matches" | "ranges">("matches");
   const [goalPredictionMode, setGoalPredictionMode] = useState<GoalPredictionMode>("full");
   const [overUnderFilter, setOverUnderFilter] = useState<OverUnderFilter>("all");
-  const [watchedMatchIds, setWatchedMatchIds] = useState<number[]>(() => readForebetWatchState().matchIds);
+  const [mutedMatchIds, setMutedMatchIds] = useState<number[]>(() => readForebetWatchState().mutedMatchIds);
   const [notifiedStartedIds, setNotifiedStartedIds] = useState<number[]>(() => readForebetWatchState().notifiedStartedIds);
   const [notifiedForecastIds, setNotifiedForecastIds] = useState<number[]>(() => readForebetWatchState().notifiedForecastIds);
   const [autoRefresh, setAutoRefresh] = useState(() => readForebetWatchState().autoRefresh);
@@ -70,7 +72,7 @@ export function ForebetPage() {
   const [lastLiveRefresh, setLastLiveRefresh] = useState<string | null>(null);
   const [nextLiveRefresh, setNextLiveRefresh] = useState<string | null>(null);
   const liveRefreshInFlightRef = useRef(false);
-  const watchedMatchIdsRef = useRef(watchedMatchIds);
+  const mutedMatchIdsRef = useRef(mutedMatchIds);
   const notifiedStartedIdsRef = useRef(notifiedStartedIds);
   const notifiedForecastIdsRef = useRef(notifiedForecastIds);
   const forecastAlertsRef = useRef(forecastAlerts);
@@ -167,18 +169,18 @@ export function ForebetPage() {
   }
 
   function toggleStartAlert(item: ForebetRangeItem) {
-    const isWatched = watchedMatchIds.includes(item.match_id);
-    if (isWatched) {
-      setWatchedMatchIds((current) => current.filter((matchId) => matchId !== item.match_id));
+    const isMuted = mutedMatchIds.includes(item.match_id);
+    if (!isMuted) {
+      setMutedMatchIds((current) => [...new Set([...current, item.match_id])]);
       setNotifiedStartedIds((current) => current.filter((matchId) => matchId !== item.match_id));
       setNotifiedForecastIds((current) => current.filter((matchId) => matchId !== item.match_id));
       setLiveMessage(`Aviso desactivado para ${item.home_team} - ${item.away_team}.`);
       return;
     }
     requestNotificationPermission();
-    setWatchedMatchIds((current) => [...new Set([...current, item.match_id])]);
+    setMutedMatchIds((current) => current.filter((matchId) => matchId !== item.match_id));
     setAutoRefresh(true);
-    setLiveMessage(`Avisaremos cuando comience ${item.home_team} - ${item.away_team}.`);
+    setLiveMessage(`Aviso activado para ${item.home_team} - ${item.away_team}.`);
     if (hasMatchStarted(item)) {
       notifyMatchStarted(item);
       if (isLiveMatch(item)) {
@@ -192,7 +194,7 @@ export function ForebetPage() {
     const nextNotified = new Set(notifiedStartedIdsRef.current);
     const startedLabels: string[] = [];
     for (const item of nextItems) {
-      if (!watchedMatchIdsRef.current.includes(item.match_id) || nextNotified.has(item.match_id) || !hasMatchStarted(item)) {
+      if (mutedMatchIdsRef.current.includes(item.match_id) || nextNotified.has(item.match_id) || !hasMatchStarted(item)) {
         continue;
       }
       notifyMatchStarted(item);
@@ -217,7 +219,7 @@ export function ForebetPage() {
     const nextNotified = new Set(notifiedForecastIdsRef.current);
     const possibleLabels: string[] = [];
     for (const item of nextItems) {
-      if (!watchedMatchIdsRef.current.includes(item.match_id) || nextNotified.has(item.match_id) || !isLiveMatch(item)) {
+      if (mutedMatchIdsRef.current.includes(item.match_id) || nextNotified.has(item.match_id) || !isLiveMatch(item)) {
         continue;
       }
       const forecastState = evaluateForecastState(item);
@@ -245,15 +247,24 @@ export function ForebetPage() {
   }, []);
 
   useEffect(() => {
-    writeForebetWatchState({ autoRefresh, forecastAlerts, matchIds: watchedMatchIds, notifiedForecastIds, notifiedStartedIds });
-  }, [autoRefresh, forecastAlerts, watchedMatchIds, notifiedForecastIds, notifiedStartedIds]);
+    const activeMatchIds = items.filter((item) => !mutedMatchIds.includes(item.match_id)).map((item) => item.match_id);
+    writeForebetWatchState({
+      autoRefresh,
+      forecastAlerts,
+      defaultStartAlerts: true,
+      mutedMatchIds,
+      matchIds: activeMatchIds,
+      notifiedForecastIds,
+      notifiedStartedIds,
+    });
+  }, [autoRefresh, forecastAlerts, items, mutedMatchIds, notifiedForecastIds, notifiedStartedIds]);
 
   useEffect(() => {
-    watchedMatchIdsRef.current = watchedMatchIds;
+    mutedMatchIdsRef.current = mutedMatchIds;
     notifiedStartedIdsRef.current = notifiedStartedIds;
     notifiedForecastIdsRef.current = notifiedForecastIds;
     forecastAlertsRef.current = forecastAlerts;
-  }, [forecastAlerts, notifiedForecastIds, notifiedStartedIds, watchedMatchIds]);
+  }, [forecastAlerts, mutedMatchIds, notifiedForecastIds, notifiedStartedIds]);
 
   useEffect(() => {
     if (!autoRefresh) {
@@ -401,7 +412,7 @@ export function ForebetPage() {
             });
           }}
           onToggleAuto={toggleAutoRefresh}
-          watchedCount={watchedMatchIds.length}
+          watchedCount={items.filter((item) => !mutedMatchIds.includes(item.match_id)).length}
         />
         {isLoading ? <div className="detail-state">{loadingDetail(loadingMode)}</div> : null}
         {!error && filteredItems.length > 0 ? (
@@ -434,7 +445,7 @@ export function ForebetPage() {
                     predictionMode={goalPredictionMode}
                     showRanges={showRangeColumns}
                     isCalculatingRanges={isCalculatingRanges}
-                    isWatched={watchedMatchIds.includes(item.match_id)}
+                    isWatched={!mutedMatchIds.includes(item.match_id)}
                     forecastAlerts={forecastAlerts}
                   />
                 ))}
@@ -604,7 +615,7 @@ function ForebetRangeRow({
         <td>
           <button className={isWatched ? "row-action active" : "row-action"} type="button" onClick={onToggleWatch}>
             {isWatched ? <BellRing size={15} aria-hidden="true" /> : <Bell size={15} aria-hidden="true" />}
-            {isWatched ? "Aviso activo" : "Avisar inicio"}
+            {isWatched ? "Aviso activo" : "Aviso desactivado"}
           </button>
           <span className="table-subtext">{formatMatchStartStatus(item)}</span>
           {isLiveMatch(item) ? <span className="table-subtext">{formatCurrentScore(item)}</span> : null}
@@ -886,12 +897,24 @@ function readForebetWatchState(): ForebetWatchState {
   try {
     const raw = localStorage.getItem(FOREBET_WATCH_KEY);
     if (!raw) {
-      return { autoRefresh: true, forecastAlerts: false, matchIds: [], notifiedForecastIds: [], notifiedStartedIds: [] };
+      return {
+        autoRefresh: true,
+        forecastAlerts: false,
+        defaultStartAlerts: true,
+        mutedMatchIds: [],
+        matchIds: [],
+        notifiedForecastIds: [],
+        notifiedStartedIds: [],
+      };
     }
     const parsed = JSON.parse(raw) as Partial<ForebetWatchState>;
     return {
       autoRefresh: parsed.autoRefresh == null ? true : Boolean(parsed.autoRefresh),
       forecastAlerts: Boolean(parsed.forecastAlerts),
+      defaultStartAlerts: true,
+      mutedMatchIds: parsed.defaultStartAlerts && Array.isArray(parsed.mutedMatchIds)
+        ? parsed.mutedMatchIds.filter((id): id is number => typeof id === "number")
+        : [],
       matchIds: Array.isArray(parsed.matchIds) ? parsed.matchIds.filter((id): id is number => typeof id === "number") : [],
       notifiedForecastIds: Array.isArray(parsed.notifiedForecastIds)
         ? parsed.notifiedForecastIds.filter((id): id is number => typeof id === "number")
@@ -901,7 +924,15 @@ function readForebetWatchState(): ForebetWatchState {
         : [],
     };
   } catch {
-    return { autoRefresh: true, forecastAlerts: false, matchIds: [], notifiedForecastIds: [], notifiedStartedIds: [] };
+    return {
+      autoRefresh: true,
+      forecastAlerts: false,
+      defaultStartAlerts: true,
+      mutedMatchIds: [],
+      matchIds: [],
+      notifiedForecastIds: [],
+      notifiedStartedIds: [],
+    };
   }
 }
 

@@ -779,10 +779,14 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("link", { name: "Forebet" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Avisar inicio" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Aviso activo" })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Avisar inicio" }));
+    expect(screen.getByText("1 partidos con aviso")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aviso activo" }));
+    expect(screen.getByRole("button", { name: "Aviso desactivado" })).toBeInTheDocument();
+    expect(screen.getByText("0 partidos con aviso")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aviso desactivado" }));
     expect(screen.getByRole("button", { name: "Aviso activo" })).toBeInTheDocument();
     expect(screen.getByText("1 partidos con aviso")).toBeInTheDocument();
     expect(screen.queryByText("Aun posible")).not.toBeInTheDocument();
@@ -853,7 +857,6 @@ describe("App", () => {
     renderApp("/forebet");
 
     await screen.findByText("Getafe");
-    fireEvent.click(screen.getByRole("button", { name: "Avisar inicio" }));
     expect(screen.getByRole("button", { name: "Aviso activo" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Actualizar ahora" }));
 
