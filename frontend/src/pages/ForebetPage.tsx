@@ -5,8 +5,8 @@ import type { ForebetDateLoadResult, ForebetRangeItem } from "../types/api";
 import {
   evaluateForecastState,
   formatCurrentScore,
+  formatForecastColumn,
   formatMatchStartStatus,
-  formatNonLiveForecastLabel,
   formatOverUnder,
   formatOverUnderSignal,
   hasMatchStarted,
@@ -565,11 +565,12 @@ function ForebetRangeRow({
   showRanges: boolean;
 }) {
   const range = item.score_range;
-  const forecastState = isLiveMatch(item) ? evaluateForecastState(item) : null;
+  const forecastState = formatForecastColumn(item);
   const ouSignal = overUnderSignal(item);
   const rowClassName = [
-    forecastState?.status === "impossible" ? "forecast-impossible-row" : "",
-    forecastState?.status === "possible" ? "forecast-possible-row" : "",
+    forecastState.status === "impossible" ? "forecast-impossible-row" : "",
+    forecastState.status === "possible" && isLiveMatch(item) ? "forecast-possible-row" : "",
+    forecastState.label === "Cumplido" ? "forecast-possible-row" : "",
     forebetTimingClass(item),
   ]
     .filter(Boolean)
@@ -594,14 +595,8 @@ function ForebetRangeRow({
           <span className={`ou-signal ${ouSignal ?? "pending"}`}>{formatOverUnderSignal(item)}</span>
         </td>
         <td>
-          {forecastState ? (
-            <>
-              <span className={`forecast-status ${forecastState.status}`}>{forecastState.label}</span>
-              <span className="table-subtext">{forecastState.detail}</span>
-            </>
-          ) : (
-            <span className="table-subtext">{formatNonLiveForecastLabel(item)}</span>
-          )}
+          <span className={`forecast-status ${forecastState.status}`}>{forecastState.label}</span>
+          <span className="table-subtext">{forecastState.detail}</span>
           <span className="table-subtext">
             {formatCurrentScore(item)}
             {forecastAlerts && isWatched ? " · aviso vivo" : ""}
