@@ -50,11 +50,10 @@ describe("forebetSignals", () => {
     ).toBe("under");
   });
 
-  it("marks live forecast as still possible when the predicted score is reachable", () => {
+  it("marks a live Over forecast as still possible independently of the predicted score", () => {
     const state = evaluateForecastState(makeItem({ status: "live", home_score: 0, away_score: 1, match_date: new Date().toISOString().slice(0, 16) }));
     expect(state.status).toBe("possible");
     expect(state.label).toBe("Aun posible");
-    expect(state.detail).toContain("1-2");
     expect(state.detail).toContain("Over 2.5");
   });
 
