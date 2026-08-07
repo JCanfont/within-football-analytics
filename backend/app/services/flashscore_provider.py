@@ -57,7 +57,16 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
             pass
 
     odds_by_event = _fetch_odds_by_event(matches, headers, base_url, day)
-    enriched = [_with_odds_and_alert(match, odds_by_event.get(match.event_id)) for match in matches]
+    enriched = []
+    for match in matches:
+        if match.event_id in odds_by_event:
+            enriched.append(_with_odds_and_alert(match, odds_by_event[match.event_id]))
+        elif match.home_odds is not None or match.away_odds is not None or match.draw_odds is not None:
+            enriched.append(
+                _with_odds_and_alert(match, (match.home_odds, match.draw_odds, match.away_odds))
+            )
+        else:
+            enriched.append(match)
     enriched.sort(key=lambda match: (match.start_time or datetime.max.replace(tzinfo=UTC), match.competition, match.home_team))
     qualifying = sum(match.favorite_odds is not None for match in enriched)
     with_odds = sum(match.home_odds is not None or match.away_odds is not None for match in enriched)
@@ -135,7 +144,21 @@ def _payload_hint(payload: Any) -> str:
             nested = item.get("matches") or item.get("events")
             nested_hint = ""
             if isinstance(nested, list) and nested and isinstance(nested[0], dict):
-                nested_hint = f" match[{','.join(sorted(nested[0].keys())[:14])}]"
+                match0 = nested[0]
+                nested_hint = f" match[{','.join(sorted(match0.keys())[:14])}]"
+                odds_val = match0.get("odds")
+                if isinstance(odds_val, list) and odds_val and isinstance(odds_val[0], dict):
+                    book = odds_val[0]
+                    nested_hint += f" book[{','.join(sorted(book.keys())[:8])}]"
+                    inner = book.get("odds")
+                    if isinstance(inner, dict):
+                        nested_hint += f" oddkeys[{','.join(sorted(inner.keys())[:12])}]"
+                    elif isinstance(inner, list):
+                        nested_hint += f" oddlist[{len(inner)}]={inner[:3]!r}"[:120]
+                    else:
+                        nested_hint += f" oddtype={type(inner).__name__}:{str(inner)[:40]}"
+                elif odds_val is not None:
+                    nested_hint += f" odds={type(odds_val).__name__}"
             return f"list[{len(payload)}]dict[{','.join(sorted(item.keys())[:12])}]{nested_hint}"
         return f"list[{len(payload)}]{type(item).__name__ if item is not None else 'empty'}"
     return type(payload).__name__
@@ -285,17 +308,28 @@ def _collect_matches(
     home_team = _team_name(value, "home")
     away_team = _team_name(value, "away")
     if event_id and home_team and away_team and _looks_like_match_record(value):
+        embedded_odds = _extract_one_x_two(value) or _extract_odds_from_bookmakers(value.get("odds"))
+        home_odds = embedded_odds[0] if embedded_odds else None
+        draw_odds = embedded_odds[1] if embedded_odds else None
+        away_odds = embedded_odds[2] if embedded_odds else None
         candidate = FlashscoreMatchRead(
             event_id=event_id,
             start_time=_datetime_value(value, "start_time", "startTime", "timestamp", "start_timestamp"),
             competition=inherited or "Flashscore",
             home_team=home_team,
             away_team=away_team,
-            status=_normalize_status(_string_value(value, "stage", "status", "state") or "scheduled"),
+            status=_normalize_status(
+                _string_value(value, "match_status", "stage", "status", "state") or "scheduled"
+            ),
             minute=_minute_value(value),
             home_score=_score_value(value, "home"),
             away_score=_score_value(value, "away"),
+            home_odds=home_odds,
+            draw_odds=draw_odds,
+            away_odds=away_odds,
         )
+        if any(value is not None for value in (home_odds, draw_odds, away_odds)):
+            candidate = _with_odds_and_alert(candidate, (home_odds, draw_odds, away_odds))
         previous = matches.get(event_id)
         matches[event_id] = _prefer_live(previous, candidate) if previous else candidate
 
@@ -342,24 +376,46 @@ def _parse_odds_by_event(payload: Any) -> dict[str, tuple[float | None, float | 
 
 
 def _extract_one_x_two(record: dict[str, Any]) -> tuple[float | None, float | None, float | None] | None:
-    home = _float_value(record, "home_odds", "homeOdds", "odds_1", "odd_1", "home")
-    draw = _float_value(record, "draw_odds", "drawOdds", "odds_x", "odd_x", "draw")
-    away = _float_value(record, "away_odds", "awayOdds", "odds_2", "odd_2", "away")
+    home = _float_value(record, "home_odds", "homeOdds", "odds_1", "odd_1")
+    draw = _float_value(record, "draw_odds", "drawOdds", "odds_x", "odd_x")
+    away = _float_value(record, "away_odds", "awayOdds", "odds_2", "odd_2")
     nested = record.get("odds") or record.get("data") or record.get("market")
+    from_bookmakers = _extract_odds_from_bookmakers(nested)
+    if from_bookmakers:
+        home = home or from_bookmakers[0]
+        draw = draw or from_bookmakers[1]
+        away = away or from_bookmakers[2]
     if isinstance(nested, dict):
-        home = home or _float_value(nested, "home", "1", "odds_1", "odd_1", "HOME")
+        home = home or _float_value(nested, "home", "1", "odds_1", "odd_1", "HOME", "avg", "average")
         draw = draw or _float_value(nested, "draw", "x", "X", "odds_x", "odd_x", "DRAW")
         away = away or _float_value(nested, "away", "2", "odds_2", "odd_2", "AWAY")
-        for key in ("full_time", "fullTime", "1x2", "match_winner", "matchWinner"):
+        # FlashScore4 often nests 1X2 as {"1": "...", "X": "...", "2": "..."} or lists under keys.
+        home = home or _coerce_odd(nested.get("1"))
+        draw = draw or _coerce_odd(nested.get("X") if "X" in nested else nested.get("x"))
+        away = away or _coerce_odd(nested.get("2"))
+        for key in ("full_time", "fullTime", "1x2", "match_winner", "matchWinner", "avg", "average"):
             market = nested.get(key)
             if isinstance(market, dict):
-                home = home or _float_value(market, "home", "1", "odds_1")
-                draw = draw or _float_value(market, "draw", "x", "X", "odds_x")
-                away = away or _float_value(market, "away", "2", "odds_2")
-    if isinstance(nested, list):
+                home = home or _float_value(market, "home", "1", "odds_1") or _coerce_odd(market.get("1"))
+                draw = draw or _float_value(market, "draw", "x", "X", "odds_x") or _coerce_odd(market.get("X") or market.get("x"))
+                away = away or _float_value(market, "away", "2", "odds_2") or _coerce_odd(market.get("2"))
+            if isinstance(market, list) and len(market) >= 3:
+                home = home or _coerce_odd(market[0])
+                draw = draw or _coerce_odd(market[1])
+                away = away or _coerce_odd(market[2])
+    if isinstance(nested, list) and nested and not isinstance(nested[0], dict):
+        # Plain [home, draw, away] list
+        if len(nested) >= 3:
+            home = home or _coerce_odd(nested[0])
+            draw = draw or _coerce_odd(nested[1])
+            away = away or _coerce_odd(nested[2])
+    elif isinstance(nested, list):
         selections: dict[str, float] = {}
         for item in nested:
             if not isinstance(item, dict):
+                continue
+            # Skip bookmaker wrappers; handled above.
+            if "odds" in item and ("name" in item or "image" in item):
                 continue
             selection = _string_value(item, "selection", "name", "outcome", "label", "type")
             value = _float_value(item, "odds", "value", "current", "price")
@@ -369,6 +425,37 @@ def _extract_one_x_two(record: dict[str, Any]) -> tuple[float | None, float | No
         draw = draw or selections.get("draw") or selections.get("x")
         away = away or selections.get("away") or selections.get("2") or selections.get("away win")
     return (home, draw, away) if any(value is not None for value in (home, draw, away)) else None
+
+
+def _extract_odds_from_bookmakers(value: Any) -> tuple[float | None, float | None, float | None] | None:
+    if not isinstance(value, list):
+        return None
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        nested = item.get("odds")
+        parsed = None
+        if isinstance(nested, dict):
+            parsed = (
+                _float_value(nested, "home", "1", "odds_1") or _coerce_odd(nested.get("1")),
+                _float_value(nested, "draw", "x", "X", "odds_x") or _coerce_odd(nested.get("X") or nested.get("x")),
+                _float_value(nested, "away", "2", "odds_2") or _coerce_odd(nested.get("2")),
+            )
+        elif isinstance(nested, list) and len(nested) >= 3:
+            parsed = (_coerce_odd(nested[0]), _coerce_odd(nested[1]), _coerce_odd(nested[2]))
+        if parsed and any(part is not None for part in parsed):
+            return parsed
+    return None
+
+
+def _coerce_odd(value: Any) -> float | None:
+    if isinstance(value, dict):
+        value = _value(value, "value", "odds", "current", "price", "avg", "average")
+    try:
+        parsed = float(str(value).replace(",", "."))
+        return parsed if parsed > 1 else None
+    except (TypeError, ValueError):
+        return None
 
 
 def _with_odds_and_alert(
@@ -453,9 +540,13 @@ def _competition_name(record: dict[str, Any]) -> str:
 def _score_value(record: dict[str, Any], side: str) -> int | None:
     value = _value(record, f"{side}_score", f"{side}Score", f"{side}_current_score", f"{side}_result")
     if value is None:
-        score = record.get("score") or record.get("result")
+        score = record.get("score") or record.get("scores") or record.get("result")
         if isinstance(score, dict):
-            value = _value(score, side, f"{side}_score", "current")
+            value = _value(score, side, f"{side}_score", "current", "regular")
+            if value is None and isinstance(score.get("current"), dict):
+                value = _value(score["current"], side)
+        elif isinstance(score, list) and len(score) >= 2:
+            value = score[0] if side == "home" else score[1]
     return _int_value(value)
 
 

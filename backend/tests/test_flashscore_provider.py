@@ -120,11 +120,15 @@ def test_flashscore_provider_reads_tournament_grouped_list(monkeypatch) -> None:
         "country_name": "England",
         "tournament_id": "t1",
         "matches": [{
-            "id": "m-10",
-            "start_time": "2026-08-08T14:00:00Z",
+            "match_id": "m-10",
+            "timestamp": "2026-08-08T14:00:00Z",
             "home_team": {"name": "Arsenal"},
             "away_team": {"name": "Chelsea"},
-            "status": "scheduled",
+            "match_status": "scheduled",
+            "odds": [
+                {"name": "bet365", "image": "x", "odds": {"1": "1.40", "X": "4.50", "2": "8.00"}},
+            ],
+            "scores": {"home": 0, "away": 0},
         }],
     }]
 
@@ -137,5 +141,9 @@ def test_flashscore_provider_reads_tournament_grouped_list(monkeypatch) -> None:
     )
 
     result = flashscore_provider.fetch_flashscore_matches(settings=settings())
-    assert result.matches[0].competition == "Premier League"
-    assert result.matches[0].home_team == "Arsenal"
+    match = result.matches[0]
+    assert match.competition == "Premier League"
+    assert match.home_team == "Arsenal"
+    assert match.home_odds == 1.4
+    assert match.favorite_team == "Arsenal"
+    assert match.favorite_odds == 1.4
