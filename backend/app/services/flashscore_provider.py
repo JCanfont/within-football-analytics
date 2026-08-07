@@ -12,6 +12,7 @@ ODDS_THRESHOLD = 1.5
 FOOTBALL_SPORT_ID = 1
 MAX_ODDS_LOOKUPS = 24
 ODDS_LOOKAHEAD = timedelta(hours=4)
+_LAST_ODDS_DEBUG = ""
 
 
 def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> FlashscoreMatchesResult:
@@ -60,12 +61,13 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
     enriched.sort(key=lambda match: (match.start_time or datetime.max.replace(tzinfo=UTC), match.competition, match.home_team))
     qualifying = sum(match.favorite_odds is not None for match in enriched)
     with_odds = sum(match.home_odds is not None or match.away_odds is not None for match in enriched)
+    odds_hint = f" · odds {_LAST_ODDS_DEBUG}" if _LAST_ODDS_DEBUG and with_odds == 0 else ""
     return FlashscoreMatchesResult(
         status="ok",
         message=(
             f"{len(enriched)} partidos Flashscore · {with_odds} con cuotas cargadas · "
             f"{qualifying} con cuota de equipo igual o inferior a {ODDS_THRESHOLD:.2f}."
-            f" · fuente {payload_hint}"
+            f" · fuente {payload_hint}{odds_hint}"
         ),
         configured=True,
         threshold=ODDS_THRESHOLD,
@@ -130,7 +132,11 @@ def _payload_hint(payload: Any) -> str:
     if isinstance(payload, list):
         item = payload[0] if payload else None
         if isinstance(item, dict):
-            return f"list[{len(payload)}]dict[{','.join(sorted(item.keys())[:12])}]"
+            nested = item.get("matches") or item.get("events")
+            nested_hint = ""
+            if isinstance(nested, list) and nested and isinstance(nested[0], dict):
+                nested_hint = f" match[{','.join(sorted(nested[0].keys())[:14])}]"
+            return f"list[{len(payload)}]dict[{','.join(sorted(item.keys())[:12])}]{nested_hint}"
         return f"list[{len(payload)}]{type(item).__name__ if item is not None else 'empty'}"
     return type(payload).__name__
 
@@ -166,6 +172,8 @@ def _fetch_odds_by_event(
     base_url: str,
     day: int,
 ) -> dict[str, tuple[float | None, float | None, float | None]]:
+    global _LAST_ODDS_DEBUG
+    _LAST_ODDS_DEBUG = ""
     odds_by_event: dict[str, tuple[float | None, float | None, float | None]] = {}
 
     try:
@@ -175,42 +183,51 @@ def _fetch_odds_by_event(
             {"dayOffset": day, "lang": "en", "version": 2},
         )
         odds_by_event.update(_parse_odds_by_event(odds_payload))
-    except requests.RequestException:
-        pass
+    except requests.RequestException as exc:
+        _LAST_ODDS_DEBUG = f"bulk:{type(exc).__name__}"
 
     candidates = _odds_candidates(matches, already=set(odds_by_event))
     if not candidates:
+        if not _LAST_ODDS_DEBUG:
+            _LAST_ODDS_DEBUG = "no-candidates"
         return odds_by_event
 
-    def lookup(match: FlashscoreMatchRead) -> tuple[str, tuple[float | None, float | None, float | None]] | None:
+    def lookup(match: FlashscoreMatchRead) -> tuple[str, tuple[float | None, float | None, float | None] | None, str]:
         try:
             payload = _get_json(
                 f"{base_url}/api/flashscore/v2/matches/odds",
                 headers,
                 {"match_id": match.event_id, "geo_ip_code": "ES"},
             )
-        except requests.RequestException:
-            return None
+        except requests.RequestException as exc:
+            return match.event_id, None, f"err:{type(exc).__name__}"
         parsed = _parse_odds_by_event(payload)
         if match.event_id in parsed:
-            return match.event_id, parsed[match.event_id]
+            return match.event_id, parsed[match.event_id], "ok"
         extracted = _extract_one_x_two(payload if isinstance(payload, dict) else {})
         if extracted and any(value is not None for value in extracted):
-            return match.event_id, extracted
+            return match.event_id, extracted, "ok"
         for record in _walk_dicts(payload):
             extracted = _extract_one_x_two(record)
             if extracted and (extracted[0] is not None or extracted[2] is not None):
-                return match.event_id, extracted
-        return None
+                return match.event_id, extracted, "ok"
+        return match.event_id, None, f"empty:{_payload_hint(payload)}"
 
     workers = min(6, len(candidates))
+    odds_debug: list[str] = []
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = [executor.submit(lookup, match) for match in candidates]
         for future in as_completed(futures):
-            result = future.result()
-            if result:
-                event_id, values = result
+            event_id, values, note = future.result()
+            if values:
                 odds_by_event[event_id] = values
+            elif len(odds_debug) < 3:
+                odds_debug.append(note)
+    if odds_debug and not odds_by_event:
+        prefix = f"{_LAST_ODDS_DEBUG};" if _LAST_ODDS_DEBUG else ""
+        _LAST_ODDS_DEBUG = prefix + ";".join(odds_debug)
+    elif odds_by_event:
+        _LAST_ODDS_DEBUG = ""
     return odds_by_event
 
 
@@ -424,7 +441,13 @@ def _competition_name(record: dict[str, Any]) -> str:
             name = _string_value(value, "name", "tournament_name", "league_name", "competition_name")
             if name:
                 return name
-    return _string_value(record, "competition_name", "tournament_name", "league_name", "tournamentName") or "Flashscore"
+    named = _string_value(record, "competition_name", "tournament_name", "league_name", "tournamentName")
+    if named:
+        return named
+    # FlashScore4 lists tournaments as {name, tournament_id, matches:[...]}
+    if ("matches" in record or "events" in record) and isinstance(record.get("name"), str) and record["name"].strip():
+        return record["name"].strip()
+    return "Flashscore"
 
 
 def _score_value(record: dict[str, Any], side: str) -> int | None:

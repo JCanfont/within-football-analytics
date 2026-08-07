@@ -112,3 +112,30 @@ def test_flashscore_provider_reports_missing_api_key() -> None:
     assert result.configured is False
     assert result.status == "not_configured"
     assert result.matches == []
+
+
+def test_flashscore_provider_reads_tournament_grouped_list(monkeypatch) -> None:
+    schedule = [{
+        "name": "Premier League",
+        "country_name": "England",
+        "tournament_id": "t1",
+        "matches": [{
+            "id": "m-10",
+            "start_time": "2026-08-08T14:00:00Z",
+            "home_team": {"name": "Arsenal"},
+            "away_team": {"name": "Chelsea"},
+            "status": "scheduled",
+        }],
+    }]
+
+    monkeypatch.setattr(
+        flashscore_provider,
+        "_get_json",
+        lambda url, headers, params: schedule if url.endswith("/matches/list") else (_ for _ in ()).throw(
+            flashscore_provider.requests.RequestException("skip")
+        ),
+    )
+
+    result = flashscore_provider.fetch_flashscore_matches(settings=settings())
+    assert result.matches[0].competition == "Premier League"
+    assert result.matches[0].home_team == "Arsenal"
