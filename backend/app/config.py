@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     forebet_alert_from: str = Field(default="WITHIN Football Alerts <onboarding@resend.dev>", alias="FOREBET_ALERT_FROM")
     rapidapi_key: str | None = Field(default=None, alias="RAPIDAPI_KEY")
     flashscore_api_host: str = Field(default="flashscore4.p.rapidapi.com", alias="FLASHSCORE_API_HOST")
+    cron_secret: str | None = Field(default=None, alias="CRON_SECRET")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

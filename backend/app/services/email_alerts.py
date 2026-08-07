@@ -65,7 +65,13 @@ def send_flashscore_goal_email(
         f"<p>Minuto detectado: {payload.minute} · {escape(payload.competition)}</p>"
         f"<p>Evento Flashscore: {escape(payload.event_id)}</p>"
     )
-    return _deliver_email(subject, html, "Alerta Flashscore enviada por email.", settings)
+    return _deliver_email(
+        subject,
+        html,
+        "Alerta Flashscore enviada por email.",
+        settings,
+        idempotency_key=f"flashscore/{payload.event_id}/favorite-goal-before-30",
+    )
 
 
 def _deliver_email(
@@ -73,6 +79,7 @@ def _deliver_email(
     html: str,
     success_message: str,
     settings: Settings,
+    idempotency_key: str | None = None,
 ) -> ForebetStartEmailResult:
     if not settings.resend_api_key or not settings.forebet_alert_email:
         return ForebetStartEmailResult(
@@ -82,12 +89,15 @@ def _deliver_email(
             message="El aviso por email necesita RESEND_API_KEY y FOREBET_ALERT_EMAIL.",
         )
     try:
+        headers = {
+            "Authorization": f"Bearer {settings.resend_api_key}",
+            "Content-Type": "application/json",
+        }
+        if idempotency_key:
+            headers["Idempotency-Key"] = idempotency_key
         response = requests.post(
             RESEND_EMAIL_URL,
-            headers={
-                "Authorization": f"Bearer {settings.resend_api_key}",
-                "Content-Type": "application/json",
-            },
+            headers=headers,
             json={
                 "from": settings.forebet_alert_from,
                 "to": [settings.forebet_alert_email],
@@ -97,6 +107,20 @@ def _deliver_email(
             timeout=10,
         )
         response.raise_for_status()
+    except requests.HTTPError as exc:
+        if idempotency_key and exc.response is not None and exc.response.status_code == 409:
+            return ForebetStartEmailResult(
+                configured=True,
+                sent=True,
+                status="deduplicated",
+                message="La alerta Flashscore ya habia sido enviada.",
+            )
+        return ForebetStartEmailResult(
+            configured=True,
+            sent=False,
+            status="provider_error",
+            message="No se pudo enviar el aviso por email en este intento.",
+        )
     except requests.RequestException:
         return ForebetStartEmailResult(
             configured=True,

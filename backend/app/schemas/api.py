@@ -217,6 +217,14 @@ class FlashscoreGoalEmailRequest(BaseModel):
     away_score: int
 
 
+class FlashscoreTickResult(BaseModel):
+    status: str
+    checked: int
+    eligible: int
+    emails_sent: int
+    message: str
+
+
 class TeamGoalParameter(BaseModel):
     team_id: int
     team: str

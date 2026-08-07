@@ -130,3 +130,4 @@ def test_flashscore_goal_email_contains_odds_minute_and_score(monkeypatch) -> No
     assert captured["json"]["subject"] == "Gol antes del 30: Getafe (1.45)"
     assert "Getafe 1-0 Celta" in captured["json"]["html"]
     assert "Minuto detectado: 24" in captured["json"]["html"]
+    assert captured["headers"]["Idempotency-Key"] == "flashscore/match-1/favorite-goal-before-30"
