@@ -518,6 +518,17 @@ El envio se configura en el entorno de produccion con `RESEND_API_KEY` y
 remitente verificado propio en lugar del remitente de pruebas de Resend. La
 clave de envio se crea en `https://resend.com/api-keys`.
 
+## Flashscore (cuotas bajas y gol temprano)
+
+En Vercel hacen falta `RAPIDAPI_KEY` (FlashScore4 en RapidAPI),
+`RESEND_API_KEY`, `FOREBET_ALERT_EMAIL` y `CRON_SECRET`.
+
+Los emails se envian al detectar un gol del favorito (cuota ≤ 1,50) antes del
+minuto 30. Con la pagina Flashscore abierta y auto-refresh cada 10 minutos ya
+sale el aviso. Para el mismo chequeo en segundo plano (cuenta Hobby de Vercel),
+añade en GitHub Secrets el mismo `CRON_SECRET` que en Vercel; el workflow
+`flashscore-tick` llama a `/api/flashscore/tick`.
+
 ## Formatos CSV fase 3
 
 ### Clasificaciones

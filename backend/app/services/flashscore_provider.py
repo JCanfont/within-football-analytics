@@ -1,4 +1,5 @@
-from datetime import UTC, datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import requests
@@ -9,6 +10,8 @@ from app.schemas.api import FlashscoreMatchRead, FlashscoreMatchesResult
 
 ODDS_THRESHOLD = 1.5
 FOOTBALL_SPORT_ID = 1
+MAX_ODDS_LOOKUPS = 24
+ODDS_LOOKAHEAD = timedelta(hours=4)
 
 
 def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> FlashscoreMatchesResult:
@@ -51,22 +54,17 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
         except requests.RequestException:
             pass
 
-    try:
-        odds_payload = _get_json(
-            f"{base_url}/api/livescores/sports/{FOOTBALL_SPORT_ID}/odds",
-            headers,
-            {"dayOffset": day, "lang": "en", "version": 2},
-        )
-        odds_by_event = _parse_odds_by_event(odds_payload)
-    except requests.RequestException:
-        odds_by_event = {}
-
+    odds_by_event = _fetch_odds_by_event(matches, headers, base_url, day)
     enriched = [_with_odds_and_alert(match, odds_by_event.get(match.event_id)) for match in matches]
     enriched.sort(key=lambda match: (match.start_time or datetime.max.replace(tzinfo=UTC), match.competition, match.home_team))
     qualifying = sum(match.favorite_odds is not None for match in enriched)
+    with_odds = sum(match.home_odds is not None or match.away_odds is not None for match in enriched)
     return FlashscoreMatchesResult(
         status="ok",
-        message=f"{len(enriched)} partidos Flashscore · {qualifying} con cuota de equipo igual o inferior a {ODDS_THRESHOLD:.2f}.",
+        message=(
+            f"{len(enriched)} partidos Flashscore · {with_odds} con cuotas cargadas · "
+            f"{qualifying} con cuota de equipo igual o inferior a {ODDS_THRESHOLD:.2f}."
+        ),
         configured=True,
         threshold=ODDS_THRESHOLD,
         matches=enriched,
@@ -74,33 +72,129 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
 
 
 def _get_json(url: str, headers: dict[str, str], params: dict[str, Any]) -> Any:
-    response = requests.get(url, headers=headers, params=params, timeout=20)
+    response = requests.get(url, headers=headers, params=params, timeout=12)
     response.raise_for_status()
     return response.json()
 
 
+def _fetch_odds_by_event(
+    matches: list[FlashscoreMatchRead],
+    headers: dict[str, str],
+    base_url: str,
+    day: int,
+) -> dict[str, tuple[float | None, float | None, float | None]]:
+    odds_by_event: dict[str, tuple[float | None, float | None, float | None]] = {}
+
+    try:
+        odds_payload = _get_json(
+            f"{base_url}/api/livescores/sports/{FOOTBALL_SPORT_ID}/odds",
+            headers,
+            {"dayOffset": day, "lang": "en", "version": 2},
+        )
+        odds_by_event.update(_parse_odds_by_event(odds_payload))
+    except requests.RequestException:
+        pass
+
+    candidates = [
+        match
+        for match in matches
+        if match.event_id not in odds_by_event and _should_lookup_odds(match)
+    ][:MAX_ODDS_LOOKUPS]
+    if not candidates:
+        return odds_by_event
+
+    def lookup(match: FlashscoreMatchRead) -> tuple[str, tuple[float | None, float | None, float | None]] | None:
+        try:
+            payload = _get_json(
+                f"{base_url}/api/flashscore/v2/matches/odds",
+                headers,
+                {"match_id": match.event_id, "geo_ip_code": "ES"},
+            )
+        except requests.RequestException:
+            return None
+        parsed = _parse_odds_by_event(payload)
+        if match.event_id in parsed:
+            return match.event_id, parsed[match.event_id]
+        extracted = _extract_one_x_two(payload if isinstance(payload, dict) else {})
+        if extracted and any(value is not None for value in extracted):
+            return match.event_id, extracted
+        for record in _walk_dicts(payload):
+            extracted = _extract_one_x_two(record)
+            if extracted and (extracted[0] is not None or extracted[2] is not None):
+                return match.event_id, extracted
+        return None
+
+    workers = min(6, len(candidates))
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = [executor.submit(lookup, match) for match in candidates]
+        for future in as_completed(futures):
+            result = future.result()
+            if result:
+                event_id, values = result
+                odds_by_event[event_id] = values
+    return odds_by_event
+
+
+def _should_lookup_odds(match: FlashscoreMatchRead) -> bool:
+    if match.minute is not None or match.home_score is not None or match.away_score is not None:
+        return True
+    status = (match.status or "").lower()
+    if any(token in status for token in ("live", "1st", "2nd", "half", "progress", "inprogress")):
+        return True
+    if not match.start_time:
+        return False
+    now = datetime.now(UTC)
+    start = match.start_time if match.start_time.tzinfo else match.start_time.replace(tzinfo=UTC)
+    return now - timedelta(minutes=15) <= start <= now + ODDS_LOOKAHEAD
+
+
 def _parse_matches(payload: Any) -> list[FlashscoreMatchRead]:
     matches: dict[str, FlashscoreMatchRead] = {}
-    for record in _walk_dicts(payload):
-        event_id = _string_value(record, "match_id", "event_id", "eventId", "id")
-        home_team = _team_name(record, "home")
-        away_team = _team_name(record, "away")
-        if not event_id or not home_team or not away_team:
-            continue
+    _collect_matches(payload, matches, competition=None)
+    return list(matches.values())
+
+
+def _collect_matches(
+    value: Any,
+    matches: dict[str, FlashscoreMatchRead],
+    competition: str | None,
+) -> None:
+    if isinstance(value, list):
+        for item in value:
+            _collect_matches(item, matches, competition)
+        return
+    if not isinstance(value, dict):
+        return
+
+    local_competition = _competition_name(value)
+    inherited = local_competition if local_competition != "Flashscore" else competition
+
+    event_id = _string_value(value, "match_id", "event_id", "eventId", "id")
+    home_team = _team_name(value, "home")
+    away_team = _team_name(value, "away")
+    if event_id and home_team and away_team and _looks_like_match_record(value):
         candidate = FlashscoreMatchRead(
             event_id=event_id,
-            start_time=_datetime_value(record, "start_time", "startTime", "timestamp", "start_timestamp"),
-            competition=_competition_name(record),
+            start_time=_datetime_value(value, "start_time", "startTime", "timestamp", "start_timestamp"),
+            competition=inherited or "Flashscore",
             home_team=home_team,
             away_team=away_team,
-            status=_string_value(record, "stage", "status", "state") or "scheduled",
-            minute=_minute_value(record),
-            home_score=_score_value(record, "home"),
-            away_score=_score_value(record, "away"),
+            status=_normalize_status(_string_value(value, "stage", "status", "state") or "scheduled"),
+            minute=_minute_value(value),
+            home_score=_score_value(value, "home"),
+            away_score=_score_value(value, "away"),
         )
         previous = matches.get(event_id)
         matches[event_id] = _prefer_live(previous, candidate) if previous else candidate
-    return list(matches.values())
+
+    for nested in value.values():
+        _collect_matches(nested, matches, inherited)
+
+
+def _looks_like_match_record(record: dict[str, Any]) -> bool:
+    if any(key in record for key in ("home_team", "away_team", "homeTeam", "awayTeam", "home", "away")):
+        return True
+    return "match_id" in record or "event_id" in record or "eventId" in record
 
 
 def _merge_live_matches(scheduled: list[FlashscoreMatchRead], live: list[FlashscoreMatchRead]) -> list[FlashscoreMatchRead]:
@@ -115,6 +209,7 @@ def _merge_live_matches(scheduled: list[FlashscoreMatchRead], live: list[Flashsc
                     "home_score": live_match.home_score,
                     "away_score": live_match.away_score,
                     "start_time": previous.start_time or live_match.start_time,
+                    "competition": previous.competition if previous.competition != "Flashscore" else live_match.competition,
                 }
             )
         else:
@@ -135,26 +230,32 @@ def _parse_odds_by_event(payload: Any) -> dict[str, tuple[float | None, float | 
 
 
 def _extract_one_x_two(record: dict[str, Any]) -> tuple[float | None, float | None, float | None] | None:
-    home = _float_value(record, "home_odds", "homeOdds", "odds_1", "home")
-    draw = _float_value(record, "draw_odds", "drawOdds", "odds_x", "draw")
-    away = _float_value(record, "away_odds", "awayOdds", "odds_2", "away")
-    nested = record.get("odds")
+    home = _float_value(record, "home_odds", "homeOdds", "odds_1", "odd_1", "home")
+    draw = _float_value(record, "draw_odds", "drawOdds", "odds_x", "odd_x", "draw")
+    away = _float_value(record, "away_odds", "awayOdds", "odds_2", "odd_2", "away")
+    nested = record.get("odds") or record.get("data") or record.get("market")
     if isinstance(nested, dict):
-        home = home or _float_value(nested, "home", "1", "odds_1")
-        draw = draw or _float_value(nested, "draw", "x", "X", "odds_x")
-        away = away or _float_value(nested, "away", "2", "odds_2")
+        home = home or _float_value(nested, "home", "1", "odds_1", "odd_1", "HOME")
+        draw = draw or _float_value(nested, "draw", "x", "X", "odds_x", "odd_x", "DRAW")
+        away = away or _float_value(nested, "away", "2", "odds_2", "odd_2", "AWAY")
+        for key in ("full_time", "fullTime", "1x2", "match_winner", "matchWinner"):
+            market = nested.get(key)
+            if isinstance(market, dict):
+                home = home or _float_value(market, "home", "1", "odds_1")
+                draw = draw or _float_value(market, "draw", "x", "X", "odds_x")
+                away = away or _float_value(market, "away", "2", "odds_2")
     if isinstance(nested, list):
         selections: dict[str, float] = {}
         for item in nested:
             if not isinstance(item, dict):
                 continue
-            selection = _string_value(item, "selection", "name", "outcome")
-            value = _float_value(item, "odds", "value", "current")
+            selection = _string_value(item, "selection", "name", "outcome", "label", "type")
+            value = _float_value(item, "odds", "value", "current", "price")
             if selection and value is not None:
                 selections[selection.lower()] = value
-        home = home or selections.get("home") or selections.get("1")
+        home = home or selections.get("home") or selections.get("1") or selections.get("home win")
         draw = draw or selections.get("draw") or selections.get("x")
-        away = away or selections.get("away") or selections.get("2")
+        away = away or selections.get("away") or selections.get("2") or selections.get("away win")
     return (home, draw, away) if any(value is not None for value in (home, draw, away)) else None
 
 
@@ -199,7 +300,12 @@ def _walk_dicts(value: Any):
 def _prefer_live(previous: FlashscoreMatchRead, candidate: FlashscoreMatchRead) -> FlashscoreMatchRead:
     previous_has_live = previous.minute is not None or previous.home_score is not None or previous.away_score is not None
     candidate_has_live = candidate.minute is not None or candidate.home_score is not None or candidate.away_score is not None
-    return candidate if candidate_has_live and not previous_has_live else previous
+    chosen = candidate if candidate_has_live and not previous_has_live else previous
+    if chosen.competition == "Flashscore" and candidate.competition != "Flashscore":
+        return chosen.model_copy(update={"competition": candidate.competition})
+    if chosen.competition == "Flashscore" and previous.competition != "Flashscore":
+        return chosen.model_copy(update={"competition": previous.competition})
+    return chosen
 
 
 def _team_name(record: dict[str, Any], side: str) -> str | None:
@@ -211,38 +317,51 @@ def _team_name(record: dict[str, Any], side: str) -> str | None:
             name = _string_value(value, "name", "participant_name", "team_name")
             if name:
                 return name
-    return None
+    return _string_value(record, f"{side}_name", f"{side}Name")
 
 
 def _competition_name(record: dict[str, Any]) -> str:
-    for key in ("competition", "tournament", "league"):
+    for key in ("competition", "tournament", "league", "category"):
         value = record.get(key)
         if isinstance(value, str) and value.strip():
             return value.strip()
         if isinstance(value, dict):
-            name = _string_value(value, "name", "tournament_name", "league_name")
+            name = _string_value(value, "name", "tournament_name", "league_name", "competition_name")
             if name:
                 return name
-    return _string_value(record, "competition_name", "tournament_name", "league_name") or "Flashscore"
+    return _string_value(record, "competition_name", "tournament_name", "league_name", "tournamentName") or "Flashscore"
 
 
 def _score_value(record: dict[str, Any], side: str) -> int | None:
-    value = _value(record, f"{side}_score", f"{side}Score", f"{side}_current_score")
+    value = _value(record, f"{side}_score", f"{side}Score", f"{side}_current_score", f"{side}_result")
     if value is None:
-        score = record.get("score")
+        score = record.get("score") or record.get("result")
         if isinstance(score, dict):
             value = _value(score, side, f"{side}_score", "current")
     return _int_value(value)
 
 
 def _minute_value(record: dict[str, Any]) -> int | None:
-    value = _value(record, "minute", "live_time", "liveTime", "clock", "stage")
+    value = _value(record, "minute", "live_time", "liveTime", "clock", "time")
     if isinstance(value, (int, float)):
         return int(value)
     if isinstance(value, str):
         digits = "".join(character for character in value.split("+", 1)[0] if character.isdigit())
         return int(digits) if digits else None
+    stage = record.get("stage")
+    if isinstance(stage, str):
+        digits = "".join(character for character in stage.split("+", 1)[0] if character.isdigit())
+        return int(digits) if digits else None
     return None
+
+
+def _normalize_status(status: str) -> str:
+    lowered = status.lower()
+    if any(token in lowered for token in ("live", "1st", "2nd", "half", "progress")):
+        return "live"
+    if any(token in lowered for token in ("finish", "ended", "ft", "aet", "pen")):
+        return "finished"
+    return status
 
 
 def _datetime_value(record: dict[str, Any], *keys: str) -> datetime | None:
@@ -270,7 +389,7 @@ def _string_value(record: dict[str, Any], *keys: str) -> str | None:
 def _float_value(record: dict[str, Any], *keys: str) -> float | None:
     value = _value(record, *keys)
     if isinstance(value, dict):
-        value = _value(value, "value", "odds", "current")
+        value = _value(value, "value", "odds", "current", "price")
     try:
         parsed = float(str(value).replace(",", "."))
         return parsed if parsed > 1 else None
