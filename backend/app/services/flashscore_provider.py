@@ -43,6 +43,7 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
         )
 
     matches = _parse_matches(schedule_payload)
+    payload_hint = _payload_hint(schedule_payload)
     if day == 0:
         try:
             live_payload = _get_json(
@@ -64,11 +65,93 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
         message=(
             f"{len(enriched)} partidos Flashscore · {with_odds} con cuotas cargadas · "
             f"{qualifying} con cuota de equipo igual o inferior a {ODDS_THRESHOLD:.2f}."
+            f" · fuente {payload_hint}"
         ),
         configured=True,
         threshold=ODDS_THRESHOLD,
         matches=enriched,
     )
+
+
+def probe_flashscore_feed(settings: Settings | None = None) -> dict[str, Any]:
+    """Return a sanitized shape sample of upstream payloads for parser fixes."""
+    settings = settings or get_settings()
+    if not settings.rapidapi_key:
+        return {"status": "not_configured"}
+    headers = {
+        "X-RapidAPI-Key": settings.rapidapi_key,
+        "X-RapidAPI-Host": settings.flashscore_api_host,
+        "Content-Type": "application/json",
+    }
+    base_url = f"https://{settings.flashscore_api_host}"
+    result: dict[str, Any] = {"status": "ok"}
+    for label, path, params in (
+        ("list", "/api/flashscore/v2/matches/list", {"sport_id": FOOTBALL_SPORT_ID, "day": 0, "timezone": "Europe/Madrid"}),
+        ("live", "/api/flashscore/v2/matches/live", {"sport_id": FOOTBALL_SPORT_ID, "timezone": "Europe/Madrid"}),
+        ("bulk_odds", f"/api/livescores/sports/{FOOTBALL_SPORT_ID}/odds", {"dayOffset": 0, "lang": "en", "version": 2}),
+    ):
+        try:
+            payload = _get_json(f"{base_url}{path}", headers, params)
+            result[label] = _shape_summary(payload)
+        except requests.RequestException as exc:
+            result[label] = {"error": type(exc).__name__, "detail": str(exc)[:160]}
+
+    list_shape = result.get("list")
+    if isinstance(list_shape, dict) and "error" not in list_shape:
+        try:
+            list_payload = _get_json(
+                f"{base_url}/api/flashscore/v2/matches/list",
+                headers,
+                {"sport_id": FOOTBALL_SPORT_ID, "day": 0, "timezone": "Europe/Madrid"},
+            )
+            matches = _parse_matches(list_payload)
+            sample_id = matches[0].event_id if matches else None
+            result["parsed_matches"] = len(matches)
+            result["sample_match"] = matches[0].model_dump(mode="json") if matches else None
+            if sample_id:
+                try:
+                    odds_payload = _get_json(
+                        f"{base_url}/api/flashscore/v2/matches/odds",
+                        headers,
+                        {"match_id": sample_id, "geo_ip_code": "ES"},
+                    )
+                    result["match_odds"] = _shape_summary(odds_payload)
+                except requests.RequestException as exc:
+                    result["match_odds"] = {"error": type(exc).__name__, "detail": str(exc)[:160]}
+        except requests.RequestException as exc:
+            result["list_parse"] = {"error": type(exc).__name__, "detail": str(exc)[:160]}
+    return result
+
+
+def _payload_hint(payload: Any) -> str:
+    if isinstance(payload, dict):
+        keys = ",".join(sorted(payload.keys())[:12])
+        return f"dict[{keys}]"
+    if isinstance(payload, list):
+        item = payload[0] if payload else None
+        if isinstance(item, dict):
+            return f"list[{len(payload)}]dict[{','.join(sorted(item.keys())[:12])}]"
+        return f"list[{len(payload)}]{type(item).__name__ if item is not None else 'empty'}"
+    return type(payload).__name__
+
+
+def _shape_summary(value: Any, depth: int = 0) -> Any:
+    if depth > 4:
+        return "…"
+    if isinstance(value, dict):
+        summary: dict[str, Any] = {"_type": "dict", "_keys": sorted(value.keys())[:40], "_size": len(value)}
+        for key in list(value.keys())[:8]:
+            summary[key] = _shape_summary(value[key], depth + 1)
+        return summary
+    if isinstance(value, list):
+        return {
+            "_type": "list",
+            "_size": len(value),
+            "_item0": _shape_summary(value[0], depth + 1) if value else None,
+        }
+    if isinstance(value, str):
+        return value[:80]
+    return value
 
 
 def _get_json(url: str, headers: dict[str, str], params: dict[str, Any]) -> Any:
@@ -95,11 +178,7 @@ def _fetch_odds_by_event(
     except requests.RequestException:
         pass
 
-    candidates = [
-        match
-        for match in matches
-        if match.event_id not in odds_by_event and _should_lookup_odds(match)
-    ][:MAX_ODDS_LOOKUPS]
+    candidates = _odds_candidates(matches, already=set(odds_by_event))
     if not candidates:
         return odds_by_event
 
@@ -135,17 +214,33 @@ def _fetch_odds_by_event(
     return odds_by_event
 
 
-def _should_lookup_odds(match: FlashscoreMatchRead) -> bool:
-    if match.minute is not None or match.home_score is not None or match.away_score is not None:
-        return True
-    status = (match.status or "").lower()
-    if any(token in status for token in ("live", "1st", "2nd", "half", "progress", "inprogress")):
-        return True
-    if not match.start_time:
-        return False
+def _odds_candidates(
+    matches: list[FlashscoreMatchRead],
+    already: set[str],
+) -> list[FlashscoreMatchRead]:
     now = datetime.now(UTC)
-    start = match.start_time if match.start_time.tzinfo else match.start_time.replace(tzinfo=UTC)
-    return now - timedelta(minutes=15) <= start <= now + ODDS_LOOKAHEAD
+    prioritized: list[tuple[int, datetime, FlashscoreMatchRead]] = []
+    for match in matches:
+        if match.event_id in already:
+            continue
+        start = match.start_time if match.start_time and match.start_time.tzinfo else (
+            match.start_time.replace(tzinfo=UTC) if match.start_time else None
+        )
+        live = (
+            match.minute is not None
+            or match.home_score is not None
+            or match.away_score is not None
+            or any(token in (match.status or "").lower() for token in ("live", "1st", "2nd", "half", "progress"))
+        )
+        soon = bool(start and now - timedelta(minutes=20) <= start <= now + ODDS_LOOKAHEAD)
+        if live:
+            prioritized.append((0, start or now, match))
+        elif soon:
+            prioritized.append((1, start or now, match))
+        elif start and start >= now - timedelta(minutes=20):
+            prioritized.append((2, start, match))
+    prioritized.sort(key=lambda item: (item[0], item[1]))
+    return [item[2] for item in prioritized[:MAX_ODDS_LOOKUPS]]
 
 
 def _parse_matches(payload: Any) -> list[FlashscoreMatchRead]:

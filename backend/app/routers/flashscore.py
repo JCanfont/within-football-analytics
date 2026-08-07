@@ -5,10 +5,19 @@ from fastapi import APIRouter, Header, HTTPException
 from app.config import get_settings
 from app.schemas.api import FlashscoreGoalEmailRequest, FlashscoreMatchesResult, FlashscoreTickResult, ForebetStartEmailResult
 from app.services.email_alerts import send_flashscore_goal_email
-from app.services.flashscore_provider import fetch_flashscore_matches
+from app.services.flashscore_provider import fetch_flashscore_matches, probe_flashscore_feed
 
 
 router = APIRouter(prefix="/api/flashscore", tags=["flashscore"])
+
+
+def _require_cron_authorization(authorization: str | None) -> None:
+    settings = get_settings()
+    if not settings.cron_secret:
+        raise HTTPException(status_code=503, detail="CRON_SECRET no configurado")
+    expected = f"Bearer {settings.cron_secret}"
+    if not authorization or not compare_digest(authorization, expected):
+        raise HTTPException(status_code=401, detail="Cron no autorizado")
 
 
 @router.get("/matches", response_model=FlashscoreMatchesResult)
@@ -22,14 +31,16 @@ def email_flashscore_goal(payload: FlashscoreGoalEmailRequest) -> ForebetStartEm
     return send_flashscore_goal_email(payload)
 
 
+@router.get("/probe")
+def probe_flashscore(authorization: str | None = Header(default=None)) -> dict:
+    _require_cron_authorization(authorization)
+    return probe_flashscore_feed()
+
+
 @router.get("/tick", response_model=FlashscoreTickResult)
 def tick_flashscore_alerts(authorization: str | None = Header(default=None)) -> FlashscoreTickResult:
+    _require_cron_authorization(authorization)
     settings = get_settings()
-    if not settings.cron_secret:
-        raise HTTPException(status_code=503, detail="CRON_SECRET no configurado")
-    expected = f"Bearer {settings.cron_secret}"
-    if not authorization or not compare_digest(authorization, expected):
-        raise HTTPException(status_code=401, detail="Cron no autorizado")
 
     feed = fetch_flashscore_matches(0, settings)
     if feed.status != "ok":
