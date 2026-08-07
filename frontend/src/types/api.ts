@@ -502,6 +502,46 @@ export type ForebetStartEmailResult = {
   message: string;
 };
 
+export type FlashscoreMatch = {
+  event_id: string;
+  start_time?: string | null;
+  competition: string;
+  home_team: string;
+  away_team: string;
+  status: string;
+  minute?: number | null;
+  home_score?: number | null;
+  away_score?: number | null;
+  home_odds?: number | null;
+  draw_odds?: number | null;
+  away_odds?: number | null;
+  favorite_side?: string | null;
+  favorite_team?: string | null;
+  favorite_odds?: number | null;
+  alert_eligible: boolean;
+};
+
+export type FlashscoreMatchesResult = {
+  provider: string;
+  status: string;
+  message: string;
+  configured: boolean;
+  threshold: number;
+  matches: FlashscoreMatch[];
+};
+
+export type FlashscoreGoalEmailRequest = {
+  event_id: string;
+  competition: string;
+  home_team: string;
+  away_team: string;
+  favorite_team: string;
+  favorite_odds: number;
+  minute: number;
+  home_score: number;
+  away_score: number;
+};
+
 export type MatchInsightData = {
   detail: MatchDetail;
   analytics: MatchAnalytics;

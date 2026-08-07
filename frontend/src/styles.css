@@ -1153,6 +1153,94 @@ td {
   gap: 22px;
 }
 
+.flashscore-page {
+  display: grid;
+  gap: 22px;
+}
+
+.flashscore-panel .panel-heading,
+.flashscore-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+}
+
+.flashscore-panel .panel-heading {
+  justify-content: space-between;
+}
+
+.flashscore-actions label {
+  display: grid;
+  gap: 5px;
+  color: #536174;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.flashscore-actions select {
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+  background: #f9fbfc;
+  color: #18212f;
+}
+
+.flashscore-panel .forebet-load-message,
+.flashscore-setup-message,
+.flashscore-setup-detail {
+  margin-right: 18px;
+  margin-left: 18px;
+}
+
+.flashscore-setup-message {
+  margin-bottom: 8px;
+  padding: 11px 12px;
+  border: 1px solid #f0c7a4;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: #9a4f12;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.flashscore-setup-detail {
+  margin-bottom: 16px;
+  color: #637080;
+  font-size: 13px;
+}
+
+.flashscore-alert-row {
+  background: #effaf5;
+}
+
+.flashscore-alert-status {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.flashscore-alert-status.triggered {
+  background: #d9f4e8;
+  color: #126142;
+}
+
+.flashscore-alert-status.watching {
+  background: #fff1c9;
+  color: #8a5a08;
+}
+
+.flashscore-alert-status.inactive {
+  background: #edf1f5;
+  color: #637080;
+}
+
 .forebet-stats-grid {
   display: grid;
   gap: 18px;

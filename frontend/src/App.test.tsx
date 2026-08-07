@@ -525,6 +525,37 @@ describe("App", () => {
         },
       ],
     });
+    mockedApi.fetchFlashscoreMatches.mockResolvedValue({
+      provider: "flashscore",
+      status: "ok",
+      message: "1 partido Flashscore.",
+      configured: true,
+      threshold: 1.5,
+      matches: [{
+        event_id: "flash-1",
+        start_time: "2026-08-07T20:00:00Z",
+        competition: "LaLiga",
+        home_team: "Getafe",
+        away_team: "Celta",
+        status: "scheduled",
+        minute: null,
+        home_score: null,
+        away_score: null,
+        home_odds: 1.45,
+        draw_odds: 4.2,
+        away_odds: 7.5,
+        favorite_side: "home",
+        favorite_team: "Getafe",
+        favorite_odds: 1.45,
+        alert_eligible: false,
+      }],
+    });
+    mockedApi.sendFlashscoreGoalEmail.mockResolvedValue({
+      configured: true,
+      sent: true,
+      status: "sent",
+      message: "Alerta Flashscore enviada por email.",
+    });
   });
 
   it("renders the dashboard with imported match data", async () => {
@@ -741,6 +772,59 @@ describe("App", () => {
     expect(screen.getByRole("link", { name: "Estadisticas Forebet" })).toHaveAttribute("href", "/forebet-stats");
     expect(screen.getByText("Acierto Over/Under")).toBeInTheDocument();
     expect(screen.getByText("Resultados exactos")).toBeInTheDocument();
+  }, 30000);
+
+  it("opens Flashscore from the left menu and shows 1X2 odds", async () => {
+    renderApp();
+
+    fireEvent.click(screen.getByRole("link", { name: "Flashscore" }));
+
+    expect(await screen.findByRole("heading", { name: "Flashscore", level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Flashscore" })).toHaveAttribute("href", "/flashscore");
+    expect(screen.getByText("Cuota local")).toBeInTheDocument();
+    expect(screen.getAllByText("1,45").length).toBeGreaterThan(0);
+    expect(screen.getByText("Vigilando")).toBeInTheDocument();
+  }, 30000);
+
+  it("emails once when the low-odds team scores before minute 30", async () => {
+    mockedApi.fetchFlashscoreMatches.mockResolvedValue({
+      provider: "flashscore",
+      status: "ok",
+      message: "1 partido live.",
+      configured: true,
+      threshold: 1.5,
+      matches: [{
+        event_id: "flash-alert-1",
+        start_time: "2026-08-07T20:00:00Z",
+        competition: "LaLiga",
+        home_team: "Getafe",
+        away_team: "Celta",
+        status: "1st Half",
+        minute: 24,
+        home_score: 1,
+        away_score: 0,
+        home_odds: 1.45,
+        draw_odds: 4.2,
+        away_odds: 7.5,
+        favorite_side: "home",
+        favorite_team: "Getafe",
+        favorite_odds: 1.45,
+        alert_eligible: true,
+      }],
+    });
+
+    renderApp("/flashscore");
+
+    await waitFor(() => {
+      expect(mockedApi.sendFlashscoreGoalEmail).toHaveBeenCalledWith(expect.objectContaining({
+        event_id: "flash-alert-1",
+        favorite_team: "Getafe",
+        favorite_odds: 1.45,
+        minute: 24,
+        home_score: 1,
+      }));
+    });
+    expect(await screen.findByText("Email enviado")).toBeInTheDocument();
   }, 30000);
 
   it("lets the user choose the Forebet goal prediction view", async () => {

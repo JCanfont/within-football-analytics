@@ -4,6 +4,8 @@ import type {
   Alert,
   DashboardData,
   Favorite,
+  FlashscoreGoalEmailRequest,
+  FlashscoreMatchesResult,
   ForebetDateLoadResult,
   ForebetRangeItem,
   ForebetStartEmailRequest,
@@ -219,6 +221,16 @@ export async function generateMatchAlerts(matchId: number): Promise<Alert[]> {
 
 export async function sendForebetStartEmail(payload: ForebetStartEmailRequest): Promise<ForebetStartEmailResult> {
   const response = await api.post<ForebetStartEmailResult>("/api/alerts/forebet-start/email", payload);
+  return response.data;
+}
+
+export async function fetchFlashscoreMatches(day = 0): Promise<FlashscoreMatchesResult> {
+  const response = await api.get<FlashscoreMatchesResult>(`/api/flashscore/matches?day=${day}`);
+  return response.data;
+}
+
+export async function sendFlashscoreGoalEmail(payload: FlashscoreGoalEmailRequest): Promise<ForebetStartEmailResult> {
+  const response = await api.post<ForebetStartEmailResult>("/api/flashscore/goal-alert/email", payload);
   return response.data;
 }
 

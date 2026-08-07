@@ -5,6 +5,7 @@ from app.config import get_settings
 from app.routers.analytics import router as analytics_router
 from app.routers.catalog import router as catalog_router
 from app.routers.config import router as config_router
+from app.routers.flashscore import router as flashscore_router
 from app.routers.health import router as health_router
 from app.routers.imports import router as imports_router
 from app.routers.live import router as live_router
@@ -40,3 +41,4 @@ app.include_router(matches_router)
 app.include_router(analytics_router)
 app.include_router(config_router)
 app.include_router(live_router)
+app.include_router(flashscore_router)

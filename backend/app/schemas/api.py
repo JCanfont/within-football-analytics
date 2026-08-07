@@ -177,6 +177,46 @@ class ForebetStartEmailResult(BaseModel):
     message: str
 
 
+class FlashscoreMatchRead(BaseModel):
+    event_id: str
+    start_time: datetime | None = None
+    competition: str
+    home_team: str
+    away_team: str
+    status: str
+    minute: int | None = None
+    home_score: int | None = None
+    away_score: int | None = None
+    home_odds: float | None = None
+    draw_odds: float | None = None
+    away_odds: float | None = None
+    favorite_side: str | None = None
+    favorite_team: str | None = None
+    favorite_odds: float | None = None
+    alert_eligible: bool = False
+
+
+class FlashscoreMatchesResult(BaseModel):
+    provider: str = "flashscore"
+    status: str
+    message: str
+    configured: bool
+    threshold: float = 1.5
+    matches: list[FlashscoreMatchRead] = Field(default_factory=list)
+
+
+class FlashscoreGoalEmailRequest(BaseModel):
+    event_id: str
+    competition: str
+    home_team: str
+    away_team: str
+    favorite_team: str
+    favorite_odds: float
+    minute: int
+    home_score: int
+    away_score: int
+
+
 class TeamGoalParameter(BaseModel):
     team_id: int
     team: str

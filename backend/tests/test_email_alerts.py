@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 import requests
 
-from app.schemas.api import ForebetStartEmailRequest
-from app.services.email_alerts import forebet_email_status, send_forebet_start_email
+from app.schemas.api import FlashscoreGoalEmailRequest, ForebetStartEmailRequest
+from app.services.email_alerts import forebet_email_status, send_flashscore_goal_email, send_forebet_start_email
 
 
 def payload() -> ForebetStartEmailRequest:
@@ -93,3 +93,40 @@ def test_start_email_handles_provider_errors(monkeypatch) -> None:
     assert result.configured is True
     assert result.sent is False
     assert result.status == "provider_error"
+
+
+def test_flashscore_goal_email_contains_odds_minute_and_score(monkeypatch) -> None:
+    captured = {}
+
+    class Response:
+        def raise_for_status(self) -> None:
+            return None
+
+    def fake_post(url, **kwargs):
+        captured.update(kwargs)
+        return Response()
+
+    monkeypatch.setattr(requests, "post", fake_post)
+    settings = SimpleNamespace(
+        resend_api_key="test-key",
+        forebet_alert_email="alerts@example.com",
+        forebet_alert_from="WITHIN <onboarding@resend.dev>",
+    )
+    payload = FlashscoreGoalEmailRequest(
+        event_id="match-1",
+        competition="LaLiga",
+        home_team="Getafe",
+        away_team="Celta",
+        favorite_team="Getafe",
+        favorite_odds=1.45,
+        minute=24,
+        home_score=1,
+        away_score=0,
+    )
+
+    result = send_flashscore_goal_email(payload, settings)
+
+    assert result.sent is True
+    assert captured["json"]["subject"] == "Gol antes del 30: Getafe (1.45)"
+    assert "Getafe 1-0 Celta" in captured["json"]["html"]
+    assert "Minuto detectado: 24" in captured["json"]["html"]
