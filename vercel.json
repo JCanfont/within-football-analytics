@@ -30,11 +30,5 @@
       "src": "/(.*)",
       "dest": "/frontend/index.html"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/flashscore/tick",
-      "schedule": "*/10 * * * *"
-    }
   ]
 }

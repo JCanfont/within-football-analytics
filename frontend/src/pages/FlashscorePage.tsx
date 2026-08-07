@@ -121,7 +121,7 @@ export function FlashscorePage() {
         <div className="panel-heading">
           <div>
             <h2>Partidos y cuotas 1X2</h2>
-            <p>Se vigila al equipo local o visitante con cuota decimal igual o inferior a 1,50.</p>
+            <p>Se vigila al equipo local o visitante con cuota decimal igual o inferior a 1,50. Con la página abierta y auto-refresh, el email sale al detectar el gol.</p>
           </div>
           <div className="flashscore-actions">
             <label>

@@ -1,0 +1,28 @@
+name: Flashscore alert tick
+
+# Hobby Vercel only allows daily crons. This workflow hits the secured tick endpoint
+# every 10 minutes so early-goal emails still work without a Pro plan.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Flashscore tick
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "Missing GitHub secret CRON_SECRET (same value as Vercel CRON_SECRET)."
+            exit 1
+          fi
+          BASE_URL="${APP_URL:-https://within-football-analytics.vercel.app}"
+          BASE_URL="${BASE_URL%/}"
+          curl -fsS \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${BASE_URL}/api/flashscore/tick"
