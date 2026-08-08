@@ -523,11 +523,12 @@ clave de envio se crea en `https://resend.com/api-keys`.
 En Vercel hacen falta `RAPIDAPI_KEY` (FlashScore4 en RapidAPI),
 `RESEND_API_KEY`, `FOREBET_ALERT_EMAIL` y `CRON_SECRET`.
 
-Los emails se envian al detectar un gol del favorito (cuota ≤ 1,50) antes del
-minuto 30. Con la pagina Flashscore abierta y auto-refresh cada 1 minuto ya
-sale el aviso. En segundo plano, el workflow `flashscore-tick` (con secret
-`CRON_SECRET`) revisa aproximadamente cada minuto llamando a
-`/api/flashscore/tick`.
+La pantalla Flashscore lista la jornada filtrada a partidos con cuota de
+equipo ≤ 1,60. Los emails se envian al detectar un gol del favorito
+(cuota ≤ 1,50) antes del minuto 30. Con la pagina abierta y auto-refresh
+cada 1 minuto ya sale el aviso. En segundo plano, el workflow
+`flashscore-tick` (con secret `CRON_SECRET`) revisa aproximadamente cada
+minuto llamando a `/api/flashscore/tick`.
 
 ## Formatos CSV fase 3
 

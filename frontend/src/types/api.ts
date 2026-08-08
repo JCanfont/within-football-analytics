@@ -527,6 +527,7 @@ export type FlashscoreMatchesResult = {
   message: string;
   configured: boolean;
   threshold: number;
+  alert_threshold?: number;
   matches: FlashscoreMatch[];
 };
 

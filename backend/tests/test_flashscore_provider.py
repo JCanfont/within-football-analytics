@@ -71,7 +71,7 @@ def test_flashscore_provider_marks_low_odds_goal_before_minute_30(monkeypatch) -
     assert match.alert_eligible is True
 
 
-def test_flashscore_provider_does_not_alert_above_threshold(monkeypatch) -> None:
+def test_flashscore_provider_lists_up_to_1_60_but_alerts_only_to_1_50(monkeypatch) -> None:
     now = datetime.now(UTC)
     payload = {
         "matches": [{
@@ -87,7 +87,7 @@ def test_flashscore_provider_does_not_alert_above_threshold(monkeypatch) -> None
     odds = {
         "events": [{
             "id": "match-2",
-            "home_odds": 1.51,
+            "home_odds": 1.55,
             "draw_odds": 3.5,
             "away_odds": 6.0,
         }]
@@ -99,11 +99,36 @@ def test_flashscore_provider_does_not_alert_above_threshold(monkeypatch) -> None
         lambda url, headers, params: odds if url.endswith("/odds") else payload,
     )
 
-    match = flashscore_provider.fetch_flashscore_matches(settings=settings()).matches[0]
+    result = flashscore_provider.fetch_flashscore_matches(settings=settings())
+    match = result.matches[0]
 
-    assert match.home_odds == 1.51
-    assert match.favorite_team is None
+    assert result.threshold == 1.6
+    assert match.home_odds == 1.55
+    assert match.favorite_team == "Local"
     assert match.alert_eligible is False
+
+
+def test_flashscore_provider_excludes_matches_above_1_60(monkeypatch) -> None:
+    schedule = [{
+        "name": "Test League",
+        "matches": [{
+            "match_id": "match-3",
+            "home_team": {"name": "Local"},
+            "away_team": {"name": "Visitante"},
+            "match_status": "scheduled",
+            "odds": {"1": "1.70", "X": "3.50", "2": "4.80"},
+        }],
+    }]
+    monkeypatch.setattr(
+        flashscore_provider,
+        "_get_json",
+        lambda url, headers, params: schedule if url.endswith("/matches/list") else (_ for _ in ()).throw(
+            flashscore_provider.requests.RequestException("skip")
+        ),
+    )
+
+    result = flashscore_provider.fetch_flashscore_matches(settings=settings())
+    assert result.matches == []
 
 
 def test_flashscore_provider_reports_missing_api_key() -> None:

@@ -93,21 +93,22 @@ export function FlashscorePage() {
     return () => window.clearInterval(interval);
   }, [autoRefresh, day, refresh]);
 
-  const qualifying = matches.filter((match) => match.favorite_odds != null).length;
+  const listed = matches.filter((match) => match.favorite_odds != null);
+  const alertWatch = listed.filter((match) => match.favorite_odds != null && match.favorite_odds <= 1.5).length;
   const activeAlerts = matches.filter((match) => match.alert_eligible).length;
 
   return (
     <section className="flashscore-page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Cuotas y goles tempranos</p>
+          <p className="eyebrow">Cuotas bajas de la jornada</p>
           <h1>Flashscore</h1>
         </div>
       </header>
 
       <div className="metrics-grid" aria-label="Resumen Flashscore">
-        <FlashscoreMetric icon={Timer} label="Partidos" value={String(matches.length)} detail="En la jornada seleccionada" />
-        <FlashscoreMetric icon={TrendingDown} label="Cuota ≤ 1,50" value={String(qualifying)} detail="Equipos vigilados" />
+        <FlashscoreMetric icon={TrendingDown} label="Cuota ≤ 1,60" value={String(listed.length)} detail="Partidos de la jornada" />
+        <FlashscoreMetric icon={Timer} label="Aviso ≤ 1,50" value={String(alertWatch)} detail="Candidatos a email" />
         <FlashscoreMetric icon={BellRing} label="Alertas detectadas" value={String(activeAlerts)} detail="Gol antes del minuto 30" />
         <FlashscoreMetric
           icon={RefreshCw}
@@ -120,8 +121,8 @@ export function FlashscorePage() {
       <section className="panel flashscore-panel">
         <div className="panel-heading">
           <div>
-            <h2>Partidos y cuotas 1X2</h2>
-            <p>Se vigila al equipo local o visitante con cuota decimal igual o inferior a 1,50. Con la página abierta y auto-refresh, el email sale al detectar el gol.</p>
+            <h2>Jornada con cuota ≤ 1,60</h2>
+            <p>Solo partidos con local o visitante a 1,60 o menos. El email de gol temprano se limita a cuota ≤ 1,50.</p>
           </div>
           <div className="flashscore-actions">
             <label>
@@ -171,7 +172,7 @@ export function FlashscorePage() {
               </tr>
             </thead>
             <tbody>
-              {matches.map((match) => {
+              {listed.map((match) => {
                 const alerted = alertedEventIds.includes(match.event_id);
                 return (
                   <tr className={match.alert_eligible ? "flashscore-alert-row" : undefined} key={match.event_id}>
@@ -180,9 +181,9 @@ export function FlashscorePage() {
                     <td><strong>{match.home_team}</strong> vs <strong>{match.away_team}</strong></td>
                     <td>{match.minute != null ? `${match.minute}'` : formatStatus(match.status)}</td>
                     <td>{formatScore(match)}</td>
-                    <td>{formatOdds(match.home_odds)}</td>
+                    <td className={isLowOdds(match.home_odds) ? "flashscore-low-odds" : undefined}>{formatOdds(match.home_odds)}</td>
                     <td>{formatOdds(match.draw_odds)}</td>
-                    <td>{formatOdds(match.away_odds)}</td>
+                    <td className={isLowOdds(match.away_odds) ? "flashscore-low-odds" : undefined}>{formatOdds(match.away_odds)}</td>
                     <td>
                       {match.favorite_team ? (
                         <>
@@ -198,7 +199,7 @@ export function FlashscorePage() {
             </tbody>
           </table>
         </div>
-        {configured && !isLoading && matches.length === 0 ? <div className="detail-state">No hay partidos Flashscore para esta jornada.</div> : null}
+        {configured && !isLoading && listed.length === 0 ? <div className="detail-state">No hay partidos con cuota ≤ 1,60 en esta jornada.</div> : null}
       </section>
     </section>
   );
@@ -226,7 +227,8 @@ function FlashscoreMetric({
 function alertLabel(match: FlashscoreMatch, alerted: boolean) {
   if (alerted) return "Email enviado";
   if (match.alert_eligible) return "Gol detectado";
-  if (!match.favorite_team) return "Sin cuota ≤ 1,50";
+  if (!match.favorite_team) return "Sin cuota ≤ 1,60";
+  if (match.favorite_odds != null && match.favorite_odds > 1.5) return "Listado (aviso ≤ 1,50)";
   if (match.minute == null) return "Vigilando";
   if (match.minute <= 30) return "Esperando gol";
   return "Ventana cerrada";
@@ -234,8 +236,19 @@ function alertLabel(match: FlashscoreMatch, alerted: boolean) {
 
 function alertTone(match: FlashscoreMatch, alerted: boolean) {
   if (alerted || match.alert_eligible) return "triggered";
-  if (match.favorite_team && (match.minute == null || match.minute <= 30)) return "watching";
+  if (
+    match.favorite_team
+    && match.favorite_odds != null
+    && match.favorite_odds <= 1.5
+    && (match.minute == null || match.minute <= 30)
+  ) {
+    return "watching";
+  }
   return "inactive";
+}
+
+function isLowOdds(value?: number | null) {
+  return value != null && value <= 1.6;
 }
 
 function formatOdds(value?: number | null) {

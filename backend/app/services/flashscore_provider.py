@@ -8,7 +8,9 @@ from app.config import Settings, get_settings
 from app.schemas.api import FlashscoreMatchRead, FlashscoreMatchesResult
 
 
-ODDS_THRESHOLD = 1.5
+LIST_ODDS_THRESHOLD = 1.6
+ALERT_ODDS_THRESHOLD = 1.5
+ODDS_THRESHOLD = LIST_ODDS_THRESHOLD  # favorite marking / jornada list
 FOOTBALL_SPORT_ID = 1
 MAX_ODDS_LOOKUPS = 24
 ODDS_LOOKAHEAD = timedelta(hours=4)
@@ -68,15 +70,17 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
     enriched.sort(key=lambda match: (match.start_time or datetime.max.replace(tzinfo=UTC), match.competition, match.home_team))
     qualifying = sum(match.favorite_odds is not None for match in enriched)
     with_odds = sum(match.home_odds is not None or match.away_odds is not None for match in enriched)
+    listed = [match for match in enriched if match.favorite_odds is not None]
     return FlashscoreMatchesResult(
         status="ok",
         message=(
-            f"{len(enriched)} partidos Flashscore · {with_odds} con cuotas cargadas · "
-            f"{qualifying} con cuota de equipo igual o inferior a {ODDS_THRESHOLD:.2f}."
+            f"{len(enriched)} partidos en la jornada · {with_odds} con cuotas · "
+            f"{qualifying} con cuota ≤ {LIST_ODDS_THRESHOLD:.2f}."
         ),
         configured=True,
-        threshold=ODDS_THRESHOLD,
-        matches=enriched,
+        threshold=LIST_ODDS_THRESHOLD,
+        alert_threshold=ALERT_ODDS_THRESHOLD,
+        matches=listed,
     )
 
 
@@ -356,11 +360,16 @@ def _with_odds_and_alert(
         ("away", match.away_team, away_odds),
     ]
     favorite = min((candidate for candidate in candidates if candidate[2] is not None), key=lambda item: item[2], default=None)
-    if not favorite or favorite[2] is None or favorite[2] > ODDS_THRESHOLD:
+    if not favorite or favorite[2] is None or favorite[2] > LIST_ODDS_THRESHOLD:
         return match.model_copy(update={"home_odds": home_odds, "draw_odds": draw_odds, "away_odds": away_odds})
     favorite_side, favorite_team, favorite_odds = favorite
     favorite_score = match.home_score if favorite_side == "home" else match.away_score
-    alert_eligible = match.minute is not None and match.minute <= 30 and (favorite_score or 0) > 0
+    alert_eligible = (
+        favorite_odds <= ALERT_ODDS_THRESHOLD
+        and match.minute is not None
+        and match.minute <= 30
+        and (favorite_score or 0) > 0
+    )
     return match.model_copy(
         update={
             "home_odds": home_odds,

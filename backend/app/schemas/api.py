@@ -201,7 +201,8 @@ class FlashscoreMatchesResult(BaseModel):
     status: str
     message: str
     configured: bool
-    threshold: float = 1.5
+    threshold: float = 1.6
+    alert_threshold: float = 1.5
     matches: list[FlashscoreMatchRead] = Field(default_factory=list)
 
 

@@ -1216,6 +1216,11 @@ td {
   background: #effaf5;
 }
 
+.flashscore-low-odds {
+  font-weight: 700;
+  color: #126142;
+}
+
 .flashscore-alert-status {
   display: inline-flex;
   min-height: 28px;

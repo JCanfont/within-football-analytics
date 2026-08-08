@@ -47,6 +47,7 @@ def tick_flashscore_alerts(authorization: str | None = Header(default=None)) -> 
         if (
             not match.favorite_team
             or match.favorite_odds is None
+            or match.favorite_odds > 1.5
             or match.minute is None
             or match.home_score is None
             or match.away_score is None

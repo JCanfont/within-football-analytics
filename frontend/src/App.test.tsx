@@ -530,7 +530,8 @@ describe("App", () => {
       status: "ok",
       message: "1 partido Flashscore.",
       configured: true,
-      threshold: 1.5,
+      threshold: 1.6,
+      alert_threshold: 1.5,
       matches: [{
         event_id: "flash-1",
         start_time: "2026-08-07T20:00:00Z",
@@ -792,7 +793,8 @@ describe("App", () => {
       status: "ok",
       message: "1 partido live.",
       configured: true,
-      threshold: 1.5,
+      threshold: 1.6,
+      alert_threshold: 1.5,
       matches: [{
         event_id: "flash-alert-1",
         start_time: "2026-08-07T20:00:00Z",
