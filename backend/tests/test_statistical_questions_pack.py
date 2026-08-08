@@ -257,17 +257,12 @@ def test_season_ratio_and_missing_templates() -> None:
         db,
         "En que partidos en vivo llegando al minuto 75 hay menos de 1 disparo a puerta?",
     )
-    odds = answer_statistical_question(
-        db,
-        "Que porcentaje de partidos con cuota inicial 1,50 o inferior acaban con mas de dos goles de diferencia a favor del favorito?",
-    )
 
     assert ratio["question_type"] == "season_over_season"
     assert ratio["metrics"]["current_season"] == "2026/2027"
     assert ratio["metrics"]["previous_season"] == "2025/2026"
     assert ratio["metrics"]["best_points_team"] == "Getafe"
     assert live["data_status"] == "missing_data"
-    assert odds["data_status"] == "missing_data"
     db.close()
 
 

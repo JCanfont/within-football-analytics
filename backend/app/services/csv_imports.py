@@ -12,6 +12,7 @@ from app.models import (
     ForebetPrediction,
     GoalMoment,
     Match,
+    MatchIncident,
     Player,
     PlayerMatchStats,
     Season,
@@ -89,23 +90,23 @@ def import_results_csv(db: Session, raw_csv: bytes) -> ImportResult:
                 _update_match_score(existing, row)
                 result.updated += 1
                 continue
-            db.add(
-                Match(
-                    competition_id=competition.id,
-                    season_id=season.id,
-                    matchday=_to_optional_int(row.get("matchday")),
-                    match_date=_parse_datetime(row["match_date"]),
-                    home_team_id=home_team.id,
-                    away_team_id=away_team.id,
-                    stadium_id=stadium.id if stadium else None,
-                    home_score=_to_optional_int(row.get("home_score")),
-                    away_score=_to_optional_int(row.get("away_score")),
-                    status=row.get("status") or "finished",
-                    is_friendly=_to_bool(row.get("is_friendly")),
-                    source=source,
-                    external_id=external_id,
-                )
+            match = Match(
+                competition_id=competition.id,
+                season_id=season.id,
+                matchday=_to_optional_int(row.get("matchday")),
+                match_date=_parse_datetime(row["match_date"]),
+                home_team_id=home_team.id,
+                away_team_id=away_team.id,
+                stadium_id=stadium.id if stadium else None,
+                home_score=_to_optional_int(row.get("home_score")),
+                away_score=_to_optional_int(row.get("away_score")),
+                status=row.get("status") or "finished",
+                is_friendly=_to_bool(row.get("is_friendly")),
+                source=source,
+                external_id=external_id,
             )
+            _apply_match_enrichment(match, row)
+            db.add(match)
             result.created += 1
         except Exception as exc:
             result.errors.append(ImportErrorDetail(row=row_number, message=str(exc)))
@@ -570,6 +571,83 @@ def _update_match_score(match: Match, row: dict[str, str]) -> None:
     match.status = row.get("status") or match.status
     if row.get("is_friendly") not in (None, ""):
         match.is_friendly = _to_bool(row.get("is_friendly"))
+    _apply_match_enrichment(match, row)
+
+
+def _apply_match_enrichment(match: Match, row: dict[str, str]) -> None:
+    match.home_ht_score = _to_optional_int(row.get("home_ht_score"), match.home_ht_score)
+    match.away_ht_score = _to_optional_int(row.get("away_ht_score"), match.away_ht_score)
+    match.home_shots = _to_optional_int(row.get("home_shots"), match.home_shots)
+    match.away_shots = _to_optional_int(row.get("away_shots"), match.away_shots)
+    match.home_shots_on_target = _to_optional_int(row.get("home_shots_on_target"), match.home_shots_on_target)
+    match.away_shots_on_target = _to_optional_int(row.get("away_shots_on_target"), match.away_shots_on_target)
+    match.home_yellow_cards = _to_optional_int(row.get("home_yellow_cards"), match.home_yellow_cards)
+    match.away_yellow_cards = _to_optional_int(row.get("away_yellow_cards"), match.away_yellow_cards)
+    match.home_red_cards = _to_optional_int(row.get("home_red_cards"), match.home_red_cards)
+    match.away_red_cards = _to_optional_int(row.get("away_red_cards"), match.away_red_cards)
+    home_odds = _to_optional_decimal(row.get("home_odds"))
+    draw_odds = _to_optional_decimal(row.get("draw_odds"))
+    away_odds = _to_optional_decimal(row.get("away_odds"))
+    if home_odds is not None:
+        match.home_odds = home_odds
+    if draw_odds is not None:
+        match.draw_odds = draw_odds
+    if away_odds is not None:
+        match.away_odds = away_odds
+    if row.get("odds_source"):
+        match.odds_source = row.get("odds_source")
+
+
+def import_match_incidents_csv(db: Session, raw_csv: bytes) -> ImportResult:
+    result = ImportResult(import_type="match_incidents_csv")
+    for row_number, row in _iter_rows(raw_csv):
+        try:
+            source = row.get("match_source") or row.get("source") or "csv"
+            external_id = row.get("match_external_id") or row.get("external_id")
+            if not external_id:
+                raise ValueError("match_external_id is required")
+            match = _get_match_by_source(db, source, external_id)
+            if not match:
+                raise ValueError(f"Match not found for {source}/{external_id}")
+            team = None
+            if row.get("team"):
+                team = _get_or_create_team(db, row["team"], row.get("country"))
+            incident_type = normalize_name(row.get("incident_type") or row.get("type") or "").replace(" ", "_")
+            if not incident_type:
+                raise ValueError("incident_type is required")
+            minute = _to_int(row["minute"])
+            player_name = row.get("player_name") or row.get("player") or None
+            existing = db.scalar(
+                select(MatchIncident).where(
+                    MatchIncident.match_id == match.id,
+                    MatchIncident.incident_type == incident_type,
+                    MatchIncident.minute == minute,
+                    MatchIncident.team_id == (team.id if team else None),
+                    MatchIncident.player_name == player_name,
+                    MatchIncident.source == source,
+                )
+            )
+            if existing:
+                result.skipped += 1
+                continue
+            db.add(
+                MatchIncident(
+                    match_id=match.id,
+                    team_id=team.id if team else None,
+                    incident_type=incident_type,
+                    minute=minute,
+                    player_name=player_name,
+                    detail=row.get("detail"),
+                    source=source,
+                    captured_at=_parse_datetime(row.get("captured_at") or datetime.now(UTC).isoformat()),
+                )
+            )
+            result.created += 1
+        except Exception as exc:
+            result.errors.append(ImportErrorDetail(row=row_number, message=str(exc)))
+    result.processed = result.created + result.updated + result.skipped + len(result.errors)
+    db.commit()
+    return result
 
 
 def _normalize_competition_type(value: str) -> str:

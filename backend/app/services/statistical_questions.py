@@ -2,13 +2,26 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from difflib import SequenceMatcher
 from statistics import mean
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
-from app.models import Competition, GoalMoment, Match, Player, PlayerMatchStats, Season, StandingsSnapshot, Team, TeamAlias
+from app.models import (
+    Competition,
+    GoalMoment,
+    LiveMatchObservation,
+    Match,
+    MatchIncident,
+    Player,
+    PlayerMatchStats,
+    Season,
+    StandingsSnapshot,
+    Team,
+    TeamAlias,
+)
 from app.utils.normalization import normalize_name
 
 
@@ -343,56 +356,88 @@ def _answer_shots_on_target_per_goal(db: Session, question: str, normalized_ques
 
 
 def _answer_goal_after_red_card(db: Session, question: str, normalized_question: str) -> dict:
-    # Without card event minutes we cannot prove "goal after red". Offer honest gap + weak proxy.
-    stats = db.execute(
-        select(
-            PlayerMatchStats.match_id,
-            func.sum(PlayerMatchStats.red_cards),
+    incidents = list(db.scalars(select(MatchIncident)).all())
+    by_match: dict[int, list[MatchIncident]] = defaultdict(list)
+    for incident in incidents:
+        by_match[incident.match_id].append(incident)
+
+    evaluated = 0
+    with_goal_after = 0
+    recent = []
+    for match_id, rows in by_match.items():
+        reds = [row for row in rows if "red" in row.incident_type]
+        goals = [row for row in rows if "goal" in row.incident_type]
+        if not reds:
+            continue
+        evaluated += 1
+        goal_after = any(goal.minute > red.minute for red in reds for goal in goals)
+        if goal_after:
+            with_goal_after += 1
+            recent.append(match_id)
+
+    if evaluated > 0:
+        percentage = round(with_goal_after / evaluated * 100, 1)
+        return _base_answer(
+            question,
+            (
+                f"En el {percentage}% de los partidos con tarjeta roja cronometrada "
+                f"({with_goal_after}/{evaluated}) hubo al menos un gol despues de la expulsion."
+            ),
+            question_type="goal_after_red_card",
+            scope="match_incident (roja + gol con minuto)",
+            sample_size=evaluated,
+            metrics={
+                "matches_with_red": evaluated,
+                "matches_with_goal_after_red": with_goal_after,
+                "percentage": percentage,
+            },
         )
-        .group_by(PlayerMatchStats.match_id)
-        .having(func.sum(PlayerMatchStats.red_cards) > 0)
+
+    # Fallback proxy from match-level red counts (Football-Data / player stats).
+    match_rows = db.scalars(
+        select(Match).where(
+            Match.home_score.is_not(None),
+            Match.away_score.is_not(None),
+            or_(
+                func.coalesce(Match.home_red_cards, 0) > 0,
+                func.coalesce(Match.away_red_cards, 0) > 0,
+            ),
+        )
     ).all()
-    if not stats:
+    if not match_rows:
+        player_reds = db.execute(
+            select(PlayerMatchStats.match_id)
+            .group_by(PlayerMatchStats.match_id)
+            .having(func.sum(PlayerMatchStats.red_cards) > 0)
+        ).all()
+        match_ids = [row[0] for row in player_reds]
+        match_rows = db.scalars(select(Match).where(Match.id.in_(match_ids))).all() if match_ids else []
+
+    if not match_rows:
         return _missing(
             question,
             "goal_after_red_card",
-            "No hay tarjetas rojas registradas para medir goles posteriores.",
+            "No hay tarjetas rojas ni incidentes cronometrados para medir goles posteriores.",
             [
-                "Hace falta timeline de eventos (minuto de roja y goles posteriores), p.ej. SofaScore incidents via Crawlora.",
-                "Como minimo, player-stats-csv con red_cards por partido.",
+                "Importa Football-Data enriquecido (rojas por partido) o match-incidents-csv con minuto.",
+                "Ideal: SofaScore incidents via Crawlora para saber si el gol fue despues de la roja.",
             ],
         )
 
-    match_ids = [row[0] for row in stats]
-    matches = db.execute(
-        select(Match).where(Match.id.in_(match_ids), Match.home_score.is_not(None), Match.away_score.is_not(None))
-    ).scalars().all()
-    if not matches:
-        return _missing(
-            question,
-            "goal_after_red_card",
-            "Hay rojas en stats de jugador, pero no resultados de esos partidos.",
-            ["Importa results-csv alineado con las stats y, idealmente, eventos con minuto."],
-        )
-
-    with_goal = sum(1 for match in matches if (match.home_score or 0) + (match.away_score or 0) > 0)
-    percentage = round(with_goal / len(matches) * 100, 1)
-    answer = (
-        f"Proxy debil (sin minuto de la roja): en {percentage}% de {len(matches)} partidos con al menos una roja "
-        "tambien hubo algun gol. No demuestra que el gol fuera despues de la expulsion. "
-        "Para la pregunta exacta hace falta el timeline de incidentes."
-    )
+    with_goal = sum(1 for match in match_rows if (match.home_score or 0) + (match.away_score or 0) > 0)
+    percentage = round(with_goal / len(match_rows) * 100, 1)
     return _base_answer(
         question,
-        answer,
+        (
+            f"Proxy con rojas a nivel de partido: en {percentage}% de {len(match_rows)} partidos con roja "
+            "tambien hubo algun gol. Importa match-incidents-csv para medir estrictamente 'gol despues de la roja'."
+        ),
         question_type="goal_after_red_card",
         data_status="partial",
-        scope="partidos con red_cards > 0 en player_match_stats",
-        sample_size=len(matches),
-        metrics={"matches_with_red": len(matches), "matches_with_any_goal": with_goal, "percentage": percentage},
-        missing_requirements=[
-            "Eventos con minuto de tarjeta roja y goles (SofaScore incidents / import dedicado).",
-        ],
+        scope="match.home/away_red_cards",
+        sample_size=len(match_rows),
+        metrics={"matches_with_red": len(match_rows), "matches_with_any_goal": with_goal, "percentage": percentage},
+        missing_requirements=["match-incidents-csv (minuto de roja y goles) para respuesta exacta"],
     )
 
 
@@ -521,31 +566,176 @@ def _answer_season_over_season(db: Session, question: str, normalized_question: 
 
 
 def _answer_live_low_shots(db: Session, question: str, normalized_question: str) -> dict:
-    return _missing(
+    observations = list(
+        db.scalars(
+            select(LiveMatchObservation)
+            .where(
+                LiveMatchObservation.minute.is_not(None),
+                LiveMatchObservation.minute >= 70,
+                LiveMatchObservation.minute <= 85,
+            )
+            .order_by(LiveMatchObservation.observed_at.desc())
+        ).all()
+    )
+    low_rows = []
+    seen_events: set[int] = set()
+    for observation in observations:
+        if observation.provider_event_id in seen_events:
+            continue
+        if observation.home_shots_on_target is None and observation.away_shots_on_target is None:
+            continue
+        seen_events.add(observation.provider_event_id)
+        total_sot = int(observation.home_shots_on_target or 0) + int(observation.away_shots_on_target or 0)
+        if total_sot < 1:
+            low_rows.append(observation)
+
+    if low_rows or observations:
+        rankings = [
+            {
+                "rank": index,
+                "label": f"{row.home_team} vs {row.away_team}",
+                "value": float(row.minute or 0),
+                "unit": "minuto",
+                "detail": (
+                    f"SOT {int(row.home_shots_on_target or 0)}-{int(row.away_shots_on_target or 0)} · "
+                    f"{row.competition or 'Live'}"
+                ),
+                "sample_size": 1,
+            }
+            for index, row in enumerate(low_rows[:25], start=1)
+        ]
+        answer = (
+            f"En observaciones live cerca del 75', {len(low_rows)} partidos tenian menos de 1 tiro a puerta "
+            f"(muestra observada: {len(seen_events)})."
+            if seen_events
+            else "Hay observaciones live, pero aun sin tiros a puerta capturados en el snapshot."
+        )
+        return _base_answer(
+            question,
+            answer,
+            question_type="live_low_shots_75",
+            data_status="ok" if seen_events else "partial",
+            scope="live_match_observation (min 70-85)",
+            sample_size=len(seen_events),
+            rankings=rankings,
+            metrics={"low_shot_matches": len(low_rows), "observed_matches": len(seen_events)},
+            missing_requirements=[] if seen_events else ["Snapshots SofaScore con tiros a puerta"],
+        )
+
+    # Live pull through Crawlora when configured.
+    try:
+        from app.services.sofascore_crawlora_provider import fetch_event_snapshot, fetch_live_events
+
+        live = fetch_live_events("football")
+    except Exception as exc:  # noqa: BLE001
+        return _missing(
+            question,
+            "live_low_shots_75",
+            f"No hay observaciones guardadas y no se pudo consultar SofaScore live ({exc}).",
+            ["Configura CRAWLORA_API_KEY en Vercel y refresca Partidos en directo / Flashscore."],
+        )
+
+    candidates = [event for event in live.events if event.minute is not None and 70 <= event.minute <= 85]
+    low = []
+    checked = 0
+    for event in candidates[:20]:
+        try:
+            snapshot = fetch_event_snapshot(event.event_id)
+        except Exception:  # noqa: BLE001
+            continue
+        checked += 1
+        total_sot = int(snapshot.home_shots_on_target or 0) + int(snapshot.away_shots_on_target or 0)
+        db.add(
+            LiveMatchObservation(
+                provider="sofascore",
+                provider_event_id=event.event_id,
+                observed_at=datetime.now(UTC),
+                minute=event.minute,
+                status=event.status,
+                home_team=event.home_team,
+                away_team=event.away_team,
+                competition=event.competition,
+                home_score=event.home_score,
+                away_score=event.away_score,
+                home_shots_on_target=snapshot.home_shots_on_target,
+                away_shots_on_target=snapshot.away_shots_on_target,
+                home_shots=snapshot.home_shots,
+                away_shots=snapshot.away_shots,
+            )
+        )
+        if total_sot < 1:
+            low.append(event)
+    db.commit()
+
+    rankings = [
+        {
+            "rank": index,
+            "label": f"{event.home_team} vs {event.away_team}",
+            "value": float(event.minute or 0),
+            "unit": "minuto",
+            "detail": event.competition or "Live",
+            "sample_size": 1,
+        }
+        for index, event in enumerate(low, start=1)
+    ]
+    return _base_answer(
         question,
-        "live_low_shots_75",
         (
-            "Esta pregunta es en vivo: hay que mirar partidos en curso cerca del minuto 75 con "
-            "menos de 1 disparo a puerta combinado."
+            f"Consulta live SofaScore: {len(low)} de {checked} partidos entre el 70' y 85' "
+            "tienen menos de 1 disparo a puerta combinado."
         ),
-        [
-            "Configura CRAWLORA_API_KEY y usa Partidos en directo / snapshot SofaScore (tiros a puerta).",
-            "Opcional: guardar snapshots periodicos para consultarlos desde Preguntas.",
-        ],
+        question_type="live_low_shots_75",
+        scope="SofaScore live + event statistics",
+        sample_size=checked,
+        rankings=rankings,
+        metrics={"low_shot_matches": len(low), "checked_matches": checked, "candidates": len(candidates)},
     )
 
 
 def _answer_favorite_odds_margin(db: Session, question: str, normalized_question: str) -> dict:
-    return _missing(
+    matches = db.scalars(
+        select(Match).where(
+            Match.home_score.is_not(None),
+            Match.away_score.is_not(None),
+            or_(Match.home_odds.is_not(None), Match.away_odds.is_not(None)),
+        )
+    ).all()
+    evaluated = 0
+    hits = 0
+    for match in matches:
+        home_odds = float(match.home_odds) if match.home_odds is not None else None
+        away_odds = float(match.away_odds) if match.away_odds is not None else None
+        if home_odds is None and away_odds is None:
+            continue
+        if home_odds is not None and (away_odds is None or home_odds <= away_odds):
+            favorite_odds, favorite_score, other_score = home_odds, int(match.home_score or 0), int(match.away_score or 0)
+        else:
+            favorite_odds, favorite_score, other_score = float(away_odds or 99), int(match.away_score or 0), int(match.home_score or 0)
+        if favorite_odds > 1.5:
+            continue
+        evaluated += 1
+        if favorite_score - other_score >= 2:
+            hits += 1
+
+    if evaluated == 0:
+        return _missing(
+            question,
+            "favorite_odds_margin",
+            "No hay partidos con cuota 1X2 y resultado final para medir favoritos <= 1,50.",
+            ["Importa Football-Data enriquecido (AvgH/B365H) o captura Flashscore y guarda el resultado."],
+        )
+
+    percentage = round(hits / evaluated * 100, 1)
+    return _base_answer(
         question,
-        "favorite_odds_margin",
         (
-            "No hay historico de cuotas pre-partido en la base para medir favoritos <= 1,50 y victorias por +2 goles."
+            f"En favoritos con cuota <= 1,50, el {percentage}% ({hits}/{evaluated}) acabo con "
+            "2 o mas goles de diferencia a favor del favorito."
         ),
-        [
-            "Persistir capturas Flashscore (cuota favorito + resultado final) o importar odds historicas.",
-            "Forebet solo aporta probabilidades, no cuotas 1X2 equivalentes fiables para este umbral.",
-        ],
+        question_type="favorite_odds_margin",
+        scope="match.home_odds/away_odds + resultado final",
+        sample_size=evaluated,
+        metrics={"favorites_le_150": evaluated, "margin_plus_2": hits, "percentage": percentage},
     )
 
 
@@ -553,18 +743,39 @@ def _answer_league_cards(db: Session, question: str, normalized_question: str) -
     rows = db.execute(
         select(
             Competition.name,
-            PlayerMatchStats.match_id,
-            func.sum(PlayerMatchStats.yellow_cards + PlayerMatchStats.red_cards),
+            Match.id,
+            func.coalesce(Match.home_yellow_cards, 0)
+            + func.coalesce(Match.away_yellow_cards, 0)
+            + func.coalesce(Match.home_red_cards, 0)
+            + func.coalesce(Match.away_red_cards, 0),
         )
-        .join(Competition, PlayerMatchStats.competition_id == Competition.id)
-        .group_by(Competition.name, PlayerMatchStats.match_id)
+        .join(Competition, Match.competition_id == Competition.id)
+        .where(
+            or_(
+                Match.home_yellow_cards.is_not(None),
+                Match.away_yellow_cards.is_not(None),
+                Match.home_red_cards.is_not(None),
+                Match.away_red_cards.is_not(None),
+            )
+        )
     ).all()
+    if not rows:
+        # Fallback to player stats aggregation.
+        rows = db.execute(
+            select(
+                Competition.name,
+                PlayerMatchStats.match_id,
+                func.sum(PlayerMatchStats.yellow_cards + PlayerMatchStats.red_cards),
+            )
+            .join(Competition, PlayerMatchStats.competition_id == Competition.id)
+            .group_by(Competition.name, PlayerMatchStats.match_id)
+        ).all()
     if not rows:
         return _missing(
             question,
             "league_cards",
-            "No hay tarjetas en player_match_stats para ranking tarjetero.",
-            ["Importa player-stats-csv con yellow_cards/red_cards o stats SofaScore/FootyStats."],
+            "No hay tarjetas a nivel de partido ni en player_match_stats.",
+            ["Importa Football-Data enriquecido o player-stats-csv con yellow/red cards."],
         )
 
     by_league: dict[str, list[int]] = defaultdict(list)
@@ -595,7 +806,7 @@ def _answer_league_cards(db: Session, question: str, normalized_question: str) -
         question,
         answer,
         question_type="league_cards",
-        scope="competiciones con tarjetas en player_match_stats",
+        scope="competiciones con tarjetas en match/player stats",
         sample_size=len(rows),
         rankings=rankings,
         metrics={"most_cards_league": top["label"], "least_cards_league": bottom["label"]},
@@ -713,9 +924,10 @@ def _answer_after_00_next_first_half(db: Session, question: str, normalized_ques
             select(GoalMoment.match_id).where(GoalMoment.minute <= 45)
         ).all()
     }
-    has_any_moments = db.scalar(select(func.count()).select_from(GoalMoment)) or 0
+    has_any_moments = bool(db.scalar(select(func.count()).select_from(GoalMoment)))
 
     evaluated = 0
+    known = 0
     no_first_half_goal = 0
     recent = []
     for competition_matches in by_competition.values():
@@ -724,13 +936,17 @@ def _answer_after_00_next_first_half(db: Session, question: str, normalized_ques
                 continue
             nxt, nxt_home, nxt_away = competition_matches[index + 1]
             evaluated += 1
-            # If we have goal moments anywhere, use them; else fall back to unknown -> skip precise count
-            if has_any_moments:
+            first_half_goal: bool | None
+            if nxt.home_ht_score is not None and nxt.away_ht_score is not None:
+                first_half_goal = (int(nxt.home_ht_score) + int(nxt.away_ht_score)) > 0
+            elif has_any_moments:
                 first_half_goal = nxt.id in moments
             else:
                 first_half_goal = None
-            if first_half_goal is False:
-                no_first_half_goal += 1
+            if first_half_goal is not None:
+                known += 1
+                if first_half_goal is False:
+                    no_first_half_goal += 1
             recent.append(
                 {
                     "match_id": nxt.id,
@@ -751,16 +967,16 @@ def _answer_after_00_next_first_half(db: Session, question: str, normalized_ques
             question,
             "after_00_next_first_half",
             "No hay partidos 0-0 con un siguiente partido en la misma competicion.",
-            ["Amplia el historico de results-csv."],
+            ["Amplia el historico de results-csv / Football-Data."],
             matched_competition=competition.name if competition else None,
         )
 
-    if not has_any_moments:
+    if known == 0:
         return _base_answer(
             question,
             (
-                f"Encontre {evaluated} secuencias 0-0 → siguiente partido, pero faltan goal moments "
-                "para saber si hubo gol en la 1a parte del siguiente."
+                f"Encontre {evaluated} secuencias 0-0 → siguiente partido, pero faltan marcadores HT "
+                "o goal moments para saber si hubo gol en la 1a parte del siguiente."
             ),
             question_type="after_00_next_first_half",
             data_status="partial",
@@ -769,12 +985,12 @@ def _answer_after_00_next_first_half(db: Session, question: str, normalized_ques
             sample_size=evaluated,
             recent_matches=recent[:10],
             metrics={"zero_zero_sequences": evaluated},
-            missing_requirements=["Importa goal-moments-csv (minuto/periodo) o incidents SofaScore."],
+            missing_requirements=["Importa Football-Data con HTHG/HTAG o goal-moments-csv."],
         )
 
-    percentage = round(no_first_half_goal / evaluated * 100, 1)
+    percentage = round(no_first_half_goal / known * 100, 1)
     answer = (
-        f"Tras un 0-0, en el {percentage}% de los casos ({no_first_half_goal}/{evaluated}) "
+        f"Tras un 0-0, en el {percentage}% de los casos conocidos ({no_first_half_goal}/{known}) "
         "el siguiente partido de esa competicion no tuvo gol en la primera parte."
     )
     return _base_answer(
@@ -783,9 +999,10 @@ def _answer_after_00_next_first_half(db: Session, question: str, normalized_ques
         question_type="after_00_next_first_half",
         scope=competition.name if competition else "competiciones cargadas",
         matched_competition=competition.name if competition else None,
-        sample_size=evaluated,
+        sample_size=known,
         metrics={
             "zero_zero_sequences": evaluated,
+            "sequences_with_first_half_data": known,
             "next_without_first_half_goal": no_first_half_goal,
             "percentage": percentage,
         },
@@ -798,38 +1015,81 @@ def _team_shot_aggregates(
     competition_id: int | None = None,
     season_id: int | None = None,
 ) -> list[dict]:
-    query = (
-        select(
-            Team.id,
-            Team.name,
-            Competition.name,
-            PlayerMatchStats.match_id,
-            func.sum(PlayerMatchStats.shots_on_target),
-            func.sum(PlayerMatchStats.goals),
-        )
-        .join(Team, PlayerMatchStats.team_id == Team.id)
-        .join(Competition, PlayerMatchStats.competition_id == Competition.id)
-        .where(PlayerMatchStats.shots_on_target.is_not(None))
-        .group_by(Team.id, Team.name, Competition.name, PlayerMatchStats.match_id)
+    home_team = Team.__table__.alias("home_team")
+    away_team = Team.__table__.alias("away_team")
+    match_query = (
+        select(Match, Competition.name, home_team.c.id, home_team.c.name, away_team.c.id, away_team.c.name)
+        .join(Competition, Match.competition_id == Competition.id)
+        .join(home_team, Match.home_team_id == home_team.c.id)
+        .join(away_team, Match.away_team_id == away_team.c.id)
+        .where(or_(Match.home_shots_on_target.is_not(None), Match.away_shots_on_target.is_not(None)))
     )
     if competition_id is not None:
-        query = query.where(PlayerMatchStats.competition_id == competition_id)
+        match_query = match_query.where(Match.competition_id == competition_id)
     if season_id is not None:
-        query = query.where(PlayerMatchStats.season_id == season_id)
-    match_rows = db.execute(query).all()
-    if not match_rows:
-        return []
+        match_query = match_query.where(Match.season_id == season_id)
+    match_rows = db.execute(match_query).all()
 
     buckets: dict[tuple[int, str, str], dict] = {}
-    for team_id, team_name, competition_name, _match_id, sot, goals in match_rows:
-        key = (team_id, team_name, competition_name)
-        bucket = buckets.setdefault(
-            key,
-            {"team_id": team_id, "team": team_name, "competition": competition_name, "matches": 0, "shots_on_target": 0, "goals": 0},
+    if match_rows:
+        for match, competition_name, home_id, home_name, away_id, away_name in match_rows:
+            sides = (
+                (home_id, home_name, match.home_shots_on_target, match.home_score),
+                (away_id, away_name, match.away_shots_on_target, match.away_score),
+            )
+            for team_id, team_name, sot, goals in sides:
+                if sot is None:
+                    continue
+                key = (team_id, team_name, competition_name)
+                bucket = buckets.setdefault(
+                    key,
+                    {
+                        "team_id": team_id,
+                        "team": team_name,
+                        "competition": competition_name,
+                        "matches": 0,
+                        "shots_on_target": 0,
+                        "goals": 0,
+                    },
+                )
+                bucket["matches"] += 1
+                bucket["shots_on_target"] += int(sot or 0)
+                bucket["goals"] += int(goals or 0)
+    else:
+        query = (
+            select(
+                Team.id,
+                Team.name,
+                Competition.name,
+                PlayerMatchStats.match_id,
+                func.sum(PlayerMatchStats.shots_on_target),
+                func.sum(PlayerMatchStats.goals),
+            )
+            .join(Team, PlayerMatchStats.team_id == Team.id)
+            .join(Competition, PlayerMatchStats.competition_id == Competition.id)
+            .where(PlayerMatchStats.shots_on_target.is_not(None))
+            .group_by(Team.id, Team.name, Competition.name, PlayerMatchStats.match_id)
         )
-        bucket["matches"] += 1
-        bucket["shots_on_target"] += int(sot or 0)
-        bucket["goals"] += int(goals or 0)
+        if competition_id is not None:
+            query = query.where(PlayerMatchStats.competition_id == competition_id)
+        if season_id is not None:
+            query = query.where(PlayerMatchStats.season_id == season_id)
+        for team_id, team_name, competition_name, _match_id, sot, goals in db.execute(query).all():
+            key = (team_id, team_name, competition_name)
+            bucket = buckets.setdefault(
+                key,
+                {
+                    "team_id": team_id,
+                    "team": team_name,
+                    "competition": competition_name,
+                    "matches": 0,
+                    "shots_on_target": 0,
+                    "goals": 0,
+                },
+            )
+            bucket["matches"] += 1
+            bucket["shots_on_target"] += int(sot or 0)
+            bucket["goals"] += int(goals or 0)
 
     rows = []
     for bucket in buckets.values():

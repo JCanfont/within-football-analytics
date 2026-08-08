@@ -9,6 +9,7 @@ from app.services.csv_imports import (
     import_forebet_csv,
     import_goal_moments_csv,
     import_goal_timing_csv,
+    import_match_incidents_csv,
     import_player_stats_csv,
     import_results_csv,
     import_standings_csv,
@@ -41,6 +42,11 @@ async def upload_goal_timing_csv(file: UploadFile = File(...), db: Session = Dep
 @router.post("/goal-moments-csv", response_model=ImportResult)
 async def upload_goal_moments_csv(file: UploadFile = File(...), db: Session = Depends(get_db)) -> ImportResult:
     return await _run_import(file, db, import_goal_moments_csv)
+
+
+@router.post("/match-incidents-csv", response_model=ImportResult)
+async def upload_match_incidents_csv(file: UploadFile = File(...), db: Session = Depends(get_db)) -> ImportResult:
+    return await _run_import(file, db, import_match_incidents_csv)
 
 
 @router.post("/forebet", response_model=ImportResult)

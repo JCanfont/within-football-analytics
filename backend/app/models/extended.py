@@ -164,6 +164,58 @@ class GoalMoment(Base):
     captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
 
 
+class MatchIncident(Base):
+    """Timed match events (goals, cards) for sequence questions like goal-after-red."""
+
+    __tablename__ = "match_incident"
+    __table_args__ = (
+        UniqueConstraint(
+            "match_id",
+            "incident_type",
+            "minute",
+            "team_id",
+            "player_name",
+            "source",
+            name="uq_match_incident_identity",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    match_id: Mapped[int] = mapped_column(ForeignKey("match.id"), nullable=False, index=True)
+    team_id: Mapped[int | None] = mapped_column(ForeignKey("team.id"), index=True)
+    incident_type: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    minute: Mapped[int] = mapped_column(Integer, nullable=False)
+    player_name: Mapped[str | None] = mapped_column(String(180))
+    detail: Mapped[str | None] = mapped_column(String(240))
+    source: Mapped[str | None] = mapped_column(String(80))
+    captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+
+
+class LiveMatchObservation(Base):
+    """Periodic live snapshots used by statistical questions about in-play shot rates."""
+
+    __tablename__ = "live_match_observation"
+    __table_args__ = (
+        UniqueConstraint("provider_event_id", "observed_at", name="uq_live_match_observation_event_time"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    provider: Mapped[str] = mapped_column(String(80), nullable=False, default="sofascore")
+    provider_event_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    minute: Mapped[int | None] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(40), nullable=False, default="inprogress")
+    home_team: Mapped[str] = mapped_column(String(180), nullable=False)
+    away_team: Mapped[str] = mapped_column(String(180), nullable=False)
+    competition: Mapped[str | None] = mapped_column(String(180))
+    home_score: Mapped[int | None] = mapped_column(Integer)
+    away_score: Mapped[int | None] = mapped_column(Integer)
+    home_shots_on_target: Mapped[int | None] = mapped_column(Integer)
+    away_shots_on_target: Mapped[int | None] = mapped_column(Integer)
+    home_shots: Mapped[int | None] = mapped_column(Integer)
+    away_shots: Mapped[int | None] = mapped_column(Integer)
+
+
 class PlayerMatchStats(Base):
     __tablename__ = "player_match_stats"
     __table_args__ = (UniqueConstraint("player_id", "match_id", "source", name="uq_player_match_stats_source"),)

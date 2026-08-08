@@ -237,6 +237,7 @@ def convert_league_rows(season: str, league_code: str, rows: list[dict[str, str]
         home_score = int(row["FTHG"])
         away_score = int(row["FTAG"])
         external_id = make_external_id(league_code, season, row["Date"], home, away)
+        home_odds, draw_odds, away_odds, odds_source = pick_odds(row)
         result_rows.append(
             {
                 "competition": competition,
@@ -251,6 +252,20 @@ def convert_league_rows(season: str, league_code: str, rows: list[dict[str, str]
                 "city": "",
                 "home_score": str(home_score),
                 "away_score": str(away_score),
+                "home_ht_score": optional_str_int(row.get("HTHG")),
+                "away_ht_score": optional_str_int(row.get("HTAG")),
+                "home_shots": optional_str_int(row.get("HS")),
+                "away_shots": optional_str_int(row.get("AS")),
+                "home_shots_on_target": optional_str_int(row.get("HST")),
+                "away_shots_on_target": optional_str_int(row.get("AST")),
+                "home_yellow_cards": optional_str_int(row.get("HY")),
+                "away_yellow_cards": optional_str_int(row.get("AY")),
+                "home_red_cards": optional_str_int(row.get("HR")),
+                "away_red_cards": optional_str_int(row.get("AR")),
+                "home_odds": home_odds,
+                "draw_odds": draw_odds,
+                "away_odds": away_odds,
+                "odds_source": odds_source,
                 "status": "finished",
                 "is_friendly": "false",
                 "source": "football-data",
@@ -428,8 +443,7 @@ def fast_import_results(db, results_path: Path) -> tuple[int, int]:
         match_key = (row.get("source") or "football-data", row["external_id"])
         match = existing_matches.get(match_key)
         if match:
-            match.home_score = optional_int(row.get("home_score"))
-            match.away_score = optional_int(row.get("away_score"))
+            apply_match_enrichment(match, row)
             match.status = row.get("status") or match.status
             updated += 1
         else:
@@ -448,6 +462,7 @@ def fast_import_results(db, results_path: Path) -> tuple[int, int]:
                 source=match_key[0],
                 external_id=match_key[1],
             )
+            apply_match_enrichment(match, row)
             db.add(match)
             existing_matches[match_key] = match
             created += 1
@@ -477,6 +492,54 @@ def optional_int(value: str | None) -> int | None:
     if value in {None, ""}:
         return None
     return int(float(value))
+
+
+def optional_str_int(value: str | None) -> str:
+    parsed = optional_int(value)
+    return "" if parsed is None else str(parsed)
+
+
+def optional_float(value: str | None) -> float | None:
+    if value in {None, ""}:
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def pick_odds(row: dict[str, str]) -> tuple[str, str, str, str]:
+    for prefix, source in (("Avg", "football-data-avg"), ("B365", "football-data-b365"), ("PS", "football-data-pinnacle")):
+        home = optional_float(row.get(f"{prefix}H"))
+        draw = optional_float(row.get(f"{prefix}D"))
+        away = optional_float(row.get(f"{prefix}A"))
+        if home is not None and draw is not None and away is not None:
+            return (str(home), str(draw), str(away), source)
+    return ("", "", "", "")
+
+
+def apply_match_enrichment(match, row: dict[str, str]) -> None:
+    from decimal import Decimal
+
+    match.home_score = optional_int(row.get("home_score"))
+    match.away_score = optional_int(row.get("away_score"))
+    match.home_ht_score = optional_int(row.get("home_ht_score"))
+    match.away_ht_score = optional_int(row.get("away_ht_score"))
+    match.home_shots = optional_int(row.get("home_shots"))
+    match.away_shots = optional_int(row.get("away_shots"))
+    match.home_shots_on_target = optional_int(row.get("home_shots_on_target"))
+    match.away_shots_on_target = optional_int(row.get("away_shots_on_target"))
+    match.home_yellow_cards = optional_int(row.get("home_yellow_cards"))
+    match.away_yellow_cards = optional_int(row.get("away_yellow_cards"))
+    match.home_red_cards = optional_int(row.get("home_red_cards"))
+    match.away_red_cards = optional_int(row.get("away_red_cards"))
+    home_odds = optional_float(row.get("home_odds"))
+    draw_odds = optional_float(row.get("draw_odds"))
+    away_odds = optional_float(row.get("away_odds"))
+    match.home_odds = Decimal(str(home_odds)) if home_odds is not None else None
+    match.draw_odds = Decimal(str(draw_odds)) if draw_odds is not None else None
+    match.away_odds = Decimal(str(away_odds)) if away_odds is not None else None
+    match.odds_source = row.get("odds_source") or None
 
 
 if __name__ == "__main__":
