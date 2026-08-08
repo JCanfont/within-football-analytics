@@ -172,6 +172,13 @@ def test_flashscore_provider_explains_missing_subscription(monkeypatch) -> None:
     assert result.matches == []
 
 
+def test_flashscore_provider_reads_finished_flags_and_ignores_timestamp_minutes() -> None:
+    assert flashscore_provider._status_value({"is_finished": True, "match_status": "2nd Half"}) == "finished"
+    assert flashscore_provider._status_value({"is_in_progress": True}) == "live"
+    assert flashscore_provider._minute_value({"time": "2026-08-08T20:00:00Z", "live_time": "24'"}) == 24
+    assert flashscore_provider._minute_value({"time": "20:00"}) is None
+
+
 def test_flashscore_provider_ignores_scalar_average_as_home_odd() -> None:
     home, draw, away = flashscore_provider._extract_one_x_two({
         "odds": {"avg": "1.45", "1": "2.10", "X": "3.20", "2": "3.40"},

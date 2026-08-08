@@ -24,6 +24,8 @@ FLASHSCORE_WATCH_KEY = "flashscore_watch"
 ALERT_ODDS_THRESHOLD = 1.5
 EARLY_GOAL_MINUTE = 30
 SLOW_LIVE_POLL = timedelta(minutes=5)
+# If Flashscore leaves status as "scheduled" with scores but no minute, stop after this.
+FINISHED_WITHOUT_CLOCK = timedelta(minutes=105)
 
 
 def save_flashscore_watch(
@@ -91,6 +93,7 @@ def merge_flashscore_live_board(
     """Merge live minute/score from Flashscore board into a sticky ≤1.60 watchlist."""
     by_id = {match.event_id: match for match in board}
     merged: list[FlashscoreMatchRead] = []
+    now = datetime.now(UTC)
     for match in matches:
         live = by_id.get(match.event_id)
         data = match.model_dump()
@@ -100,7 +103,10 @@ def merge_flashscore_live_board(
             data["home_score"] = live.home_score if live.home_score is not None else match.home_score
             data["away_score"] = live.away_score if live.away_score is not None else match.away_score
             # Keep captured prematch odds / favorite sticky on the watchlist.
-        merged.append(with_early_goal_flags(FlashscoreMatchRead.model_validate(data)))
+        stamped = FlashscoreMatchRead.model_validate(data)
+        if is_match_finished(stamped, now) and (stamped.status or "").lower() != "finished":
+            stamped = stamped.model_copy(update={"status": "finished", "minute": None if stamped.minute is None else stamped.minute})
+        merged.append(with_early_goal_flags(stamped))
     return merged
 
 
@@ -175,22 +181,57 @@ def is_alert_eligible(match: FlashscoreMatchRead) -> bool:
     return (favorite_score or 0) > 0
 
 
+def is_match_finished(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
+    """Detect finished matches even when Flashscore leaves status as scheduled."""
+    status = (match.status or "").lower().strip()
+    if status in {"finished", "ft", "aet", "ap"} or any(
+        token in status
+        for token in (
+            "finish",
+            "ended",
+            "final",
+            "full time",
+            "after extra",
+            "after pen",
+            "penalties",
+            "awarded",
+            "abandoned",
+            "cancelled",
+            "canceled",
+            "postponed",
+            "walkover",
+            "retired",
+            "closed",
+        )
+    ):
+        return True
+    if match.minute is not None:
+        return False
+    if match.start_time is None:
+        return False
+    current = now or datetime.now(UTC)
+    start = match.start_time
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=UTC)
+    # No live clock after a full-match window ⇒ treat as done (common Flashscore list quirk).
+    return current >= start + FINISHED_WITHOUT_CLOCK
+
+
 def needs_live_poll(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
     """True while a ≤1.60 favorite still needs live Flashscore updates."""
     if match.favorite_odds is None or match.favorite_odds > LIST_ODDS_THRESHOLD:
         return False
-    status = (match.status or "").lower()
-    if "finish" in status or "ended" in status or "afterpen" in status:
+    current = now or datetime.now(UTC)
+    if is_match_finished(match, current):
         return False
     if match.minute is not None:
         return True
     if match.start_time is None:
         return True
-    current = now or datetime.now(UTC)
     start = match.start_time
     if start.tzinfo is None:
         start = start.replace(tzinfo=UTC)
-    return start - timedelta(minutes=20) <= current <= start + timedelta(hours=2, minutes=30)
+    return start - timedelta(minutes=20) <= current < start + FINISHED_WITHOUT_CLOCK
 
 
 def needs_fast_live_poll(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
@@ -232,16 +273,34 @@ def run_flashscore_signal_tick(db: Session, settings: Settings | None = None) ->
         )
 
     now = datetime.now(UTC)
+    stamped_watch = []
+    finished_stamped = 0
+    for match in watch.matches:
+        if is_match_finished(match, now) and (match.status or "").lower() != "finished":
+            stamped_watch.append(match.model_copy(update={"status": "finished"}))
+            finished_stamped += 1
+        else:
+            stamped_watch.append(match)
+    if finished_stamped:
+        watch = save_flashscore_watch(
+            db,
+            day=watch.day,
+            captured_at=watch.captured_at,
+            matches=stamped_watch,
+            last_live_poll_at=watch.last_live_poll_at,
+        )
+
     live_candidates = [match for match in watch.matches if needs_live_poll(match, now)]
     if not live_candidates:
+        finished = sum(1 for match in watch.matches if is_match_finished(match, now))
         return FlashscoreTickResult(
             status="idle",
             checked=len(watch.matches),
             eligible=0,
             emails_sent=0,
             message=(
-                f"{len(watch.matches)} vigilados ≤ {LIST_ODDS_THRESHOLD:.2f}, ninguno activo. "
-                "Sin consulta Flashscore."
+                f"{len(watch.matches)} vigilados ≤ {LIST_ODDS_THRESHOLD:.2f}, "
+                f"{finished} acabados, ninguno activo. Sin consulta Flashscore."
             ),
         )
 

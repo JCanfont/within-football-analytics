@@ -336,9 +336,7 @@ def _collect_matches(
             competition=inherited or "Flashscore",
             home_team=home_team,
             away_team=away_team,
-            status=_normalize_status(
-                _string_value(value, "match_status", "stage", "status", "state") or "scheduled"
-            ),
+            status=_status_value(value),
             minute=_minute_value(value),
             home_score=_score_value(value, "home"),
             away_score=_score_value(value, "away"),
@@ -576,26 +574,78 @@ def _score_value(record: dict[str, Any], side: str) -> int | None:
 
 
 def _minute_value(record: dict[str, Any]) -> int | None:
-    value = _value(record, "minute", "live_time", "liveTime", "clock", "time")
+    # Avoid generic "time" — Flashscore often stores kickoff timestamps there.
+    value = _value(record, "minute", "live_time", "liveTime", "clock", "match_time", "game_time")
+    parsed = _parse_minute_candidate(value)
+    if parsed is not None:
+        return parsed
+    stage = record.get("stage") or record.get("match_status")
+    return _parse_minute_candidate(stage)
+
+
+def _parse_minute_candidate(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
     if isinstance(value, (int, float)):
-        return int(value)
-    if isinstance(value, str):
-        digits = "".join(character for character in value.split("+", 1)[0] if character.isdigit())
-        return int(digits) if digits else None
-    stage = record.get("stage")
-    if isinstance(stage, str):
-        digits = "".join(character for character in stage.split("+", 1)[0] if character.isdigit())
-        return int(digits) if digits else None
-    return None
+        minute = int(value)
+        return minute if 0 <= minute <= 130 else None
+    if not isinstance(value, str):
+        return None
+    text = value.strip().lower()
+    if not text or ("-" in text and "t" in text):
+        # ISO timestamps like 2026-08-08t20:00:00z are not live minutes.
+        return None
+    if ":" in text and len(text) >= 4 and not text.endswith("'"):
+        # Kickoff clock like 20:00, not a live minute.
+        return None
+    digits = "".join(character for character in text.split("+", 1)[0] if character.isdigit())
+    if not digits:
+        return None
+    minute = int(digits)
+    return minute if 0 <= minute <= 130 else None
+
+
+def _status_value(record: dict[str, Any]) -> str:
+    if record.get("is_finished") is True or record.get("isFinished") is True:
+        return "finished"
+    if record.get("is_in_progress") is True or record.get("isInProgress") is True:
+        return "live"
+    if record.get("is_started") is False or record.get("isStarted") is False:
+        raw = _string_value(record, "match_status", "stage", "status", "state")
+        return _normalize_status(raw or "scheduled")
+    raw = _string_value(record, "match_status", "stage", "status", "state")
+    return _normalize_status(raw or "scheduled")
 
 
 def _normalize_status(status: str) -> str:
-    lowered = status.lower()
-    if any(token in lowered for token in ("live", "1st", "2nd", "half", "progress")):
-        return "live"
-    if any(token in lowered for token in ("finish", "ended", "ft", "aet", "pen")):
+    lowered = status.lower().strip()
+    if lowered in {"ft", "aet", "ap", "pen", "pen."}:
         return "finished"
-    return status
+    if any(
+        token in lowered
+        for token in (
+            "finish",
+            "ended",
+            "final",
+            "full time",
+            "fulltime",
+            "after extra",
+            "after pen",
+            "penalties",
+            "awarded",
+            "abandoned",
+            "cancelled",
+            "canceled",
+            "postponed",
+            "walkover",
+            "retired",
+            "closed",
+        )
+    ):
+        return "finished"
+    if any(token in lowered for token in ("live", "1st", "2nd", "half", "progress", "inplay", "in play")):
+        return "live"
+    return status or "scheduled"
 
 
 def _datetime_value(record: dict[str, Any], *keys: str) -> datetime | None:

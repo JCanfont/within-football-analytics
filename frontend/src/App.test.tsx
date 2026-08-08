@@ -534,7 +534,7 @@ describe("App", () => {
       alert_threshold: 1.5,
       matches: [{
         event_id: "flash-1",
-        start_time: "2026-08-07T20:00:00Z",
+        start_time: new Date(Date.now() + 30 * 60_000).toISOString(),
         competition: "LaLiga",
         home_team: "Getafe",
         away_team: "Celta",
@@ -810,6 +810,7 @@ describe("App", () => {
   }, 30000);
 
   it("emails once when Flashscore Ultra shows the low-odds team scored before minute 30", async () => {
+    const kickoff = new Date(Date.now() - 20 * 60_000).toISOString();
     mockedApi.fetchFlashscoreMatches.mockResolvedValue({
       provider: "flashscore",
       status: "ok",
@@ -819,7 +820,7 @@ describe("App", () => {
       alert_threshold: 1.5,
       matches: [{
         event_id: "flash-alert-1",
-        start_time: "2026-08-07T20:00:00Z",
+        start_time: kickoff,
         competition: "LaLiga",
         home_team: "Getafe",
         away_team: "Celta",
@@ -844,7 +845,7 @@ describe("App", () => {
       threshold: 1.6,
       matches: [{
         event_id: "flash-alert-1",
-        start_time: "2026-08-07T20:00:00Z",
+        start_time: kickoff,
         competition: "LaLiga",
         home_team: "Getafe",
         away_team: "Celta",
