@@ -152,3 +152,15 @@ describe("flashscoreWatch", () => {
     })], now)).toBeNull();
   });
 });
+
+describe("isWatchableCompetition / isHalfTime", () => {
+  it("rejects poland/norway deep leagues and women sides", async () => {
+    const { isWatchableCompetition, isHalfTime } = await import("./flashscoreWatch");
+    expect(isWatchableCompetition(baseMatch({ competition: "POLAND: III Liga - Group II" }))).toBe(false);
+    expect(isWatchableCompetition(baseMatch({ competition: "NORWAY: Division 2 - Group 1" }))).toBe(false);
+    expect(isWatchableCompetition(baseMatch({ competition: "POLAND: Ekstraliga Women" }))).toBe(false);
+    expect(isWatchableCompetition(baseMatch({ home_team: "Lyn W", away_team: "LSK Kvinner W" }))).toBe(false);
+    expect(isHalfTime(baseMatch({ status: "halftime" }))).toBe(true);
+    expect(isHalfTime(baseMatch({ status: "2nd half" }))).toBe(false);
+  });
+});

@@ -28,8 +28,19 @@ ALWAYS_REJECT_TOKENS = (
     "amistoso",
     "women",
     "femen",
+    "femenina",
+    "femenino",
+    "feminine",
     "womens",
     "women's",
+    "ladies",
+    "damer",
+    "kvinn",
+    "nadeshiko",
+    "nwsl",
+    "wk league",
+    "elitettan",
+    "toppserien",
     "u15",
     "u16",
     "u17",
@@ -50,6 +61,18 @@ ALWAYS_REJECT_TOKENS = (
     "junior",
     "next pro",
     "mls next",
+    "central youth",
+)
+
+# Always drop these lower tiers even if cup heuristics misfire.
+HARD_REJECT_COMPETITION = (
+    re.compile(r"norway:.*\bdivision\s*[23]\b", re.I),
+    re.compile(r"norway:.*\b[23]\.\s*divisjon\b", re.I),
+    re.compile(r"poland:.*\biii\b", re.I),
+    re.compile(r"poland:.*\b3\.\s*liga\b", re.I),
+    re.compile(r"poland:.*\bdivision\s*2\b", re.I),
+    re.compile(r"poland:.*\bii\s*liga\b", re.I),
+    re.compile(r"poland:.*\b2\.\s*liga\b", re.I),
 )
 
 INTERNATIONAL_ALLOW = (
@@ -196,13 +219,14 @@ COUNTRY_TIER_RULES: dict[str, tuple[tuple[str, int], ...]] = {
     ),
     "poland": (
         ("ekstraklasa", 1),
-        ("division 1", 2),
-        ("i liga", 2),
-        ("1. liga", 2),
+        ("division 2", 3),
         ("ii liga", 3),
         ("2. liga", 3),
         ("iii liga", 4),
         ("3. liga", 4),
+        ("division 1", 2),
+        ("i liga", 2),
+        ("1. liga", 2),
         ("polish cup", 0),
         ("puchar", 0),
     ),
@@ -489,9 +513,13 @@ def is_watchable_competition(match: FlashscoreMatchRead) -> bool:
     home = match.home_team or ""
     away = match.away_team or ""
     haystack = f"{competition} {home} {away}".lower()
+    if _is_women_match(competition, home, away, haystack):
+        return False
     if any(token in haystack for token in ALWAYS_REJECT_TOKENS):
         return False
     if _is_under_20(haystack):
+        return False
+    if any(pattern.search(competition) for pattern in HARD_REJECT_COMPETITION):
         return False
 
     country, league = _split_competition(competition)
@@ -500,6 +528,9 @@ def is_watchable_competition(match: FlashscoreMatchRead) -> bool:
     full_l = competition.lower()
 
     if any(token in full_l for token in INTERNATIONAL_ALLOW):
+        # Never allow women's internationals even if they match UEFA/CL tokens.
+        if _is_women_match(competition, home, away, haystack):
+            return False
         return True
 
     if not country_key:
@@ -531,6 +562,34 @@ def _is_under_20(haystack: str) -> bool:
     if any(token in haystack for token in ("u20", "under 20", "under-20", "under20", "sub-20", "sub 20", "sub20")):
         return True
     return bool(re.search(r"\bu-?20\b", haystack))
+
+
+def _is_women_match(competition: str, home: str, away: str, haystack: str) -> bool:
+    if any(
+        token in haystack
+        for token in (
+            "women",
+            "femen",
+            "femenina",
+            "femenino",
+            "feminine",
+            "ladies",
+            "damer",
+            "kvinn",
+            "nadeshiko",
+            "nwsl",
+            "wk league",
+            "elitettan",
+            "toppserien",
+        )
+    ):
+        return True
+    # Flashscore often suffixes women's sides with " W" (avoid false positives like "West").
+    if home.rstrip().endswith(" W") or away.rstrip().endswith(" W"):
+        return True
+    if re.search(r"\bwomen\b|\bwomens\b|\bladies\b", competition, re.I):
+        return True
+    return False
 
 
 def _split_competition(competition: str) -> tuple[str, str]:

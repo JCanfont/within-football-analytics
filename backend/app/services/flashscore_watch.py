@@ -16,9 +16,11 @@ from app.schemas.api import (
     SofaScoreTeamEvent,
 )
 from app.services.email_alerts import send_flashscore_goal_email
+from app.services.flashscore_competition_filter import is_watchable_competition
 from app.services.flashscore_provider import (
     LIST_ODDS_THRESHOLD,
     enrich_matches_with_details,
+    enrich_matches_with_goal_minutes,
     fetch_flashscore_live_board,
 )
 from app.utils.team_match import same_team
@@ -236,10 +238,24 @@ def has_match_started(match: FlashscoreMatchRead, now: datetime | None = None) -
     if match.home_score is not None or match.away_score is not None:
         return True
     status = (match.status or "").lower()
-    if any(token in status for token in ("live", "1st", "2nd", "half", "progress", "inplay", "in play")):
+    if any(
+        token in status
+        for token in ("live", "1st", "2nd", "half", "halftime", "progress", "inplay", "in play", "ht")
+    ):
         return True
     # Flashscore often keeps status=scheduled after kickoff; the clock is enough.
     return is_past_kickoff(match, current)
+
+
+def is_half_time(match: FlashscoreMatchRead) -> bool:
+    status = (match.status or "").lower().strip()
+    if status in {"halftime", "ht", "break", "pause", "paused"}:
+        return True
+    if "half time" in status or "half-time" in status or "halftime" in status:
+        return True
+    if "half" in status and not any(token in status for token in ("1st", "2nd", "first", "second")):
+        return True
+    return False
 
 
 def is_past_kickoff(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
@@ -370,6 +386,7 @@ def run_flashscore_signal_tick(db: Session, settings: Settings | None = None) ->
 
     merged = merge_flashscore_live_board(watch.matches, board)
     merged = enrich_matches_with_details(merged, settings)
+    merged = enrich_matches_with_goal_minutes(merged, settings)
     save_flashscore_watch(
         db,
         day=watch.day,
@@ -421,7 +438,11 @@ def run_flashscore_signal_tick(db: Session, settings: Settings | None = None) ->
 
 
 def _is_watchable(match: FlashscoreMatchRead) -> bool:
-    return match.favorite_odds is not None and match.favorite_odds <= LIST_ODDS_THRESHOLD
+    return (
+        match.favorite_odds is not None
+        and match.favorite_odds <= LIST_ODDS_THRESHOLD
+        and is_watchable_competition(match)
+    )
 
 
 def _watch_from_payload(payload: dict[str, Any]) -> FlashscoreWatchState:

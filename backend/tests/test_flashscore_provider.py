@@ -177,8 +177,47 @@ def test_flashscore_provider_explains_missing_subscription(monkeypatch) -> None:
 def test_flashscore_provider_reads_finished_flags_and_ignores_timestamp_minutes() -> None:
     assert flashscore_provider._status_value({"is_finished": True, "match_status": "2nd Half"}) == "finished"
     assert flashscore_provider._status_value({"is_in_progress": True}) == "live"
+    assert flashscore_provider._status_value({"is_in_progress": True, "stage": "Half Time"}) == "halftime"
+    assert flashscore_provider._status_value({"live_time": "HT"}) == "halftime"
     assert flashscore_provider._minute_value({"time": "2026-08-08T20:00:00Z", "live_time": "24'"}) == 24
     assert flashscore_provider._minute_value({"time": "20:00"}) is None
+
+
+def test_extract_goal_minutes_from_summary_payload() -> None:
+    payload = {
+        "incidents": [
+            {"type": "goal", "time": "12'", "team": "home"},
+            {"type": "yellow", "time": "20'"},
+            {"type": "goal", "minute": 41, "team": "away"},
+        ]
+    }
+    assert flashscore_provider._extract_goal_minutes(payload) == [12, 41]
+
+
+def test_enrich_matches_with_goal_minutes(monkeypatch) -> None:
+    base = FlashscoreMatchRead(
+        event_id="goal-1",
+        competition="Japan: J1 League",
+        home_team="Sanfrecce Hiroshima",
+        away_team="Chiba",
+        status="live",
+        minute=55,
+        home_score=1,
+        away_score=0,
+        favorite_odds=1.4,
+        favorite_team="Sanfrecce Hiroshima",
+        favorite_side="home",
+        start_time=datetime.now(UTC) - timedelta(minutes=55),
+    )
+
+    def fake_get_json(url, headers, params):
+        assert "summary" in url or "commentary" in url
+        return {"events": [{"type": "goal", "time": "17'"}]}
+
+    monkeypatch.setattr(flashscore_provider, "_get_json", fake_get_json)
+    enriched = flashscore_provider.enrich_matches_with_goal_minutes([base], settings=settings())
+    assert enriched[0].early_goal_minute == 17
+    assert enriched[0].early_goal is True
 
 
 def test_flashscore_live_board_merges_live_feed_minutes(monkeypatch) -> None:

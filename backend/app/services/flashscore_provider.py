@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime, timedelta
+import re
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -94,7 +95,7 @@ def fetch_flashscore_matches(
             f"{len(listed)} favoritos ≤ {LIST_ODDS_THRESHOLD:.2f} vigilables "
             f"(de {len(enriched)} en jornada · {with_odds} con alguna cuota · "
             f"{rejected} fuera de 1ª/2ª · {finished} acabados excluidos). "
-            "Solo 1ª/2ª (3ª en ES/EN/PT), sin Under 20; senales desde la hora de inicio."
+            "Solo 1ª/2ª (3ª en ES/EN/PT), sin Under 20 ni femenino; senales desde la hora de inicio."
         ),
         configured=True,
         threshold=LIST_ODDS_THRESHOLD,
@@ -197,6 +198,110 @@ def enrich_matches_with_details(
     if not details_by_id:
         return matches
     return _merge_live_matches(matches, list(details_by_id.values()))
+
+
+def enrich_matches_with_goal_minutes(
+    matches: list[FlashscoreMatchRead],
+    settings: Settings | None = None,
+    *,
+    max_lookups: int = 10,
+) -> list[FlashscoreMatchRead]:
+    """Attach first-goal minute from /matches/match/summary when the scoreline has goals."""
+    settings = settings or get_settings()
+    if not settings.rapidapi_key or not matches:
+        return matches
+
+    def needs_goals(match: FlashscoreMatchRead) -> bool:
+        if match.favorite_odds is None:
+            return False
+        if match.early_goal_minute is not None:
+            return False
+        home = match.home_score
+        away = match.away_score
+        if home is None or away is None:
+            return False
+        return (home + away) > 0
+
+    targets = [match for match in matches if needs_goals(match)][:max_lookups]
+    if not targets:
+        return matches
+
+    host = getattr(settings, "flashscore_api_host", None) or "flashscore4.p.rapidapi.com"
+    headers = {
+        "X-RapidAPI-Key": settings.rapidapi_key,
+        "X-RapidAPI-Host": host,
+        "Content-Type": "application/json",
+    }
+    base_url = f"https://{host}"
+    goal_minute_by_id: dict[str, int] = {}
+
+    def lookup(match: FlashscoreMatchRead) -> tuple[str, int] | None:
+        for path in (
+            f"{base_url}/api/flashscore/v2/matches/match/summary",
+            f"{base_url}/api/flashscore/v2/matches/match/commentary",
+        ):
+            try:
+                payload = _get_json(path, headers, {"match_id": match.event_id})
+            except requests.RequestException:
+                continue
+            minutes = _extract_goal_minutes(payload)
+            if minutes:
+                return match.event_id, minutes[0]
+        return None
+
+    workers = min(4, len(targets))
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = [executor.submit(lookup, match) for match in targets]
+        for future in as_completed(futures):
+            result = future.result()
+            if result:
+                goal_minute_by_id[result[0]] = result[1]
+
+    if not goal_minute_by_id:
+        return matches
+
+    updated: list[FlashscoreMatchRead] = []
+    for match in matches:
+        first_goal = goal_minute_by_id.get(match.event_id)
+        if first_goal is None:
+            updated.append(match)
+            continue
+        updated.append(
+            match.model_copy(
+                update={
+                    "early_goal_minute": first_goal,
+                    "early_goal": bool(match.early_goal) or first_goal <= 30,
+                }
+            )
+        )
+    return updated
+
+
+def _extract_goal_minutes(payload: Any) -> list[int]:
+    minutes: list[int] = []
+    for record in _walk_dicts(payload):
+        kind = " ".join(
+            str(record.get(key) or "")
+            for key in ("type", "incident_type", "event_type", "name", "class", "incident")
+        ).lower()
+        if "goal" not in kind and "score" not in kind:
+            # Some payloads only mark goals via "is_goal".
+            if record.get("is_goal") is not True and record.get("goal") is not True:
+                continue
+        minute = _minute_value(record)
+        if minute is None:
+            minute = _parse_minute_candidate(record.get("time") or record.get("value"))
+        if minute is not None and 0 <= minute <= 130:
+            minutes.append(minute)
+    # Preserve chronological order without duplicates.
+    seen: set[int] = set()
+    ordered: list[int] = []
+    for minute in minutes:
+        if minute in seen:
+            continue
+        seen.add(minute)
+        ordered.append(minute)
+    return ordered
 
 
 def _load_day_board(
@@ -529,12 +634,22 @@ def _merge_live_matches(scheduled: list[FlashscoreMatchRead], live: list[Flashsc
 
 
 def _prefer_status(previous: str, candidate: str) -> str:
-    rank = {"scheduled": 0, "live": 1, "finished": 2}
-    prev = (previous or "scheduled").lower()
-    cand = (candidate or "scheduled").lower()
-    prev_key = "finished" if "finish" in prev else ("live" if any(t in prev for t in ("live", "1st", "2nd", "half", "progress")) else "scheduled")
-    cand_key = "finished" if "finish" in cand else ("live" if any(t in cand for t in ("live", "1st", "2nd", "half", "progress")) else "scheduled")
-    return candidate if rank.get(cand_key, 0) >= rank.get(prev_key, 0) and candidate else previous
+    def rank(status: str) -> int:
+        lowered = (status or "").lower()
+        if "finish" in lowered:
+            return 3
+        if lowered in {"halftime", "ht", "break", "pause", "paused"} or (
+            ("half time" in lowered or "halftime" in lowered or "half-time" in lowered)
+            and not any(token in lowered for token in ("1st", "2nd", "first", "second"))
+        ):
+            return 2
+        if any(token in lowered for token in ("live", "1st", "2nd", "half", "progress", "inplay", "in play")):
+            return 2
+        return 0
+
+    if not candidate:
+        return previous
+    return candidate if rank(candidate) >= rank(previous) else previous
 
 
 def _parse_odds_by_event(payload: Any) -> dict[str, tuple[float | None, float | None, float | None]]:
@@ -795,13 +910,16 @@ def _parse_minute_candidate(value: Any) -> int | None:
 def _status_value(record: dict[str, Any]) -> str:
     if record.get("is_finished") is True or record.get("isFinished") is True:
         return "finished"
+    raw = _string_value(record, "match_status", "stage", "status", "state", "live_time", "liveTime")
+    normalized = _normalize_status(raw or "")
+    if normalized == "halftime":
+        return "halftime"
     if record.get("is_in_progress") is True or record.get("isInProgress") is True:
-        return "live"
+        # Half-time is often still marked in_progress with stage/live_time = HT.
+        return "live" if normalized != "halftime" else "halftime"
     if record.get("is_started") is False or record.get("isStarted") is False:
-        raw = _string_value(record, "match_status", "stage", "status", "state")
         return _normalize_status(raw or "scheduled")
-    raw = _string_value(record, "match_status", "stage", "status", "state")
-    return _normalize_status(raw or "scheduled")
+    return normalized or "scheduled"
 
 
 def _normalize_status(status: str) -> str:
@@ -830,6 +948,13 @@ def _normalize_status(status: str) -> str:
         )
     ):
         return "finished"
+    # Detect half-time before generic "half" (1st/2nd half) matches.
+    if re.search(r"\b(half[\s-]?time|halftime|\bht\b|paused|break)\b", lowered) and not re.search(
+        r"\b(1st|2nd|first|second)\b", lowered
+    ):
+        return "halftime"
+    if lowered in {"ht", "pause", "paused", "break"}:
+        return "halftime"
     if any(token in lowered for token in ("live", "1st", "2nd", "half", "progress", "inplay", "in play")):
         return "live"
     return status or "scheduled"
