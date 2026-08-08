@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from secrets import compare_digest
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Body, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -15,7 +15,11 @@ from app.schemas.api import (
     ForebetStartEmailResult,
 )
 from app.services.email_alerts import send_flashscore_goal_email
-from app.services.flashscore_provider import fetch_flashscore_live_board, fetch_flashscore_matches
+from app.services.flashscore_provider import (
+    enrich_matches_with_details,
+    fetch_flashscore_live_board,
+    fetch_flashscore_matches,
+)
 from app.services.flashscore_watch import (
     clear_flashscore_watch,
     load_flashscore_watch,
@@ -61,8 +65,20 @@ def get_flashscore_live_board(day: int = 0) -> FlashscoreMatchesResult:
 
 
 @router.post("/watch/refresh", response_model=FlashscoreWatchState)
-def refresh_flashscore_watch_live(db: Session = Depends(get_db)) -> FlashscoreWatchState:
-    watch = load_flashscore_watch(db)
+def refresh_flashscore_watch_live(
+    payload: FlashscoreWatchUpsertRequest | None = Body(default=None),
+    db: Session = Depends(get_db),
+) -> FlashscoreWatchState:
+    """Refresh scores/minutes for the ≤1.60 watchlist (body optional; falls back to server watch)."""
+    if payload is not None and payload.matches:
+        watch = save_flashscore_watch(
+            db,
+            day=payload.day,
+            captured_at=payload.captured_at,
+            matches=payload.matches,
+        )
+    else:
+        watch = load_flashscore_watch(db)
     if watch is None or not watch.matches:
         return FlashscoreWatchState(message="No hay lista vigilada en servidor para refrescar.")
     try:
@@ -70,6 +86,7 @@ def refresh_flashscore_watch_live(db: Session = Depends(get_db)) -> FlashscoreWa
     except Exception as exc:  # noqa: BLE001
         return watch.model_copy(update={"message": f"No se pudo refrescar con Flashscore Ultra: {exc}"})
     merged = merge_flashscore_live_board(watch.matches, board)
+    merged = enrich_matches_with_details(merged)
     saved = save_flashscore_watch(
         db,
         day=watch.day,
@@ -77,11 +94,15 @@ def refresh_flashscore_watch_live(db: Session = Depends(get_db)) -> FlashscoreWa
         matches=merged,
         last_live_poll_at=datetime.now(UTC),
     )
+    with_score = sum(
+        1 for match in saved.matches if match.home_score is not None or match.away_score is not None
+    )
+    with_minute = sum(1 for match in saved.matches if match.minute is not None)
     return saved.model_copy(
         update={
             "message": (
                 f"Flashscore Ultra refresco · {len(saved.matches)} vigilados ≤ 1,60 · "
-                f"{sum(1 for match in saved.matches if match.minute is not None)} con minuto."
+                f"{with_score} con marcador · {with_minute} con minuto."
             )
         }
     )

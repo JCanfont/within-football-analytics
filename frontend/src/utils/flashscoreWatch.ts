@@ -178,7 +178,10 @@ export function isMatchFinished(match: FlashscoreMatch, now = Date.now()): boole
   if (!Number.isFinite(start)) {
     return false;
   }
-  return now >= start + FINISHED_WITHOUT_CLOCK_MS;
+  const graceMs = (match.home_score != null || match.away_score != null)
+    ? 150 * 60 * 1000
+    : FINISHED_WITHOUT_CLOCK_MS;
+  return now >= start + graceMs;
 }
 
 export function hasMatchStarted(match: FlashscoreMatch, now = Date.now()): boolean {
