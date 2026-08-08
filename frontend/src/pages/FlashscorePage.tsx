@@ -158,8 +158,8 @@ export function FlashscorePage() {
         <p className={configured && status === "ok" ? "forebet-load-message" : "flashscore-setup-message"}>{message}</p>
         {!configured || status === "request_failed" || status === "not_configured" ? (
           <p className="flashscore-setup-detail">
-            Revisa en RapidAPI que la suscripcion a <strong>FlashScore4</strong> este activa y que
-            <code> RAPIDAPI_KEY</code> en Vercel sea la clave correcta. Luego pulsa Actualizar ahora.
+            Las cuotas vienen de RapidAPI (FlashScore4). Si el listado sale vacio, la suscripcion o la clave
+            <code> RAPIDAPI_KEY</code> en Vercel estan fallando. Activa FlashScore4 en rapidapi.com y pulsa Actualizar ahora.
           </p>
         ) : null}
 

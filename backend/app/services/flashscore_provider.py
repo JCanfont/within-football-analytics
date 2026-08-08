@@ -138,17 +138,20 @@ def _request_error_message(exc: requests.RequestException) -> str:
     lowered = text.lower()
     if "not subscribed" in lowered or "you are not subscribed" in lowered:
         return (
-            "RapidAPI no tiene suscripcion activa a FlashScore4. "
-            "Entra en rapidapi.com, suscribete otra vez a FlashScore4 y revisa RAPIDAPI_KEY en Vercel."
+            "No se pueden cargar las cuotas 1X2: RapidAPI no tiene suscripcion activa a FlashScore4. "
+            "Abre rapidapi.com/flashscore4, pulsa Subscribe y revisa RAPIDAPI_KEY en Vercel."
         )
-    if "429" in text or "rate limit" in lowered or "too many requests" in lowered:
-        return "RapidAPI ha limitado las peticiones (cuota/rate limit). Espera unos minutos o sube de plan en FlashScore4."
+    if "429" in text or "rate limit" in lowered or "too many requests" in lowered or "quota" in lowered:
+        return (
+            "No se pueden cargar las cuotas 1X2: RapidAPI ha bloqueado el acceso por exceso de peticiones. "
+            "Espera a que se renueve el limite del plan FlashScore4 o sube de plan; luego pulsa Actualizar."
+        )
     if "401" in text or "403" in text or "invalid" in lowered:
         return (
-            "RapidAPI rechazo la clave Flashscore. Comprueba que RAPIDAPI_KEY en Vercel sea la de FlashScore4 "
-            "y que la suscripcion siga activa."
+            "No se pueden cargar las cuotas 1X2: RapidAPI rechazo la clave. "
+            "Comprueba RAPIDAPI_KEY en Vercel y que la suscripcion a FlashScore4 siga activa."
         )
-    return f"No se pudo consultar la jornada de Flashscore ({text[:160]})."
+    return f"No se pueden cargar las cuotas 1X2 desde Flashscore ({text[:160]})."
 
 
 def _fetch_odds_by_event(

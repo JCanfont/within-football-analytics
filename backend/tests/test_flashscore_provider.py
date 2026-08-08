@@ -162,6 +162,7 @@ def test_flashscore_provider_explains_missing_subscription(monkeypatch) -> None:
     result = flashscore_provider.fetch_flashscore_matches(settings=settings())
 
     assert result.status == "request_failed"
+    assert "cuotas" in result.message.lower()
     assert "suscripcion" in result.message.lower()
     assert result.matches == []
 
