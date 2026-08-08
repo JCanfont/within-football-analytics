@@ -80,3 +80,9 @@ Capas DXF: `A-WALL`, `A-DOOR`, `A-GLAZ`, `A-FURN`, `A-FLOR-APPL`, `A-FLOR-SANR`,
 - `RenderJob` asíncrono con estado, preset, resolución y cámara; preview local SVG sin GPU cloud.
 - Adaptador Blender opcional (`blenderAdapter.ts`) como bridge JSON; Blender no es dependencia del núcleo BIM/planos.
 - Invalidación del render al cambiar `model_id`; escenario guarda `render_job_id` / `render_scene_id`.
+
+## Nuevo en P8 plataforma
+- `generateStructuralModel`: geometría STRUCT preliminar coordinada con ARCH.
+- Elementos: pilares, vigas, muros estructurales, forjados, cimentación, huecos.
+- Flags explícitos `is_preliminary=true` / `is_signed_calculation=false` (no cálculo firmado).
+- UI `StructurePanel` + export JSON; escenario guarda `structural_model_id`.

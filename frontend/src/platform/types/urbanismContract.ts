@@ -112,4 +112,5 @@ export type DesignScenarioUrbanLink = {
   optimization_recommended_key?: "A" | "B" | "C" | null;
   render_job_id?: string | null;
   render_scene_id?: string | null;
+  structural_model_id?: string | null;
 };

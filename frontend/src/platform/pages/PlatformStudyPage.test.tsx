@@ -29,8 +29,10 @@ describe("PlatformStudyPage", () => {
     expect(screen.getByRole("heading", { name: /Planos 2D \(desde modelo\)/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Optimizador de diseño/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Visor 3D y Render/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Estructura preliminar/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Exportar IFC4/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Exportar DXF/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Exportar STRUCT JSON/i })).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/Objetivo de optimización/i), {
       target: { value: "maximize_courtyard" },
@@ -40,13 +42,14 @@ describe("PlatformStudyPage", () => {
     expect(screen.getByText(/job_id/i)).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", {
-        name: /Vincular análisis \+ envolvente \+ massing \+ optimización \+ BIM \+ planos \+ render al escenario/i,
+        name: /Vincular análisis \+ envolvente \+ massing \+ optimización \+ BIM \+ planos \+ render \+ estructura al escenario/i,
       }),
     );
     expect(screen.getAllByText("ua-fixture-cat-001").length).toBeGreaterThan(0);
     expect(screen.getByText(/plan_set_id/i)).toBeInTheDocument();
     expect(screen.getByText(/optimization_id/i)).toBeInTheDocument();
     expect(screen.getByText(/render_job_id/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/structural_model_id/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: /Abrir planos \/ AutoCAD DXF/i })).toHaveAttribute(
       "href",
       "/floor-plan",
