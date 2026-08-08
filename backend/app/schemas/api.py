@@ -366,11 +366,11 @@ class StatisticalQuestionRequest(BaseModel):
 
 
 class StreakSummary(BaseModel):
-    signal: str
-    current: int
-    maximum: int
-    total: int
-    percentage: float
+    signal: str = ""
+    current: int = 0
+    maximum: int = 0
+    total: int = 0
+    percentage: float = 0.0
     current_owner: str | None = None
     maximum_owner: str | None = None
     scope: str | None = None
@@ -378,7 +378,7 @@ class StreakSummary(BaseModel):
 
 class QuestionMatchRow(BaseModel):
     match_id: int
-    match_date: datetime
+    match_date: datetime | str
     home_team_id: int | None = None
     away_team_id: int | None = None
     home_team: str
@@ -386,18 +386,33 @@ class QuestionMatchRow(BaseModel):
     home_score: int
     away_score: int
     total_goals: int
-    signal: str
+    signal: str = ""
+
+
+class QuestionRankingRow(BaseModel):
+    rank: int
+    label: str
+    value: float
+    unit: str = ""
+    detail: str | None = None
+    sample_size: int | None = None
 
 
 class StatisticalQuestionAnswer(BaseModel):
     question: str
     answer: str
     scope: str
+    question_type: str = "under_over_streak"
+    data_status: str = "ok"
     matched_team: str | None = None
-    sample_size: int
-    under_25: StreakSummary
-    over_25: StreakSummary
-    recent_matches: list[QuestionMatchRow]
+    matched_competition: str | None = None
+    sample_size: int = 0
+    under_25: StreakSummary = Field(default_factory=StreakSummary)
+    over_25: StreakSummary = Field(default_factory=StreakSummary)
+    rankings: list[QuestionRankingRow] = Field(default_factory=list)
+    metrics: dict[str, float | int | str | None] = Field(default_factory=dict)
+    recent_matches: list[QuestionMatchRow] = Field(default_factory=list)
+    missing_requirements: list[str] = Field(default_factory=list)
 
 
 class GoalTimingRead(BaseModel):
