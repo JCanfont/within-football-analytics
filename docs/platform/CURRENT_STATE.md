@@ -50,3 +50,9 @@ Capas DXF: `A-WALL`, `A-DOOR`, `A-GLAZ`, `A-FURN`, `A-FLOR-APPL`, `A-FLOR-SANR`,
   - C barra compacta
 - Métricas: plantas, altura, huella, m²t, patio, fill de envolvente y violaciones.
 - UI de comparación y selección; escenario guarda `massing_study_id` + `massing_selected_key`.
+
+## Nuevo en P4 plataforma
+- Modelo semántico ARCH (`generateArchitecturalModel`): Site, Building, Storey, Space, Wall, Slab, Roof, Door, Window, Stair, Core, Shaft, Terrace, ParkingSpace.
+- Disciplinas reservadas para Structure/MEP futuros; IDs estables.
+- Adaptador BIM aislado `services/bim/ifcAdapter.ts` → export IFC4 SPF + JSON semántico (fuente de verdad).
+- Escenario guarda `architectural_model_id`.

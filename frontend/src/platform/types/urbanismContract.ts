@@ -105,4 +105,5 @@ export type DesignScenarioUrbanLink = {
   envelope_id?: string | null;
   massing_study_id?: string | null;
   massing_selected_key?: "A" | "B" | "C" | null;
+  architectural_model_id?: string | null;
 };
