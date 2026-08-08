@@ -11,8 +11,8 @@ Dos repositorios, un contrato. Este repo **solo consume** la API.
 | 2 | OpenAPI v1 + fixtures + tests de contrato cliente | Misma copia del contrato + server stubs |
 | 3 | — | Primer `POST /api/v1/urbanism/analyze` real |
 | 4 | Panel Urbanismo en UI | — |
-| 5 | `BuildingEnvelopeGenerator` con `constraint → urban_parameter → source_refs` | — | ✅ P2 base |
-| 6 | Massing / BIM / planos (evolucionar DXF actual desde modelo) | — | siguiente |
+| 5 | `BuildingEnvelopeGenerator` con `constraint → urban_parameter → source_refs` | — | ✅ P2 |
+| 6 | Massing / BIM / planos (evolucionar DXF actual desde modelo) | — | ✅ Massing P3; BIM/planos siguiente |
 | 7+ | Optimizador, render, Structure/MEP | Solo si aparecen parámetros urbanísticos nuevos |
 
 ## Cliente en plataforma

@@ -24,12 +24,18 @@ describe("PlatformStudyPage", () => {
 
     expect(screen.getAllByText(/Edificabilidad/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: /Envolvente edificable/i })).toBeInTheDocument();
-    expect(screen.getByText(/Restricciones trazables/i)).toBeInTheDocument();
-    expect(screen.getAllByText("unknown").length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: /Massing paramétrico/i })).toBeInTheDocument();
+    expect(screen.getByText(/A · Máximo aprovechamiento/i)).toBeInTheDocument();
+    expect(screen.getByText(/B · Patio interior/i)).toBeInTheDocument();
+    expect(screen.getByText(/C · Barra compacta/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /Vincular análisis \+ envolvente al escenario/i }));
+    fireEvent.click(screen.getByRole("button", { name: /B · Patio interior/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Vincular análisis \+ envolvente \+ massing al escenario/i }),
+    );
     expect(screen.getAllByText("ua-fixture-cat-001").length).toBeGreaterThan(0);
-    expect(screen.getByText(/env-ua-fixture-cat-001/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/env-ua-fixture-cat-001/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/mass-study-env-ua-fixture-cat-001/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Abrir planos \/ AutoCAD DXF/i })).toHaveAttribute(
       "href",
       "/floor-plan",

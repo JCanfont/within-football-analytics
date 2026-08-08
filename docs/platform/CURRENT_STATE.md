@@ -42,3 +42,11 @@ Capas DXF: `A-WALL`, `A-DOOR`, `A-GLAZ`, `A-FURN`, `A-FLOR-APPL`, `A-FLOR-SANR`,
 - Trazabilidad `constraint → urban_parameter → source_refs` en UI (`EnvelopePanel`).
 - Escenario guarda también `envelope_id`.
 - Avisos si parámetros `unknown`/`conflict` (sin defaults silenciosos).
+
+## Nuevo en P3 plataforma
+- `generateMassingStudy` con alternativas A/B/C:
+  - A máximo aprovechamiento (full fill)
+  - B patio interior
+  - C barra compacta
+- Métricas: plantas, altura, huella, m²t, patio, fill de envolvente y violaciones.
+- UI de comparación y selección; escenario guarda `massing_study_id` + `massing_selected_key`.

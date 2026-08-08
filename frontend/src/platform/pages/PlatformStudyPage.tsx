@@ -1,9 +1,11 @@
 import { Building2, DraftingCompass, Link2, Radar } from "lucide-react";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { EnvelopePanel } from "../components/EnvelopePanel";
+import { MassingPanel } from "../components/MassingPanel";
 import { UrbanismPanel } from "../components/UrbanismPanel";
 import { generateBuildingEnvelope } from "../services/buildingEnvelopeGenerator";
+import { generateMassingStudy } from "../services/massingGenerator";
 import {
   analyzeParcel,
   isUrbanismEngineConfigured,
@@ -15,6 +17,7 @@ import type { DesignScenarioUrbanLink, UrbanismAnalysis } from "../types/urbanis
 
 const SCENARIO_KEY = "platform.designScenario.urbanLink.v1";
 const ENVELOPE_KEY = "platform.designScenario.envelope.v1";
+const MASSING_KEY = "platform.designScenario.massing.v1";
 
 function readScenarioLink(): DesignScenarioUrbanLink | null {
   try {
@@ -29,6 +32,9 @@ export function PlatformStudyPage() {
   const [cadastralReference, setCadastralReference] = useState("1234501VH1234S0001AB");
   const [analysis, setAnalysis] = useState<UrbanismAnalysis | null>(() => readCachedUrbanismAnalysis());
   const [scenarioLink, setScenarioLink] = useState<DesignScenarioUrbanLink | null>(() => readScenarioLink());
+  const [selectedMassing, setSelectedMassing] = useState<"A" | "B" | "C">(
+    () => readScenarioLink()?.massing_selected_key ?? "A",
+  );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const engineConfigured = useMemo(() => isUrbanismEngineConfigured(), []);
@@ -44,6 +50,25 @@ export function PlatformStudyPage() {
       plot_area_m2: analysis.parcel?.area_m2 ?? null,
     });
   }, [analysis]);
+
+  const massingStudy = useMemo(() => {
+    if (!envelope) {
+      return null;
+    }
+    return generateMassingStudy({ envelope });
+  }, [envelope]);
+
+  useEffect(() => {
+    if (!massingStudy) {
+      return;
+    }
+    setSelectedMassing((current) => {
+      if (massingStudy.alternatives.some((alt) => alt.key === current)) {
+        return current;
+      }
+      return massingStudy.selected_key;
+    });
+  }, [massingStudy]);
 
   const onAnalyze = (event: FormEvent) => {
     event.preventDefault();
@@ -72,15 +97,21 @@ export function PlatformStudyPage() {
   };
 
   const bindToFloorPlanScenario = () => {
-    if (!analysis || !envelope) {
+    if (!analysis || !envelope || !massingStudy) {
       return;
     }
-    const link = {
+    const link: DesignScenarioUrbanLink = {
       ...linkScenarioToUrbanism(analysis),
       envelope_id: envelope.envelope_id,
+      massing_study_id: massingStudy.study_id,
+      massing_selected_key: selectedMassing,
     };
     localStorage.setItem(SCENARIO_KEY, JSON.stringify(link));
     localStorage.setItem(ENVELOPE_KEY, JSON.stringify(envelope));
+    localStorage.setItem(
+      MASSING_KEY,
+      JSON.stringify({ ...massingStudy, selected_key: selectedMassing }),
+    );
     setScenarioLink(link);
   };
 
@@ -88,11 +119,11 @@ export function PlatformStudyPage() {
     <section className="platform-study-page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Plataforma inmobiliaria · P2</p>
+          <p className="eyebrow">Plataforma inmobiliaria · P3</p>
           <h1>Estudio de finca</h1>
           <p className="page-lead">
-            Urbanismo por API → panel → envolvente trazable → vínculo al escenario de planos/DXF. El motor
-            urbanístico no vive en este repositorio.
+            Urbanismo → envolvente → massing A/B/C → vínculo a planos/DXF. El Urbanismo Engine no se implementa
+            en este repositorio.
           </p>
         </div>
       </header>
@@ -145,6 +176,17 @@ export function PlatformStudyPage() {
             </section>
           ) : null}
 
+          {envelope && massingStudy ? (
+            <section className="panel">
+              <MassingPanel
+                study={massingStudy}
+                envelope={envelope}
+                selectedKey={selectedMassing}
+                onSelect={setSelectedMassing}
+              />
+            </section>
+          ) : null}
+
           <section className="panel platform-next-steps">
             <div className="panel-heading">
               <div>
@@ -160,7 +202,7 @@ export function PlatformStudyPage() {
 
             <div className="platform-actions">
               <button type="button" className="primary-action" onClick={bindToFloorPlanScenario}>
-                Vincular análisis + envolvente al escenario
+                Vincular análisis + envolvente + massing al escenario
               </button>
               <Link className="secondary-action" to="/floor-plan">
                 <DraftingCompass size={16} aria-hidden="true" />
@@ -177,6 +219,12 @@ export function PlatformStudyPage() {
                 <div>
                   <dt>envelope_id</dt>
                   <dd>{scenarioLink.envelope_id ?? "—"}</dd>
+                </div>
+                <div>
+                  <dt>massing</dt>
+                  <dd>
+                    {scenarioLink.massing_selected_key ?? "—"} · {scenarioLink.massing_study_id ?? "—"}
+                  </dd>
                 </div>
                 <div>
                   <dt>api_version</dt>

@@ -103,4 +103,6 @@ export type DesignScenarioUrbanLink = {
   parameters_hash: string;
   overrides: ScenarioUrbanOverride[];
   envelope_id?: string | null;
+  massing_study_id?: string | null;
+  massing_selected_key?: "A" | "B" | "C" | null;
 };
