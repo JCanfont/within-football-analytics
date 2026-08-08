@@ -24,6 +24,7 @@ import type {
   MatchDetail,
   MatchInsightData,
   MatchListItem,
+  NewsHeadlinesResult,
   Player,
   PlayerStadiumAnalytics,
   SofaScoreEventComparison,
@@ -327,5 +328,18 @@ export async function setGlobalLiveTracking(enabled: boolean): Promise<LiveTrack
 
 export async function setMatchLiveTracking(matchId: number, enabled: boolean): Promise<LiveTrackingSettings> {
   const response = await api.put<LiveTrackingSettings>(`/api/live/tracking/matches/${matchId}`, { enabled });
+  return response.data;
+}
+
+export async function fetchNewsHeadlines(options?: {
+  limitPerSource?: number;
+  refresh?: boolean;
+}): Promise<NewsHeadlinesResult> {
+  const params = new URLSearchParams();
+  params.set("limit_per_source", String(options?.limitPerSource ?? 12));
+  if (options?.refresh) {
+    params.set("refresh", "true");
+  }
+  const response = await api.get<NewsHeadlinesResult>(`/api/news/headlines?${params.toString()}`);
   return response.data;
 }

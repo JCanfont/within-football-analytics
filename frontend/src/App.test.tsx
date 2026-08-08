@@ -583,6 +583,61 @@ describe("App", () => {
       message: "2 eventos live SofaScore.",
       events: [],
     });
+    mockedApi.fetchNewsHeadlines.mockResolvedValue({
+      status: "ok",
+      message: "2 titulares de 2 medios.",
+      fetched_at: "2026-08-08T11:00:00Z",
+      sources: [
+        {
+          source: "marca",
+          source_label: "Marca",
+          status: "ok",
+          message: "1 titulares.",
+          feed_url: "https://example.com/marca.xml",
+          headlines: [{
+            source: "marca",
+            source_label: "Marca",
+            title: "Titular Marca de prueba",
+            url: "https://example.com/marca-1",
+            published_at: "2026-08-08T10:30:00Z",
+            summary: "Resumen Marca",
+          }],
+        },
+        {
+          source: "athletic",
+          source_label: "The Athletic",
+          status: "ok",
+          message: "1 titulares.",
+          feed_url: "https://example.com/athletic.xml",
+          headlines: [{
+            source: "athletic",
+            source_label: "The Athletic",
+            title: "Athletic transfer roundup",
+            url: "https://example.com/athletic-1",
+            published_at: "2026-08-08T09:30:00Z",
+            summary: "Summary Athletic",
+          }],
+        },
+      ],
+      headlines: [
+        {
+          source: "marca",
+          source_label: "Marca",
+          title: "Titular Marca de prueba",
+          url: "https://example.com/marca-1",
+          published_at: "2026-08-08T10:30:00Z",
+          summary: "Resumen Marca",
+        },
+        {
+          source: "athletic",
+          source_label: "The Athletic",
+          title: "Athletic transfer roundup",
+          url: "https://example.com/athletic-1",
+          published_at: "2026-08-08T09:30:00Z",
+          summary: "Summary Athletic",
+        },
+      ],
+    });
   });
 
   it("renders the dashboard with imported match data", async () => {
@@ -1076,6 +1131,26 @@ describe("App", () => {
       expect(mockedApi.generateMatchAlerts).toHaveBeenCalledWith(1);
     });
   }, 30000);
+
+  it("opens news desk and lists headlines from sports press", async () => {
+    renderApp("/news");
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Noticias" })).toBeInTheDocument();
+    });
+    expect(mockedApi.fetchNewsHeadlines).toHaveBeenCalled();
+    expect(screen.getByText("Titular Marca de prueba")).toBeInTheDocument();
+    expect(screen.getByText("Athletic transfer roundup")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Marca" }));
+    expect(screen.getByText("Titular Marca de prueba")).toBeInTheDocument();
+    expect(screen.queryByText("Athletic transfer roundup")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Capturar titulares" }));
+    await waitFor(() => {
+      expect(mockedApi.fetchNewsHeadlines).toHaveBeenCalledWith({ limitPerSource: 12, refresh: true });
+    });
+  });
 
   it("opens imports and uploads a csv file", async () => {
     renderApp();

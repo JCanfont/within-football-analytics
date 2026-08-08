@@ -245,6 +245,32 @@ class FlashscoreTickResult(BaseModel):
     message: str
 
 
+class NewsHeadlineRead(BaseModel):
+    source: str
+    source_label: str
+    title: str
+    url: str
+    published_at: datetime | None = None
+    summary: str | None = None
+
+
+class NewsSourceResult(BaseModel):
+    source: str
+    source_label: str
+    status: str
+    message: str
+    feed_url: str | None = None
+    headlines: list[NewsHeadlineRead] = Field(default_factory=list)
+
+
+class NewsHeadlinesResult(BaseModel):
+    status: str
+    message: str
+    fetched_at: datetime
+    sources: list[NewsSourceResult] = Field(default_factory=list)
+    headlines: list[NewsHeadlineRead] = Field(default_factory=list)
+
+
 class TeamGoalParameter(BaseModel):
     team_id: int
     team: str

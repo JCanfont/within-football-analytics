@@ -645,3 +645,29 @@ export type ImportResult = {
   skipped: number;
   errors: ImportErrorDetail[];
 };
+
+export type NewsHeadline = {
+  source: string;
+  source_label: string;
+  title: string;
+  url: string;
+  published_at?: string | null;
+  summary?: string | null;
+};
+
+export type NewsSourceResult = {
+  source: string;
+  source_label: string;
+  status: string;
+  message: string;
+  feed_url?: string | null;
+  headlines: NewsHeadline[];
+};
+
+export type NewsHeadlinesResult = {
+  status: string;
+  message: string;
+  fetched_at: string;
+  sources: NewsSourceResult[];
+  headlines: NewsHeadline[];
+};
