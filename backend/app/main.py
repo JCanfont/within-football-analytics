@@ -10,9 +10,11 @@ from app.routers.health import router as health_router
 from app.routers.imports import router as imports_router
 from app.routers.live import router as live_router
 from app.routers.matches import router as matches_router
+from app.services.schema_migrate import ensure_schema
 
 
 settings = get_settings()
+ensure_schema()
 
 app = FastAPI(
     title="WITHIN Football Analytics",
