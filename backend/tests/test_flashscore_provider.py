@@ -1,7 +1,14 @@
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
+import pytest
+
 from app.services import flashscore_provider
+
+
+@pytest.fixture(autouse=True)
+def clear_flashscore_cache() -> None:
+    flashscore_provider._RESULT_CACHE.clear()
 
 
 def settings(api_key: str | None = "rapid-key"):
@@ -136,6 +143,26 @@ def test_flashscore_provider_reports_missing_api_key() -> None:
 
     assert result.configured is False
     assert result.status == "not_configured"
+    assert result.matches == []
+
+
+def test_flashscore_provider_explains_missing_subscription(monkeypatch) -> None:
+    class FakeResponse:
+        ok = False
+        status_code = 403
+        reason = "Forbidden"
+        text = '{"message":"You are not subscribed to this API."}'
+
+        def json(self):
+            return {"message": "You are not subscribed to this API."}
+
+    monkeypatch.setattr(flashscore_provider.requests, "get", lambda *args, **kwargs: FakeResponse())
+    flashscore_provider._RESULT_CACHE.clear()
+
+    result = flashscore_provider.fetch_flashscore_matches(settings=settings())
+
+    assert result.status == "request_failed"
+    assert "suscripcion" in result.message.lower()
     assert result.matches == []
 
 

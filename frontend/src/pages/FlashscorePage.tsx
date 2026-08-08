@@ -13,6 +13,7 @@ export function FlashscorePage() {
   const [day, setDay] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [configured, setConfigured] = useState(true);
+  const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("Preparando datos Flashscore...");
   const [lastRefresh, setLastRefresh] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(readAutoRefresh);
@@ -72,11 +73,17 @@ export function FlashscorePage() {
       .then((result) => {
         setMatches(result.matches);
         setConfigured(result.configured);
+        setStatus(result.status);
         setMessage(result.message);
         setLastRefresh(new Date().toISOString());
-        sendEligibleAlerts(result.matches);
+        if (result.status === "ok") {
+          sendEligibleAlerts(result.matches);
+        }
       })
-      .catch(() => setMessage("No se pudieron consultar los datos de Flashscore."))
+      .catch(() => {
+        setStatus("request_failed");
+        setMessage("No se pudieron consultar los datos de Flashscore.");
+      })
       .finally(() => setIsLoading(false));
   }, [day, sendEligibleAlerts]);
 
@@ -148,10 +155,11 @@ export function FlashscorePage() {
           </div>
         </div>
 
-        <p className={configured ? "forebet-load-message" : "flashscore-setup-message"}>{message}</p>
-        {!configured ? (
+        <p className={configured && status === "ok" ? "forebet-load-message" : "flashscore-setup-message"}>{message}</p>
+        {!configured || status === "request_failed" || status === "not_configured" ? (
           <p className="flashscore-setup-detail">
-            Configura <code>RAPIDAPI_KEY</code> en Vercel después de suscribirte a FlashScore4 en RapidAPI.
+            Revisa en RapidAPI que la suscripcion a <strong>FlashScore4</strong> este activa y que
+            <code> RAPIDAPI_KEY</code> en Vercel sea la clave correcta. Luego pulsa Actualizar ahora.
           </p>
         ) : null}
 
@@ -199,7 +207,9 @@ export function FlashscorePage() {
             </tbody>
           </table>
         </div>
-        {configured && !isLoading && listed.length === 0 ? <div className="detail-state">No hay partidos con cuota ≤ 1,60 en esta jornada.</div> : null}
+        {configured && status === "ok" && !isLoading && listed.length === 0 ? (
+          <div className="detail-state">No hay partidos con cuota ≤ 1,60 en esta jornada.</div>
+        ) : null}
       </section>
     </section>
   );

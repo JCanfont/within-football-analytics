@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -14,6 +15,8 @@ ODDS_THRESHOLD = LIST_ODDS_THRESHOLD  # favorite marking / jornada list
 FOOTBALL_SPORT_ID = 1
 MAX_ODDS_LOOKUPS = 24
 ODDS_LOOKAHEAD = timedelta(hours=4)
+CACHE_TTL = timedelta(seconds=55)
+_RESULT_CACHE: dict[int, tuple[datetime, FlashscoreMatchesResult]] = {}
 
 
 def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> FlashscoreMatchesResult:
@@ -25,6 +28,11 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
             configured=False,
         )
 
+    cached = _RESULT_CACHE.get(day)
+    now = datetime.now(UTC)
+    if cached and now - cached[0] < CACHE_TTL and cached[1].status == "ok":
+        return cached[1]
+
     headers = {
         "X-RapidAPI-Key": settings.rapidapi_key,
         "X-RapidAPI-Host": settings.flashscore_api_host,
@@ -32,15 +40,11 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
     }
     base_url = f"https://{settings.flashscore_api_host}"
     try:
-        schedule_payload = _get_json(
-            f"{base_url}/api/flashscore/v2/matches/list",
-            headers,
-            {"sport_id": FOOTBALL_SPORT_ID, "day": day, "timezone": "Europe/Madrid"},
-        )
-    except requests.RequestException:
+        schedule_payload = _load_schedule_payload(base_url, headers, day)
+    except requests.RequestException as exc:
         return FlashscoreMatchesResult(
             status="request_failed",
-            message="No se pudo consultar la jornada de Flashscore.",
+            message=_request_error_message(exc),
             configured=True,
         )
 
@@ -56,7 +60,9 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
         except requests.RequestException:
             pass
 
-    odds_by_event = _fetch_odds_by_event(matches, headers, base_url, day)
+    # Prefer odds already embedded in the list payload to save RapidAPI quota.
+    needs_odds = [match for match in matches if match.home_odds is None and match.away_odds is None]
+    odds_by_event = _fetch_odds_by_event(needs_odds, headers, base_url, day) if needs_odds else {}
     enriched = []
     for match in matches:
         if match.event_id in odds_by_event:
@@ -71,7 +77,7 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
     qualifying = sum(match.favorite_odds is not None for match in enriched)
     with_odds = sum(match.home_odds is not None or match.away_odds is not None for match in enriched)
     listed = [match for match in enriched if match.favorite_odds is not None]
-    return FlashscoreMatchesResult(
+    result = FlashscoreMatchesResult(
         status="ok",
         message=(
             f"{len(enriched)} partidos en la jornada · {with_odds} con cuotas · "
@@ -82,12 +88,67 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
         alert_threshold=ALERT_ODDS_THRESHOLD,
         matches=listed,
     )
+    _RESULT_CACHE[day] = (now, result)
+    return result
+
+
+def _load_schedule_payload(base_url: str, headers: dict[str, str], day: int) -> Any:
+    try:
+        return _get_json(
+            f"{base_url}/api/flashscore/v2/matches/list",
+            headers,
+            {"sport_id": FOOTBALL_SPORT_ID, "day": day, "timezone": "Europe/Madrid"},
+        )
+    except requests.HTTPError as exc:
+        # Fallback used by some FlashScore4 plans / endpoints.
+        if exc.response is None or exc.response.status_code not in {400, 404, 422}:
+            raise
+    # Keep calendar day aligned with Europe/Madrid like the primary feed.
+    madrid_day = datetime.now(ZoneInfo("Europe/Madrid")).date() + timedelta(days=day)
+    return _get_json(
+        f"{base_url}/api/flashscore/v2/matches/list-by-date",
+        headers,
+        {
+            "sport_id": FOOTBALL_SPORT_ID,
+            "date": madrid_day.isoformat(),
+            "timezone": "Europe/Madrid",
+        },
+    )
 
 
 def _get_json(url: str, headers: dict[str, str], params: dict[str, Any]) -> Any:
     response = requests.get(url, headers=headers, params=params, timeout=12)
-    response.raise_for_status()
+    if not response.ok:
+        detail = ""
+        try:
+            payload = response.json()
+            if isinstance(payload, dict):
+                detail = str(payload.get("message") or payload.get("error") or payload.get("detail") or "")
+        except ValueError:
+            detail = (response.text or "")[:180]
+        raise requests.HTTPError(
+            f"{response.status_code} {detail or response.reason}",
+            response=response,
+        )
     return response.json()
+
+
+def _request_error_message(exc: requests.RequestException) -> str:
+    text = str(exc)
+    lowered = text.lower()
+    if "not subscribed" in lowered or "you are not subscribed" in lowered:
+        return (
+            "RapidAPI no tiene suscripcion activa a FlashScore4. "
+            "Entra en rapidapi.com, suscribete otra vez a FlashScore4 y revisa RAPIDAPI_KEY en Vercel."
+        )
+    if "429" in text or "rate limit" in lowered or "too many requests" in lowered:
+        return "RapidAPI ha limitado las peticiones (cuota/rate limit). Espera unos minutos o sube de plan en FlashScore4."
+    if "401" in text or "403" in text or "invalid" in lowered:
+        return (
+            "RapidAPI rechazo la clave Flashscore. Comprueba que RAPIDAPI_KEY en Vercel sea la de FlashScore4 "
+            "y que la suscripcion siga activa."
+        )
+    return f"No se pudo consultar la jornada de Flashscore ({text[:160]})."
 
 
 def _fetch_odds_by_event(
@@ -97,18 +158,7 @@ def _fetch_odds_by_event(
     day: int,
 ) -> dict[str, tuple[float | None, float | None, float | None]]:
     odds_by_event: dict[str, tuple[float | None, float | None, float | None]] = {}
-
-    try:
-        odds_payload = _get_json(
-            f"{base_url}/api/livescores/sports/{FOOTBALL_SPORT_ID}/odds",
-            headers,
-            {"dayOffset": day, "lang": "en", "version": 2},
-        )
-        odds_by_event.update(_parse_odds_by_event(odds_payload))
-    except requests.RequestException:
-        pass
-
-    # Prefer matches that still lack embedded odds and are live / soon.
+    # Avoid the bulk livescores odds endpoint: it burns RapidAPI quota and is often unavailable.
     missing = [match for match in matches if match.home_odds is None and match.away_odds is None]
     candidates = _odds_candidates(missing, already=set(odds_by_event))
     if not candidates:
