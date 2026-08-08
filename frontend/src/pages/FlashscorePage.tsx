@@ -16,7 +16,6 @@ import {
   clearFlashscoreWatch,
   hasMatchStarted,
   isMatchFinished,
-  isPastKickoff,
   liveRefreshIntervalMs,
   mergeFlashscoreLiveBoard,
   readFlashscoreWatch,
@@ -377,7 +376,7 @@ export function FlashscorePage() {
                         </span>
                       </div>
                     </td>
-                    <td>{match.minute != null ? `${match.minute}'` : formatStatus(match.status)}</td>
+                    <td>{match.minute != null ? `${match.minute}'` : formatMatchClock(match)}</td>
                     <td>{formatScore(match)}</td>
                     <td>
                       <span className={`flashscore-early-goal-status ${earlyGoalTone(match)}`}>
@@ -450,11 +449,10 @@ function alertLabel(match: FlashscoreMatch, alerted: boolean) {
   if (match.early_favorite_goal || match.alert_eligible) return "Gol favorito <30'";
   if (match.early_goal) return "Gol rival/otro <30'";
   if (isMatchFinished(match)) return "Acabado";
-  if (!hasMatchStarted(match) && !isPastKickoff(match)) return "Pendiente de inicio";
-  if (!hasMatchStarted(match)) return "Esperando inicio real";
+  if (!hasMatchStarted(match)) return "Pendiente de inicio";
   if (!match.favorite_team) return "Sin cuota ≤ 1,60";
   if (match.favorite_odds != null && match.favorite_odds > ALERT_ODDS_THRESHOLD) return "Listado (aviso ≤ 1,50)";
-  if (match.minute == null) return "Esperando Flashscore";
+  if (match.minute == null) return "En juego · sin minuto";
   if (match.minute <= 30) return "Esperando gol <30'";
   return "Ventana cerrada";
 }
@@ -483,6 +481,17 @@ function formatOdds(value?: number | null) {
 
 function formatScore(match: FlashscoreMatch) {
   return match.home_score == null || match.away_score == null ? "—" : `${match.home_score}-${match.away_score}`;
+}
+
+function formatMatchClock(match: FlashscoreMatch) {
+  if (hasMatchStarted(match)) {
+    const status = (match.status || "").toLowerCase();
+    if (status.includes("half") && !status.includes("1st") && !status.includes("2nd")) {
+      return "Descanso";
+    }
+    return "En juego";
+  }
+  return formatStatus(match.status);
 }
 
 function formatStatus(status: string) {

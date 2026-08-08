@@ -125,8 +125,17 @@ describe("flashscoreWatch", () => {
     })], now)).toBeNull();
   });
 
-  it("does not activate fast signals before a real live start", () => {
+  it("uses fast signals once kickoff time has passed even without live status", () => {
     const now = Date.parse("2026-08-08T18:05:00Z");
+    expect(liveRefreshIntervalMs([baseMatch({
+      favorite_odds: 1.4,
+      status: "scheduled",
+      start_time: "2026-08-08T18:00:00Z",
+    })], now)).toBe(FAST_LIVE_REFRESH_MS);
+  });
+
+  it("slows after 30 minutes past kickoff without a live minute", () => {
+    const now = Date.parse("2026-08-08T18:40:00Z");
     expect(liveRefreshIntervalMs([baseMatch({
       favorite_odds: 1.4,
       status: "scheduled",

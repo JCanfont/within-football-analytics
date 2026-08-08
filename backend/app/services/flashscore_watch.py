@@ -220,12 +220,19 @@ def is_match_finished(match: FlashscoreMatchRead, now: datetime | None = None) -
 
 
 def has_match_started(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
-    """True only with real live evidence — scheduled kickoff time alone is not enough."""
-    del now  # reserved for API symmetry with callers
+    """True with live evidence, scores, or once the scheduled kickoff time has passed."""
+    current = now or datetime.now(UTC)
+    if is_match_finished(match, current):
+        return False
     if match.minute is not None:
         return True
+    if match.home_score is not None or match.away_score is not None:
+        return True
     status = (match.status or "").lower()
-    return any(token in status for token in ("live", "1st", "2nd", "half", "progress", "inplay", "in play"))
+    if any(token in status for token in ("live", "1st", "2nd", "half", "progress", "inplay", "in play")):
+        return True
+    # Flashscore often keeps status=scheduled after kickoff; the clock is enough.
+    return is_past_kickoff(match, current)
 
 
 def is_past_kickoff(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
@@ -238,29 +245,37 @@ def is_past_kickoff(match: FlashscoreMatchRead, now: datetime | None = None) -> 
     return current >= start
 
 
+def _minutes_since_kickoff(match: FlashscoreMatchRead, now: datetime) -> float | None:
+    if match.start_time is None:
+        return None
+    start = match.start_time
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=UTC)
+    return (now - start).total_seconds() / 60.0
+
+
 def needs_live_poll(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
-    """Poll after scheduled kickoff to discover the real start; never before."""
+    """Poll once the match has started (kickoff time or live data); never before."""
     if match.favorite_odds is None or match.favorite_odds > LIST_ODDS_THRESHOLD:
         return False
     current = now or datetime.now(UTC)
     if is_match_finished(match, current):
         return False
-    if has_match_started(match, current):
-        return True
-    # Slow discovery only once the scheduled kickoff has passed.
-    return is_past_kickoff(match, current)
+    return has_match_started(match, current)
 
 
 def needs_fast_live_poll(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
-    """1-minute signal cadence only after the match is actually live."""
+    """1-minute cadence in the early-goal window (live minute or elapsed since kickoff)."""
     if not needs_live_poll(match, now):
         return False
     if match.early_favorite_goal or match.alert_eligible:
         return False
-    if not has_match_started(match, now):
-        return False
+    current = now or datetime.now(UTC)
     if match.minute is not None:
         return match.minute <= EARLY_GOAL_MINUTE
+    elapsed = _minutes_since_kickoff(match, current)
+    if elapsed is not None:
+        return elapsed <= EARLY_GOAL_MINUTE
     return True
 
 
