@@ -56,6 +56,7 @@ describe("flashscoreWatch", () => {
       minute: 18,
       home_score: 1,
       away_score: 0,
+      status: "inprogress",
     }));
     const later = withEarlyGoalFlags({
       ...flagged,
@@ -74,6 +75,7 @@ describe("flashscoreWatch", () => {
       minute: 12,
       home_score: 0,
       away_score: 1,
+      status: "inprogress",
     }));
 
     expect(match.early_goal).toBe(true);
@@ -87,10 +89,11 @@ describe("flashscoreWatch", () => {
       minute: 12,
       home_score: 1,
       away_score: 0,
+      status: "inprogress",
     }))).toBe(false);
   });
 
-  it("uses a 1-minute Flashscore poll while a ≤1.60 favorite is before minute 30", () => {
+  it("uses a 1-minute Flashscore poll while a live ≤1.60 favorite is before minute 30", () => {
     const now = Date.parse("2026-08-08T18:20:00Z");
     expect(liveRefreshIntervalMs([baseMatch({
       favorite_odds: 1.55,
@@ -111,7 +114,7 @@ describe("flashscoreWatch", () => {
     })])).toBe(SLOW_LIVE_REFRESH_MS);
   });
 
-  it("stops polling finished matches and scheduled matches long after kickoff", () => {
+  it("stops polling finished matches", () => {
     const now = Date.parse("2026-08-08T20:00:00Z");
     expect(liveRefreshIntervalMs([baseMatch({
       favorite_odds: 1.4,
@@ -120,31 +123,23 @@ describe("flashscoreWatch", () => {
       away_score: 1,
       start_time: "2026-08-08T17:00:00Z",
     })], now)).toBeNull();
+  });
 
+  it("does not activate fast signals before a real live start", () => {
+    const now = Date.parse("2026-08-08T18:05:00Z");
     expect(liveRefreshIntervalMs([baseMatch({
       favorite_odds: 1.4,
       status: "scheduled",
-      home_score: 2,
-      away_score: 1,
-      start_time: "2026-08-08T17:00:00Z",
-    })], now)).toBeNull();
+      start_time: "2026-08-08T18:00:00Z",
+    })], now)).toBe(SLOW_LIVE_REFRESH_MS);
   });
 
-  it("does not activate signals before kickoff", () => {
+  it("does not poll at all before scheduled kickoff", () => {
     const now = Date.parse("2026-08-08T17:50:00Z");
     expect(liveRefreshIntervalMs([baseMatch({
       favorite_odds: 1.4,
       status: "scheduled",
       start_time: "2026-08-08T18:00:00Z",
     })], now)).toBeNull();
-  });
-
-  it("activates 1-minute polling once the match has started", () => {
-    const now = Date.parse("2026-08-08T18:05:00Z");
-    expect(liveRefreshIntervalMs([baseMatch({
-      favorite_odds: 1.4,
-      status: "scheduled",
-      start_time: "2026-08-08T18:00:00Z",
-    })], now)).toBe(FAST_LIVE_REFRESH_MS);
   });
 });

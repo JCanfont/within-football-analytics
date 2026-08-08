@@ -131,7 +131,7 @@ def test_signal_tick_skips_flashscore_when_slow_window_was_just_polled(monkeypat
     assert "5 min" in result.message
 
 
-def test_signals_wait_until_kickoff() -> None:
+def test_signals_wait_until_real_live_start() -> None:
     now = datetime(2026, 8, 8, 17, 50, tzinfo=UTC)
     upcoming = FlashscoreMatchRead(
         event_id="soon",
@@ -144,13 +144,16 @@ def test_signals_wait_until_kickoff() -> None:
         favorite_side="home",
         start_time=now + timedelta(minutes=10),
     )
-    started = upcoming.model_copy(update={"start_time": now - timedelta(minutes=5)})
+    past_kickoff = upcoming.model_copy(update={"start_time": now - timedelta(minutes=5)})
+    live = past_kickoff.model_copy(update={"status": "inprogress", "minute": 5})
     assert flashscore_watch.has_match_started(upcoming, now) is False
     assert flashscore_watch.needs_live_poll(upcoming, now) is False
     assert flashscore_watch.needs_fast_live_poll(upcoming, now) is False
-    assert flashscore_watch.has_match_started(started, now) is True
-    assert flashscore_watch.needs_live_poll(started, now) is True
-    assert flashscore_watch.needs_fast_live_poll(started, now) is True
+    assert flashscore_watch.has_match_started(past_kickoff, now) is False
+    assert flashscore_watch.needs_live_poll(past_kickoff, now) is True
+    assert flashscore_watch.needs_fast_live_poll(past_kickoff, now) is False
+    assert flashscore_watch.has_match_started(live, now) is True
+    assert flashscore_watch.needs_fast_live_poll(live, now) is True
 
 
 def test_finished_and_stale_scheduled_matches_do_not_need_live_poll() -> None:

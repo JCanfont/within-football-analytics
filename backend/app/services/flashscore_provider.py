@@ -42,6 +42,7 @@ _NON_COMPETITIVE_TOKENS = (
     "junior",
     "next pro",
 )
+FINISHED_WITHOUT_CLOCK = timedelta(minutes=105)
 
 
 def fetch_flashscore_matches(
@@ -90,17 +91,25 @@ def fetch_flashscore_matches(
     enriched = [_ensure_odds_marking(match) for match in board]
     enriched.sort(key=lambda match: (match.start_time or datetime.max.replace(tzinfo=UTC), match.competition, match.home_team))
     with_odds = sum(match.home_odds is not None or match.away_odds is not None for match in enriched)
-    listed = [
+    favorites = [
         match
         for match in enriched
         if match.favorite_odds is not None and _is_competitive_match(match)
     ]
+    finished = 0
+    listed: list[FlashscoreMatchRead] = []
+    for match in favorites:
+        if _is_match_finished_for_list(match, now):
+            finished += 1
+            continue
+        listed.append(match)
     result = FlashscoreMatchesResult(
         status="ok",
         message=(
             f"{len(listed)} favoritos ≤ {LIST_ODDS_THRESHOLD:.2f} vigilables "
-            f"(de {len(enriched)} en jornada · {with_odds} con alguna cuota). "
-            "Solo se guardan los ≤ 1.60; el resto no se vigila."
+            f"(de {len(enriched)} en jornada · {with_odds} con alguna cuota · "
+            f"{finished} acabados excluidos). "
+            "Solo se guardan ≤ 1.60 no acabados; senales solo tras inicio real."
         ),
         configured=True,
         threshold=LIST_ODDS_THRESHOLD,
@@ -163,6 +172,40 @@ def _is_competitive_match(match: FlashscoreMatchRead) -> bool:
         if part
     ).lower()
     return not any(token in haystack for token in _NON_COMPETITIVE_TOKENS)
+
+
+def _is_match_finished_for_list(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
+    status = (match.status or "").lower().strip()
+    if status in {"finished", "ft", "aet", "ap"} or any(
+        token in status
+        for token in (
+            "finish",
+            "ended",
+            "final",
+            "full time",
+            "after extra",
+            "after pen",
+            "penalties",
+            "awarded",
+            "abandoned",
+            "cancelled",
+            "canceled",
+            "postponed",
+            "walkover",
+            "retired",
+            "closed",
+        )
+    ):
+        return True
+    if match.minute is not None:
+        return False
+    if match.start_time is None:
+        return False
+    current = now or datetime.now(UTC)
+    start = match.start_time
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=UTC)
+    return current >= start + FINISHED_WITHOUT_CLOCK
 
 
 def _load_schedule_payload(base_url: str, headers: dict[str, str], day: int) -> Any:
