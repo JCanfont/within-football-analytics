@@ -51,7 +51,32 @@ def test_merge_marks_early_favorite_goal() -> None:
     assert merged[0].home_odds == 1.4
     assert merged[0].favorite_odds == 1.4
     assert merged[0].early_favorite_goal is True
+    assert merged[0].early_goal_minute == 17
     assert merged[0].alert_eligible is True
+
+
+def test_with_early_goal_flags_keeps_goal_minute_after_halftime() -> None:
+    flagged = flashscore_watch.with_early_goal_flags(
+        FlashscoreMatchRead(
+            event_id="hiroshima",
+            competition="Japan: J1 League",
+            home_team="Sanfrecce Hiroshima",
+            away_team="Chiba",
+            status="halftime",
+            minute=None,
+            home_score=1,
+            away_score=0,
+            favorite_side="home",
+            favorite_team="Sanfrecce Hiroshima",
+            favorite_odds=1.35,
+            early_goal_minute=14,
+        )
+    )
+
+    assert flagged.early_goal is True
+    assert flagged.early_favorite_goal is True
+    assert flagged.early_goal_minute == 14
+    assert flagged.alert_eligible is True
 
 
 def test_save_watch_keeps_only_favorites_at_or_below_1_60() -> None:

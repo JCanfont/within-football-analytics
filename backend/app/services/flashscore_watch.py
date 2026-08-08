@@ -103,12 +103,30 @@ def merge_flashscore_live_board(
     for match in matches:
         live = by_id.get(match.event_id)
         data = match.model_dump()
+        previous_total = (match.home_score or 0) + (match.away_score or 0)
         if live is not None:
             data["status"] = live.status or match.status
             data["minute"] = live.minute if live.minute is not None else match.minute
             data["home_score"] = live.home_score if live.home_score is not None else match.home_score
             data["away_score"] = live.away_score if live.away_score is not None else match.away_score
             # Keep captured prematch odds / favorite sticky on the watchlist.
+            if live.early_goal_minute is not None:
+                previous = data.get("early_goal_minute")
+                data["early_goal_minute"] = (
+                    live.early_goal_minute
+                    if previous is None
+                    else min(int(previous), int(live.early_goal_minute))
+                )
+        next_total = (data.get("home_score") or 0) + (data.get("away_score") or 0)
+        minute = data.get("minute")
+        # Stamp the live clock when the scoreline first moves inside the early window.
+        if (
+            data.get("early_goal_minute") is None
+            and next_total > previous_total
+            and isinstance(minute, int)
+            and minute <= EARLY_GOAL_MINUTE
+        ):
+            data["early_goal_minute"] = minute
         stamped = FlashscoreMatchRead.model_validate(data)
         if is_match_finished(stamped, now) and (stamped.status or "").lower() != "finished":
             stamped = stamped.model_copy(update={"status": "finished", "minute": None if stamped.minute is None else stamped.minute})
@@ -149,24 +167,29 @@ def with_early_goal_flags(match: FlashscoreMatchRead) -> FlashscoreMatchRead:
     total_goals = home_score + away_score
     favorite_score = away_score if match.favorite_side == "away" else home_score
     in_early_window = minute is not None and minute <= EARLY_GOAL_MINUTE
-    saw_early_goal = bool(match.early_goal) or (in_early_window and total_goals > 0)
+    early_goal_minute = match.early_goal_minute
+    if early_goal_minute is None and in_early_window and total_goals > 0:
+        early_goal_minute = minute
+    known_early_goal = early_goal_minute is not None and early_goal_minute <= EARLY_GOAL_MINUTE
+    saw_early_goal = bool(match.early_goal) or known_early_goal or (in_early_window and total_goals > 0)
     saw_early_favorite_goal = bool(match.early_favorite_goal) or (
-        in_early_window
+        (
+            known_early_goal or in_early_window
+        )
         and match.favorite_team is not None
         and match.favorite_odds is not None
         and match.favorite_odds <= ALERT_ODDS_THRESHOLD
         and favorite_score > 0
     )
-    early_goal_minute = match.early_goal_minute
-    if early_goal_minute is None and saw_early_goal and in_early_window:
-        early_goal_minute = minute
-    return match.model_copy(
+    flagged = match.model_copy(
         update={
             "early_goal": saw_early_goal,
             "early_favorite_goal": saw_early_favorite_goal,
             "early_goal_minute": early_goal_minute,
-            "alert_eligible": saw_early_favorite_goal or is_alert_eligible(match),
         }
+    )
+    return flagged.model_copy(
+        update={"alert_eligible": saw_early_favorite_goal or is_alert_eligible(flagged)}
     )
 
 
@@ -386,7 +409,10 @@ def run_flashscore_signal_tick(db: Session, settings: Settings | None = None) ->
 
     merged = merge_flashscore_live_board(watch.matches, board)
     merged = enrich_matches_with_details(merged, settings)
-    merged = enrich_matches_with_goal_minutes(merged, settings)
+    merged = [
+        with_early_goal_flags(match)
+        for match in enrich_matches_with_goal_minutes(merged, settings)
+    ]
     save_flashscore_watch(
         db,
         day=watch.day,
@@ -398,10 +424,11 @@ def run_flashscore_signal_tick(db: Session, settings: Settings | None = None) ->
     eligible = [match for match in merged if is_alert_eligible(match)]
     emails_sent = 0
     for match in eligible:
+        goal_minute = match.early_goal_minute if match.early_goal_minute is not None else match.minute
         if (
             not match.favorite_team
             or match.favorite_odds is None
-            or match.minute is None
+            or goal_minute is None
             or match.home_score is None
             or match.away_score is None
         ):
@@ -414,7 +441,7 @@ def run_flashscore_signal_tick(db: Session, settings: Settings | None = None) ->
                 away_team=match.away_team,
                 favorite_team=match.favorite_team,
                 favorite_odds=match.favorite_odds,
-                minute=match.minute,
+                minute=goal_minute,
                 home_score=match.home_score,
                 away_score=match.away_score,
             ),

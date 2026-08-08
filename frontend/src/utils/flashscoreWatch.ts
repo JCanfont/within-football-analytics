@@ -65,6 +65,7 @@ export function mergeFlashscoreLiveBoard(
   return matches
     .map((match) => {
       const live = byId.get(match.event_id);
+      const previousTotal = (match.home_score ?? 0) + (match.away_score ?? 0);
       const base = live
         ? {
             ...match,
@@ -72,11 +73,24 @@ export function mergeFlashscoreLiveBoard(
             minute: live.minute ?? match.minute,
             home_score: live.home_score ?? match.home_score,
             away_score: live.away_score ?? match.away_score,
+            early_goal_minute: pickEarlierGoalMinute(
+              match.early_goal_minute,
+              live.early_goal_minute,
+            ),
           }
         : { ...match };
-      const stamped = isMatchFinished(base) && base.status !== "finished"
-        ? { ...base, status: "finished" }
+      const nextTotal = (base.home_score ?? 0) + (base.away_score ?? 0);
+      const stampedScore = (
+        base.early_goal_minute == null
+        && nextTotal > previousTotal
+        && base.minute != null
+        && base.minute <= EARLY_GOAL_MINUTE
+      )
+        ? { ...base, early_goal_minute: base.minute }
         : base;
+      const stamped = isMatchFinished(stampedScore) && stampedScore.status !== "finished"
+        ? { ...stampedScore, status: "finished" }
+        : stampedScore;
       return withEarlyGoalFlags(stamped);
     })
     .filter((match) => !isMatchFinished(match));
@@ -89,25 +103,38 @@ export function withEarlyGoalFlags(match: FlashscoreMatch): FlashscoreMatch {
   const totalGoals = homeScore + awayScore;
   const favoriteScore = match.favorite_side === "away" ? awayScore : homeScore;
   const inEarlyWindow = minute != null && minute <= EARLY_GOAL_MINUTE;
-  const sawEarlyGoal = Boolean(match.early_goal) || (inEarlyWindow && totalGoals > 0);
+  const earlyGoalMinute = match.early_goal_minute ?? (
+    inEarlyWindow && totalGoals > 0 ? minute : null
+  );
+  const knownEarlyGoal = earlyGoalMinute != null && earlyGoalMinute <= EARLY_GOAL_MINUTE;
+  const sawEarlyGoal = Boolean(match.early_goal) || knownEarlyGoal || (inEarlyWindow && totalGoals > 0);
   const sawEarlyFavoriteGoal = Boolean(match.early_favorite_goal) || (
-    inEarlyWindow &&
+    (knownEarlyGoal || inEarlyWindow) &&
     match.favorite_team != null &&
     match.favorite_odds != null &&
     match.favorite_odds <= ALERT_ODDS_THRESHOLD &&
     favoriteScore > 0
   );
-  const earlyGoalMinute = match.early_goal_minute ?? (
-    sawEarlyGoal && inEarlyWindow ? minute : null
-  );
 
-  return {
+  const flagged: FlashscoreMatch = {
     ...match,
     early_goal: sawEarlyGoal,
     early_favorite_goal: sawEarlyFavoriteGoal,
     early_goal_minute: earlyGoalMinute,
-    alert_eligible: sawEarlyFavoriteGoal || isAlertEligible(match),
   };
+  return {
+    ...flagged,
+    alert_eligible: sawEarlyFavoriteGoal || isAlertEligible(flagged),
+  };
+}
+
+function pickEarlierGoalMinute(
+  current: number | null | undefined,
+  candidate: number | null | undefined,
+): number | null | undefined {
+  if (current == null) return candidate;
+  if (candidate == null) return current;
+  return Math.min(current, candidate);
 }
 
 export function isAlertEligible(match: FlashscoreMatch, now = Date.now()) {
