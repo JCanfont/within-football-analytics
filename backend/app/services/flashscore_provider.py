@@ -94,7 +94,7 @@ def fetch_flashscore_matches(
             f"{len(listed)} favoritos ≤ {LIST_ODDS_THRESHOLD:.2f} vigilables "
             f"(de {len(enriched)} en jornada · {with_odds} con alguna cuota · "
             f"{rejected} fuera de 1ª/2ª · {finished} acabados excluidos). "
-            "Solo 1ª/2ª (3ª en ES/EN/PT), sin Under 20; senales tras inicio real."
+            "Solo 1ª/2ª (3ª en ES/EN/PT), sin Under 20; senales desde la hora de inicio."
         ),
         configured=True,
         threshold=LIST_ODDS_THRESHOLD,

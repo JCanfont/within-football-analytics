@@ -805,7 +805,7 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "Capturar cuotas ≤ 1,60" }));
     expect(await screen.findByText("1X2")).toBeInTheDocument();
     expect(screen.getAllByText("1,45").length).toBeGreaterThan(0);
-    expect(screen.getByText(/Pendiente de inicio|Esperando inicio real/)).toBeInTheDocument();
+    expect(screen.getByText(/Pendiente de inicio|En juego/)).toBeInTheDocument();
     expect(screen.getByText("Gol <30'")).toBeInTheDocument();
   }, 30000);
 
@@ -865,7 +865,7 @@ describe("App", () => {
 
     renderApp("/flashscore");
     fireEvent.click(await screen.findByRole("button", { name: "Capturar cuotas ≤ 1,60" }));
-    expect(await screen.findByText("Esperando inicio real")).toBeInTheDocument();
+    expect(await screen.findByText(/En juego/)).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Actualizar resultados" })).toBeEnabled();
     });

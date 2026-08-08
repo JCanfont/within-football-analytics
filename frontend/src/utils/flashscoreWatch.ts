@@ -6,7 +6,7 @@ export const LIST_ODDS_THRESHOLD = 1.6;
 export const EARLY_GOAL_MINUTE = 30;
 /** Poll Flashscore Ultra every minute while a live ≤1.60 favorite is before minute 30. */
 export const FAST_LIVE_REFRESH_MS = 60 * 1000;
-/** After minute 30, or while waiting for a real kickoff, poll every 5 minutes. */
+/** After minute 30, poll every 5 minutes. */
 export const SLOW_LIVE_REFRESH_MS = 5 * 60 * 1000;
 /** Without a live minute, stop asking for signals this long after kickoff. */
 export const FINISHED_WITHOUT_CLOCK_MS = 105 * 60 * 1000;
@@ -181,12 +181,18 @@ export function isMatchFinished(match: FlashscoreMatch, now = Date.now()): boole
   return now >= start + FINISHED_WITHOUT_CLOCK_MS;
 }
 
-export function hasMatchStarted(match: FlashscoreMatch, _now = Date.now()): boolean {
+export function hasMatchStarted(match: FlashscoreMatch, now = Date.now()): boolean {
+  if (isMatchFinished(match, now)) {
+    return false;
+  }
   if (match.minute != null) {
     return true;
   }
+  if (match.home_score != null || match.away_score != null) {
+    return true;
+  }
   const status = (match.status || "").toLowerCase();
-  return (
+  if (
     status.includes("live") ||
     status.includes("1st") ||
     status.includes("2nd") ||
@@ -194,7 +200,11 @@ export function hasMatchStarted(match: FlashscoreMatch, _now = Date.now()): bool
     status.includes("progress") ||
     status.includes("inplay") ||
     status.includes("in play")
-  );
+  ) {
+    return true;
+  }
+  // Flashscore often keeps status=scheduled after kickoff; the clock is enough.
+  return isPastKickoff(match, now);
 }
 
 export function isPastKickoff(match: FlashscoreMatch, now = Date.now()): boolean {
@@ -208,6 +218,17 @@ export function isPastKickoff(match: FlashscoreMatch, now = Date.now()): boolean
   return now >= start;
 }
 
+function minutesSinceKickoff(match: FlashscoreMatch, now: number): number | null {
+  if (!match.start_time) {
+    return null;
+  }
+  const start = new Date(match.start_time).getTime();
+  if (!Number.isFinite(start)) {
+    return null;
+  }
+  return (now - start) / 60_000;
+}
+
 export function needsLivePoll(match: FlashscoreMatch, now = Date.now()): boolean {
   if (match.favorite_odds == null || match.favorite_odds > LIST_ODDS_THRESHOLD) {
     return false;
@@ -215,13 +236,10 @@ export function needsLivePoll(match: FlashscoreMatch, now = Date.now()): boolean
   if (isMatchFinished(match, now)) {
     return false;
   }
-  if (hasMatchStarted(match, now)) {
-    return true;
-  }
-  return isPastKickoff(match, now);
+  return hasMatchStarted(match, now);
 }
 
-/** Fast only when actually live before minute 30; otherwise slow discovery / post-30. */
+/** Fast in the early-goal window (live minute or elapsed since kickoff); otherwise 5 min. */
 export function liveRefreshIntervalMs(matches: FlashscoreMatch[], now = Date.now()): number | null {
   const active = matches.filter((match) => needsLivePoll(match, now));
   if (active.length === 0) {
@@ -239,11 +257,12 @@ export function isCriticalSignalWatch(match: FlashscoreMatch, now = Date.now()):
   if (match.early_favorite_goal || match.alert_eligible) {
     return false;
   }
-  if (!hasMatchStarted(match, now)) {
-    return false;
-  }
   if (match.minute != null) {
     return match.minute <= EARLY_GOAL_MINUTE;
+  }
+  const elapsed = minutesSinceKickoff(match, now);
+  if (elapsed != null) {
+    return elapsed <= EARLY_GOAL_MINUTE;
   }
   return true;
 }
