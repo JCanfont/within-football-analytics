@@ -2,8 +2,8 @@ import { BellRing, RefreshCw, Timer, TrendingDown } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  fetchFlashscoreLiveBoard,
   fetchFlashscoreMatches,
+  refreshFlashscoreWatch,
   saveFlashscoreWatch,
   sendFlashscoreGoalEmail,
 } from "../services/api";
@@ -17,7 +17,6 @@ import {
   hasMatchStarted,
   isMatchFinished,
   liveRefreshIntervalMs,
-  mergeFlashscoreLiveBoard,
   readFlashscoreWatch,
   sortFlashscoreMatches,
   withEarlyGoalFlags,
@@ -127,38 +126,43 @@ export function FlashscorePage() {
     }
     setIsRefreshingLive(true);
     setMessage("Actualizando marcadores con Flashscore Ultra...");
-    fetchFlashscoreLiveBoard(day)
+    const stamp = capturedAt ?? new Date().toISOString();
+    refreshFlashscoreWatch({
+      day,
+      captured_at: stamp,
+      matches: matchesRef.current,
+    })
       .then((result) => {
-        if (result.status !== "ok") {
-          setMessage(result.message);
-          return;
-        }
-        const merged = sortFlashscoreMatches(mergeFlashscoreLiveBoard(matchesRef.current, result.matches));
+        const merged = sortFlashscoreMatches(
+          (result.matches || [])
+            .map(withEarlyGoalFlags)
+            .filter((match) => !isMatchFinished(match)),
+        );
         setMatches(merged);
         writeFlashscoreWatch({
-          capturedAt: capturedAt ?? new Date().toISOString(),
+          capturedAt: stamp,
           day,
           matches: merged,
         });
-        syncServerWatch(merged, day, capturedAt);
         setLastLiveRefresh(new Date().toISOString());
         const linked = merged.filter((match) => match.minute != null || match.home_score != null).length;
         const earlyGoals = merged.filter((match) => match.early_goal).length;
         const nextWait = liveRefreshIntervalMs(merged);
-        const finished = merged.filter((match) => isMatchFinished(match)).length;
+        const finished = (result.matches || []).length - merged.length;
         const intervalLabel = nextWait == null
           ? "parado (sin activos)"
           : nextWait === FAST_LIVE_REFRESH_MS
             ? "1 min"
             : "5 min";
         setMessage(
-          `${linked}/${merged.length} vigilados · ${finished} acabados · ${earlyGoals} con gol antes del 30' · proximo refresh ${intervalLabel}.`,
+          `${result.message || "Marcadores actualizados"} · ${linked}/${merged.length} con dato live · ` +
+          `${finished} acabados · ${earlyGoals} gol <30' · proximo refresh ${intervalLabel}.`,
         );
         sendEligibleAlerts(merged);
       })
       .catch(() => setMessage("No se pudieron actualizar los resultados desde Flashscore Ultra."))
       .finally(() => setIsRefreshingLive(false));
-  }, [capturedAt, day, sendEligibleAlerts, syncServerWatch]);
+  }, [capturedAt, day, sendEligibleAlerts]);
 
   const captureOdds = useCallback(() => {
     setIsCapturingOdds(true);
@@ -187,16 +191,20 @@ export function FlashscorePage() {
         });
         syncServerWatch(captured, day, stamp);
         setMessage(
-          `${result.message} Guardados ${captured.length} favoritos ≤ 1,60. ` +
-          "Live Ultra: 1 min hasta el 30', luego 5 min.",
+          `${result.message} Guardados ${captured.length} favoritos ≤ 1,60. Actualizando marcadores…`,
         );
+        // Pull /matches/live (+ details) right after capture so scores are not stuck on —.
+        if (captured.length > 0) {
+          matchesRef.current = captured;
+          refreshLive();
+        }
       })
       .catch(() => {
         setOddsStatus("request_failed");
         setMessage("No se pudieron capturar las cuotas Flashscore.");
       })
       .finally(() => setIsCapturingOdds(false));
-  }, [day, syncServerWatch]);
+  }, [day, refreshLive, syncServerWatch]);
 
   useEffect(() => {
     localStorage.setItem(LIVE_REFRESH_KEY, String(liveRefresh));

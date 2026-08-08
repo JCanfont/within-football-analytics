@@ -563,6 +563,12 @@ describe("App", () => {
       matches: [],
       message: "ok",
     });
+    mockedApi.refreshFlashscoreWatch.mockImplementation(async (payload) => ({
+      day: payload.day,
+      captured_at: payload.captured_at ?? null,
+      matches: payload.matches,
+      message: "Flashscore Ultra refresco · sin cambios live.",
+    }));
     mockedApi.fetchFlashscoreLiveBoard.mockResolvedValue({
       provider: "flashscore",
       status: "ok",
@@ -837,12 +843,10 @@ describe("App", () => {
         alert_eligible: false,
       }],
     });
-    mockedApi.fetchFlashscoreLiveBoard.mockResolvedValue({
-      provider: "flashscore",
-      status: "ok",
-      message: "Live board Flashscore Ultra.",
-      configured: true,
-      threshold: 1.6,
+    mockedApi.refreshFlashscoreWatch.mockResolvedValue({
+      day: 0,
+      captured_at: kickoff,
+      message: "Flashscore Ultra refresco · 1 vigilados ≤ 1,60 · 1 con marcador · 1 con minuto.",
       matches: [{
         event_id: "flash-alert-1",
         start_time: kickoff,
@@ -859,20 +863,18 @@ describe("App", () => {
         favorite_side: "home",
         favorite_team: "Getafe",
         favorite_odds: 1.45,
-        alert_eligible: false,
+        alert_eligible: true,
+        early_goal: true,
+        early_favorite_goal: true,
+        early_goal_minute: 24,
       }],
     });
 
     renderApp("/flashscore");
     fireEvent.click(await screen.findByRole("button", { name: "Capturar cuotas ≤ 1,60" }));
-    expect(await screen.findByText(/En juego/)).toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Actualizar resultados" })).toBeEnabled();
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Actualizar resultados" }));
 
     await waitFor(() => {
-      expect(mockedApi.fetchFlashscoreLiveBoard).toHaveBeenCalled();
+      expect(mockedApi.refreshFlashscoreWatch).toHaveBeenCalled();
       expect(mockedApi.sendFlashscoreGoalEmail).toHaveBeenCalledWith(expect.objectContaining({
         event_id: "flash-alert-1",
         favorite_team: "Getafe",
@@ -883,6 +885,8 @@ describe("App", () => {
     });
     expect(await screen.findByText("Email enviado")).toBeInTheDocument();
     expect(screen.getByText(/Favorito marco/)).toBeInTheDocument();
+    expect(screen.getByText("24'")).toBeInTheDocument();
+    expect(screen.getByText("1-0")).toBeInTheDocument();
   }, 30000);
 
   it("lets the user choose the Forebet goal prediction view", async () => {

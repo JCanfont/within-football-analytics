@@ -16,7 +16,11 @@ from app.schemas.api import (
     SofaScoreTeamEvent,
 )
 from app.services.email_alerts import send_flashscore_goal_email
-from app.services.flashscore_provider import LIST_ODDS_THRESHOLD, fetch_flashscore_live_board
+from app.services.flashscore_provider import (
+    LIST_ODDS_THRESHOLD,
+    enrich_matches_with_details,
+    fetch_flashscore_live_board,
+)
 from app.utils.team_match import same_team
 
 
@@ -215,8 +219,11 @@ def is_match_finished(match: FlashscoreMatchRead, now: datetime | None = None) -
     start = match.start_time
     if start.tzinfo is None:
         start = start.replace(tzinfo=UTC)
-    # No live clock after a full-match window ⇒ treat as done (common Flashscore list quirk).
-    return current >= start + FINISHED_WITHOUT_CLOCK
+    # With a scoreline but no clock, wait longer before assuming FT (list feed is sticky).
+    grace = FINISHED_WITHOUT_CLOCK
+    if match.home_score is not None or match.away_score is not None:
+        grace = timedelta(minutes=150)
+    return current >= start + grace
 
 
 def has_match_started(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
@@ -362,6 +369,7 @@ def run_flashscore_signal_tick(db: Session, settings: Settings | None = None) ->
         )
 
     merged = merge_flashscore_live_board(watch.matches, board)
+    merged = enrich_matches_with_details(merged, settings)
     save_flashscore_watch(
         db,
         day=watch.day,

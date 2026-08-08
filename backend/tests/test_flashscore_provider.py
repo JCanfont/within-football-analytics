@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from app.schemas.api import FlashscoreMatchRead
 from app.services import flashscore_provider
 
 
@@ -178,6 +179,82 @@ def test_flashscore_provider_reads_finished_flags_and_ignores_timestamp_minutes(
     assert flashscore_provider._status_value({"is_in_progress": True}) == "live"
     assert flashscore_provider._minute_value({"time": "2026-08-08T20:00:00Z", "live_time": "24'"}) == 24
     assert flashscore_provider._minute_value({"time": "20:00"}) is None
+
+
+def test_flashscore_live_board_merges_live_feed_minutes(monkeypatch) -> None:
+    schedule = [{
+        "name": "LaLiga",
+        "country_name": "Spain",
+        "matches": [{
+            "match_id": "live-merge-1",
+            "home_team": {"name": "Getafe"},
+            "away_team": {"name": "Celta"},
+            "match_status": "scheduled",
+            "odds": {"1": "1.40", "X": "4.50", "2": "8.00"},
+        }],
+    }]
+    live_feed = [{
+        "name": "LaLiga",
+        "matches": [{
+            "match_id": "live-merge-1",
+            "home_team": {"name": "Getafe"},
+            "away_team": {"name": "Celta"},
+            "is_in_progress": True,
+            "live_time": "18'",
+            "scores": {"home": 1, "away": 0},
+        }],
+    }]
+
+    def fake_get_json(url, headers, params):
+        if url.endswith("/matches/live"):
+            return live_feed
+        if "matches/list" in url:
+            return schedule
+        raise flashscore_provider.requests.RequestException("skip")
+
+    monkeypatch.setattr(flashscore_provider, "_get_json", fake_get_json)
+    flashscore_provider._BOARD_CACHE.clear()
+    flashscore_provider._LIVE_FEED_CACHE.clear()
+
+    board = flashscore_provider.fetch_flashscore_live_board(settings=settings(), bypass_cache=True)
+    match = next(item for item in board if item.event_id == "live-merge-1")
+    assert match.minute == 18
+    assert match.home_score == 1
+    assert match.away_score == 0
+    assert match.status == "live"
+
+
+def test_enrich_matches_with_details_fills_missing_score(monkeypatch) -> None:
+    base = FlashscoreMatchRead(
+        event_id="detail-1",
+        competition="Spain: LaLiga",
+        home_team="Getafe",
+        away_team="Celta",
+        status="scheduled",
+        favorite_odds=1.4,
+        favorite_team="Getafe",
+        favorite_side="home",
+        start_time=datetime.now(UTC) - timedelta(minutes=12),
+    )
+
+    def fake_get_json(url, headers, params):
+        assert url.endswith("/matches/details")
+        assert params["match_id"] == "detail-1"
+        return {
+            "match_id": "detail-1",
+            "is_in_progress": True,
+            "live_time": "12'",
+            "scores": {"home": 0, "away": 0},
+            "home_team": {"name": "Getafe"},
+            "away_team": {"name": "Celta"},
+        }
+
+    monkeypatch.setattr(flashscore_provider, "_get_json", fake_get_json)
+    enriched = flashscore_provider.enrich_matches_with_details([base], settings=settings())
+    assert enriched[0].minute == 12
+    assert enriched[0].home_score == 0
+    assert enriched[0].away_score == 0
+    assert enriched[0].status == "live"
 
 
 def test_flashscore_provider_ignores_scalar_average_as_home_odd() -> None:

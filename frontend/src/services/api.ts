@@ -250,6 +250,15 @@ export async function saveFlashscoreWatch(payload: {
   return response.data;
 }
 
+export async function refreshFlashscoreWatch(payload: {
+  day: number;
+  captured_at?: string | null;
+  matches: FlashscoreMatch[];
+}): Promise<FlashscoreWatchState> {
+  const response = await api.post<FlashscoreWatchState>("/api/flashscore/watch/refresh", payload);
+  return response.data;
+}
+
 export async function uploadImportCsv(endpoint: string, file: File): Promise<ImportResult> {
   const formData = new FormData();
   formData.append("file", file);

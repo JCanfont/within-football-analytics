@@ -111,13 +111,92 @@ def fetch_flashscore_live_board(
     *,
     bypass_cache: bool = True,
 ) -> list[FlashscoreMatchRead]:
-    """Full day board for live score/minute updates (not filtered by ≤1.60)."""
+    """Day board merged with Flashscore /matches/live (real minutes + scores)."""
     settings = settings or get_settings()
     if not settings.rapidapi_key:
         raise RuntimeError("Flashscore necesita RAPIDAPI_KEY.")
     if bypass_cache:
         _BOARD_CACHE.pop(day, None)
-    return _load_day_board(day, settings)
+        _LIVE_FEED_CACHE.clear()
+    board = _load_day_board(day, settings)
+    live = _load_live_feed(settings)
+    if not live:
+        return board
+    return _merge_live_matches(board, live)
+
+
+def enrich_matches_with_details(
+    matches: list[FlashscoreMatchRead],
+    settings: Settings | None = None,
+    *,
+    max_lookups: int = 12,
+) -> list[FlashscoreMatchRead]:
+    """Fill missing minute/score for started watchlist matches via /matches/details."""
+    settings = settings or get_settings()
+    if not settings.rapidapi_key or not matches:
+        return matches
+
+    now = datetime.now(UTC)
+
+    def needs_details(match: FlashscoreMatchRead) -> bool:
+        if match.favorite_odds is None:
+            return False
+        if _is_match_finished_for_list(match, now) and match.minute is not None:
+            return False
+        start = match.start_time
+        if start is None:
+            return False
+        if start.tzinfo is None:
+            start = start.replace(tzinfo=UTC)
+        if now < start:
+            return False
+        return match.minute is None or match.home_score is None or match.away_score is None
+
+    targets = [match for match in matches if needs_details(match)][:max_lookups]
+    if not targets:
+        return matches
+
+    host = getattr(settings, "flashscore_api_host", None) or "flashscore4.p.rapidapi.com"
+    headers = {
+        "X-RapidAPI-Key": settings.rapidapi_key,
+        "X-RapidAPI-Host": host,
+        "Content-Type": "application/json",
+    }
+    base_url = f"https://{host}"
+
+    details_by_id: dict[str, FlashscoreMatchRead] = {}
+
+    def lookup(match: FlashscoreMatchRead) -> tuple[str, FlashscoreMatchRead] | None:
+        try:
+            payload = _get_json(
+                f"{base_url}/api/flashscore/v2/matches/details",
+                headers,
+                {"match_id": match.event_id},
+            )
+        except requests.RequestException:
+            return None
+        parsed = _parse_matches(payload)
+        if not parsed:
+            # Details often return a single match object (status fields + scores).
+            if isinstance(payload, dict):
+                candidate = _match_from_details_record(payload, match)
+                if candidate is not None:
+                    return match.event_id, candidate
+            return None
+        detail = next((item for item in parsed if item.event_id == match.event_id), parsed[0])
+        return match.event_id, detail
+
+    workers = min(6, len(targets))
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = [executor.submit(lookup, match) for match in targets]
+        for future in as_completed(futures):
+            result = future.result()
+            if result:
+                details_by_id[result[0]] = result[1]
+
+    if not details_by_id:
+        return matches
+    return _merge_live_matches(matches, list(details_by_id.values()))
 
 
 def _load_day_board(
@@ -140,6 +219,57 @@ def _load_day_board(
     matches = [_ensure_odds_marking(match) for match in _parse_matches(schedule_payload)]
     _BOARD_CACHE[day] = (now, matches)
     return matches
+
+
+_LIVE_FEED_CACHE: dict[str, tuple[datetime, list[FlashscoreMatchRead]]] = {}
+
+
+def _load_live_feed(settings: Settings) -> list[FlashscoreMatchRead]:
+    """FlashScore4 live feed — includes live_time / in-progress scores the day list often omits."""
+    cached = _LIVE_FEED_CACHE.get("football")
+    now = datetime.now(UTC)
+    if cached and now - cached[0] < LIVE_CACHE_TTL:
+        return cached[1]
+
+    headers = {
+        "X-RapidAPI-Key": settings.rapidapi_key,
+        "X-RapidAPI-Host": settings.flashscore_api_host,
+        "Content-Type": "application/json",
+    }
+    base_url = f"https://{settings.flashscore_api_host}"
+    try:
+        payload = _get_json(
+            f"{base_url}/api/flashscore/v2/matches/live",
+            headers,
+            {"sport_id": FOOTBALL_SPORT_ID, "timezone": "Europe/Madrid"},
+        )
+    except requests.RequestException:
+        return cached[1] if cached else []
+
+    matches = [_ensure_odds_marking(match) for match in _parse_matches(payload)]
+    _LIVE_FEED_CACHE["football"] = (now, matches)
+    return matches
+
+
+def _match_from_details_record(
+    record: dict[str, Any],
+    base: FlashscoreMatchRead,
+) -> FlashscoreMatchRead | None:
+    """Build a live patch from /matches/details when the payload is a flat status object."""
+    home_score = _score_value(record, "home")
+    away_score = _score_value(record, "away")
+    minute = _minute_value(record)
+    status = _status_value(record)
+    if home_score is None and away_score is None and minute is None and status == "scheduled":
+        return None
+    return base.model_copy(
+        update={
+            "status": status or base.status,
+            "minute": minute if minute is not None else base.minute,
+            "home_score": home_score if home_score is not None else base.home_score,
+            "away_score": away_score if away_score is not None else base.away_score,
+        }
+    )
 
 
 def _ensure_odds_marking(match: FlashscoreMatchRead) -> FlashscoreMatchRead:
@@ -385,10 +515,10 @@ def _merge_live_matches(scheduled: list[FlashscoreMatchRead], live: list[Flashsc
         if previous:
             by_id[live_match.event_id] = previous.model_copy(
                 update={
-                    "status": live_match.status,
-                    "minute": live_match.minute,
-                    "home_score": live_match.home_score,
-                    "away_score": live_match.away_score,
+                    "status": _prefer_status(previous.status, live_match.status),
+                    "minute": live_match.minute if live_match.minute is not None else previous.minute,
+                    "home_score": live_match.home_score if live_match.home_score is not None else previous.home_score,
+                    "away_score": live_match.away_score if live_match.away_score is not None else previous.away_score,
                     "start_time": previous.start_time or live_match.start_time,
                     "competition": previous.competition if previous.competition != "Flashscore" else live_match.competition,
                 }
@@ -396,6 +526,15 @@ def _merge_live_matches(scheduled: list[FlashscoreMatchRead], live: list[Flashsc
         else:
             by_id[live_match.event_id] = live_match
     return list(by_id.values())
+
+
+def _prefer_status(previous: str, candidate: str) -> str:
+    rank = {"scheduled": 0, "live": 1, "finished": 2}
+    prev = (previous or "scheduled").lower()
+    cand = (candidate or "scheduled").lower()
+    prev_key = "finished" if "finish" in prev else ("live" if any(t in prev for t in ("live", "1st", "2nd", "half", "progress")) else "scheduled")
+    cand_key = "finished" if "finish" in cand else ("live" if any(t in cand for t in ("live", "1st", "2nd", "half", "progress")) else "scheduled")
+    return candidate if rank.get(cand_key, 0) >= rank.get(prev_key, 0) and candidate else previous
 
 
 def _parse_odds_by_event(payload: Any) -> dict[str, tuple[float | None, float | None, float | None]]:
@@ -539,14 +678,25 @@ def _walk_dicts(value: Any):
 
 
 def _prefer_live(previous: FlashscoreMatchRead, candidate: FlashscoreMatchRead) -> FlashscoreMatchRead:
-    previous_has_live = previous.minute is not None or previous.home_score is not None or previous.away_score is not None
-    candidate_has_live = candidate.minute is not None or candidate.home_score is not None or candidate.away_score is not None
-    chosen = candidate if candidate_has_live and not previous_has_live else previous
-    if chosen.competition == "Flashscore" and candidate.competition != "Flashscore":
-        return chosen.model_copy(update={"competition": candidate.competition})
-    if chosen.competition == "Flashscore" and previous.competition != "Flashscore":
-        return chosen.model_copy(update={"competition": previous.competition})
-    return chosen
+    competition = previous.competition
+    if competition == "Flashscore" and candidate.competition != "Flashscore":
+        competition = candidate.competition
+    return previous.model_copy(
+        update={
+            "status": _prefer_status(previous.status, candidate.status),
+            "minute": candidate.minute if candidate.minute is not None else previous.minute,
+            "home_score": candidate.home_score if candidate.home_score is not None else previous.home_score,
+            "away_score": candidate.away_score if candidate.away_score is not None else previous.away_score,
+            "start_time": previous.start_time or candidate.start_time,
+            "competition": competition,
+            "home_odds": candidate.home_odds if candidate.home_odds is not None else previous.home_odds,
+            "draw_odds": candidate.draw_odds if candidate.draw_odds is not None else previous.draw_odds,
+            "away_odds": candidate.away_odds if candidate.away_odds is not None else previous.away_odds,
+            "favorite_odds": candidate.favorite_odds if candidate.favorite_odds is not None else previous.favorite_odds,
+            "favorite_team": candidate.favorite_team if candidate.favorite_team is not None else previous.favorite_team,
+            "favorite_side": candidate.favorite_side if candidate.favorite_side is not None else previous.favorite_side,
+        }
+    )
 
 
 def _team_name(record: dict[str, Any], side: str) -> str | None:
@@ -591,14 +741,22 @@ def _competition_name(record: dict[str, Any]) -> str:
 
 def _score_value(record: dict[str, Any], side: str) -> int | None:
     value = _value(record, f"{side}_score", f"{side}Score", f"{side}_current_score", f"{side}_result")
+    if isinstance(value, dict):
+        value = _value(value, "current", "display", "regular", side)
     if value is None:
         score = record.get("score") or record.get("scores") or record.get("result")
         if isinstance(score, dict):
             value = _value(score, side, f"{side}_score", "current", "regular")
             if value is None and isinstance(score.get("current"), dict):
                 value = _value(score["current"], side)
+            if isinstance(value, dict):
+                value = _value(value, "current", "display", "regular")
         elif isinstance(score, list) and len(score) >= 2:
             value = score[0] if side == "home" else score[1]
+        elif isinstance(score, str) and "-" in score:
+            parts = [part.strip() for part in score.replace(":", "-").split("-")]
+            if len(parts) >= 2:
+                value = parts[0] if side == "home" else parts[1]
     return _int_value(value)
 
 
