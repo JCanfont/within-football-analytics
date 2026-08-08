@@ -310,18 +310,15 @@ export function FlashscorePage() {
         ) : null}
 
         <div className="table-wrap">
-          <table>
+          <table className="flashscore-table">
             <thead>
               <tr>
                 <th>Hora</th>
-                <th>Competicion</th>
                 <th>Partido</th>
+                <th>1X2</th>
                 <th>Minuto</th>
                 <th>Marcador</th>
                 <th>Gol &lt;30&apos;</th>
-                <th>Cuota local</th>
-                <th>Empate</th>
-                <th>Cuota visitante</th>
                 <th>Equipo vigilado</th>
                 <th>Alerta</th>
               </tr>
@@ -337,8 +334,27 @@ export function FlashscorePage() {
                 return (
                   <tr className={rowClass} key={match.event_id}>
                     <td>{formatStartTime(match.start_time)}</td>
-                    <td>{match.competition}</td>
-                    <td><strong>{match.home_team}</strong> vs <strong>{match.away_team}</strong></td>
+                    <td>
+                      <div className="flashscore-match-cell">
+                        <strong>{match.home_team}</strong>
+                        <span className="flashscore-match-vs">vs</span>
+                        <strong>{match.away_team}</strong>
+                        <span className="table-subtext flashscore-match-competition">{match.competition}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="flashscore-odds-trio" aria-label="Cuotas 1X2">
+                        <span className={isLowOdds(match.home_odds) ? "flashscore-low-odds" : undefined}>
+                          <em>1</em>{formatOdds(match.home_odds)}
+                        </span>
+                        <span>
+                          <em>X</em>{formatOdds(match.draw_odds)}
+                        </span>
+                        <span className={isLowOdds(match.away_odds) ? "flashscore-low-odds" : undefined}>
+                          <em>2</em>{formatOdds(match.away_odds)}
+                        </span>
+                      </div>
+                    </td>
                     <td>{match.minute != null ? `${match.minute}'` : formatStatus(match.status)}</td>
                     <td>{formatScore(match)}</td>
                     <td>
@@ -346,9 +362,6 @@ export function FlashscorePage() {
                         {earlyGoalLabel(match)}
                       </span>
                     </td>
-                    <td className={isLowOdds(match.home_odds) ? "flashscore-low-odds" : undefined}>{formatOdds(match.home_odds)}</td>
-                    <td>{formatOdds(match.draw_odds)}</td>
-                    <td className={isLowOdds(match.away_odds) ? "flashscore-low-odds" : undefined}>{formatOdds(match.away_odds)}</td>
                     <td>
                       {match.favorite_team ? (
                         <>

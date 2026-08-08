@@ -803,7 +803,7 @@ describe("App", () => {
     expect(await screen.findByRole("heading", { name: "Flashscore", level: 1 })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Flashscore" })).toHaveAttribute("href", "/flashscore");
     fireEvent.click(screen.getByRole("button", { name: "Capturar cuotas ≤ 1,60" }));
-    expect(await screen.findByText("Cuota local")).toBeInTheDocument();
+    expect(await screen.findByText("1X2")).toBeInTheDocument();
     expect(screen.getAllByText("1,45").length).toBeGreaterThan(0);
     expect(screen.getByText("Esperando Flashscore")).toBeInTheDocument();
     expect(screen.getByText("Gol <30'")).toBeInTheDocument();
