@@ -9,6 +9,8 @@ import {
   clearFlashscoreWatch,
   mergeFlashscoreWithSofaScore,
   readFlashscoreWatch,
+  sortFlashscoreMatches,
+  withEarlyGoalFlags,
   writeFlashscoreWatch,
 } from "../utils/flashscoreWatch";
 
@@ -48,7 +50,7 @@ export function FlashscorePage() {
     }
     setDay(saved.day);
     setCapturedAt(saved.capturedAt);
-    setMatches(saved.matches);
+    setMatches(sortFlashscoreMatches(saved.matches.map(withEarlyGoalFlags)));
     setOddsStatus("ok");
     setConfigured(true);
     setMessage(
@@ -106,7 +108,7 @@ export function FlashscorePage() {
     setMessage("Actualizando marcadores con SofaScore...");
     fetchSofaScoreLiveEvents()
       .then((result) => {
-        const merged = mergeFlashscoreWithSofaScore(matchesRef.current, result.events);
+        const merged = sortFlashscoreMatches(mergeFlashscoreWithSofaScore(matchesRef.current, result.events));
         setMatches(merged);
         writeFlashscoreWatch({
           capturedAt: capturedAt ?? new Date().toISOString(),
@@ -115,8 +117,9 @@ export function FlashscorePage() {
         });
         setLastLiveRefresh(new Date().toISOString());
         const linked = merged.filter((match) => match.minute != null || match.home_score != null).length;
+        const earlyGoals = merged.filter((match) => match.early_goal).length;
         setMessage(
-          `${result.message || "SofaScore actualizado"} · ${linked}/${merged.length} partidos enlazados con directo.`,
+          `${result.message || "SofaScore actualizado"} · ${linked}/${merged.length} enlazados · ${earlyGoals} con gol antes del 30'.`,
         );
         sendEligibleAlerts(merged);
       })
@@ -136,12 +139,13 @@ export function FlashscorePage() {
           return;
         }
         const stamp = new Date().toISOString();
+        const captured = sortFlashscoreMatches(result.matches.map(withEarlyGoalFlags));
         setCapturedAt(stamp);
-        setMatches(result.matches);
+        setMatches(captured);
         writeFlashscoreWatch({
           capturedAt: stamp,
           day,
-          matches: result.matches,
+          matches: captured,
         });
         setMessage(
           `${result.message} Cuotas guardadas. A partir de ahora los resultados vienen de SofaScore.`,
@@ -165,8 +169,8 @@ export function FlashscorePage() {
 
   const listed = matches.filter((match) => match.favorite_odds != null);
   const alertWatch = listed.filter((match) => match.favorite_odds != null && match.favorite_odds <= ALERT_ODDS_THRESHOLD).length;
-  const activeAlerts = matches.filter((match) => match.alert_eligible).length;
-  const liveLinked = matches.filter((match) => match.minute != null || (match.home_score != null && match.status.toLowerCase().includes("live")) || match.status.toLowerCase().includes("progress")).length;
+  const earlyGoals = matches.filter((match) => match.early_goal).length;
+  const favoriteEarlyGoals = matches.filter((match) => match.early_favorite_goal || match.alert_eligible).length;
 
   return (
     <section className="flashscore-page">
@@ -180,7 +184,7 @@ export function FlashscorePage() {
       <div className="metrics-grid" aria-label="Resumen Flashscore">
         <FlashscoreMetric icon={TrendingDown} label="Cuota ≤ 1,60" value={String(listed.length)} detail="Capturados en la jornada" />
         <FlashscoreMetric icon={Timer} label="Aviso ≤ 1,50" value={String(alertWatch)} detail="Candidatos a email" />
-        <FlashscoreMetric icon={BellRing} label="En directo" value={String(liveLinked)} detail="Enlazados con SofaScore" />
+        <FlashscoreMetric icon={BellRing} label="Gol antes del 30'" value={String(earlyGoals)} detail={`${favoriteEarlyGoals} del equipo vigilado`} />
         <FlashscoreMetric
           icon={RefreshCw}
           label="Resultados"
@@ -194,8 +198,8 @@ export function FlashscorePage() {
           <div>
             <h2>Jornada con cuota ≤ 1,60</h2>
             <p>
-              1) Captura las cuotas con Flashscore. 2) SofaScore actualiza marcador y minuto.
-              El email de gol temprano usa cuota ≤ {ALERT_ODDS_THRESHOLD.toFixed(2).replace(".", ",")} y minuto ≤ 30.
+              Se senala en cuanto SofaScore detecta un gol antes del minuto 30.
+              El email salta si el equipo vigilado (cuota ≤ {ALERT_ODDS_THRESHOLD.toFixed(2).replace(".", ",")}) es quien marca.
             </p>
           </div>
           <div className="flashscore-actions">
@@ -258,6 +262,7 @@ export function FlashscorePage() {
                 <th>Partido</th>
                 <th>Minuto</th>
                 <th>Marcador</th>
+                <th>Gol &lt;30&apos;</th>
                 <th>Cuota local</th>
                 <th>Empate</th>
                 <th>Cuota visitante</th>
@@ -268,13 +273,23 @@ export function FlashscorePage() {
             <tbody>
               {listed.map((match) => {
                 const alerted = alertedEventIds.includes(match.event_id);
+                const rowClass = match.early_favorite_goal || match.alert_eligible
+                  ? "flashscore-alert-row flashscore-early-favorite-row"
+                  : match.early_goal
+                    ? "flashscore-early-goal-row"
+                    : undefined;
                 return (
-                  <tr className={match.alert_eligible ? "flashscore-alert-row" : undefined} key={match.event_id}>
+                  <tr className={rowClass} key={match.event_id}>
                     <td>{formatStartTime(match.start_time)}</td>
                     <td>{match.competition}</td>
                     <td><strong>{match.home_team}</strong> vs <strong>{match.away_team}</strong></td>
                     <td>{match.minute != null ? `${match.minute}'` : formatStatus(match.status)}</td>
                     <td>{formatScore(match)}</td>
+                    <td>
+                      <span className={`flashscore-early-goal-status ${earlyGoalTone(match)}`}>
+                        {earlyGoalLabel(match)}
+                      </span>
+                    </td>
                     <td className={isLowOdds(match.home_odds) ? "flashscore-low-odds" : undefined}>{formatOdds(match.home_odds)}</td>
                     <td>{formatOdds(match.draw_odds)}</td>
                     <td className={isLowOdds(match.away_odds) ? "flashscore-low-odds" : undefined}>{formatOdds(match.away_odds)}</td>
@@ -322,18 +337,45 @@ function FlashscoreMetric({
   );
 }
 
+function earlyGoalLabel(match: FlashscoreMatch) {
+  if (match.early_favorite_goal || match.alert_eligible) {
+    const minute = match.early_goal_minute ?? match.minute;
+    return minute != null ? `Favorito marco (${minute}')` : "Favorito marco <30'";
+  }
+  if (match.early_goal) {
+    const minute = match.early_goal_minute ?? match.minute;
+    return minute != null ? `Gol al ${minute}'` : "Gol antes del 30'";
+  }
+  if (match.minute != null && match.minute <= 30) {
+    return "Ventana abierta";
+  }
+  if (match.minute != null && match.minute > 30) {
+    return "Sin gol <30'";
+  }
+  return "—";
+}
+
+function earlyGoalTone(match: FlashscoreMatch) {
+  if (match.early_favorite_goal || match.alert_eligible) return "favorite";
+  if (match.early_goal) return "any";
+  if (match.minute != null && match.minute <= 30) return "open";
+  return "idle";
+}
+
 function alertLabel(match: FlashscoreMatch, alerted: boolean) {
   if (alerted) return "Email enviado";
-  if (match.alert_eligible) return "Gol detectado";
+  if (match.early_favorite_goal || match.alert_eligible) return "Gol favorito <30'";
+  if (match.early_goal) return "Gol rival/otro <30'";
   if (!match.favorite_team) return "Sin cuota ≤ 1,60";
   if (match.favorite_odds != null && match.favorite_odds > ALERT_ODDS_THRESHOLD) return "Listado (aviso ≤ 1,50)";
   if (match.minute == null) return "Esperando SofaScore";
-  if (match.minute <= 30) return "Esperando gol";
+  if (match.minute <= 30) return "Esperando gol <30'";
   return "Ventana cerrada";
 }
 
 function alertTone(match: FlashscoreMatch, alerted: boolean) {
-  if (alerted || match.alert_eligible) return "triggered";
+  if (alerted || match.early_favorite_goal || match.alert_eligible) return "triggered";
+  if (match.early_goal) return "watching";
   if (
     match.favorite_team
     && match.favorite_odds != null

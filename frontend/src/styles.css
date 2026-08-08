@@ -1212,13 +1212,49 @@ td {
   font-size: 13px;
 }
 
-.flashscore-alert-row {
-  background: #effaf5;
+.flashscore-alert-row,
+.flashscore-early-favorite-row {
+  background: #dff7eb;
+}
+
+.flashscore-early-goal-row {
+  background: #fff6df;
 }
 
 .flashscore-low-odds {
   font-weight: 700;
   color: #126142;
+}
+
+.flashscore-early-goal-status {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.flashscore-early-goal-status.favorite {
+  background: #126142;
+  color: #f4fff8;
+}
+
+.flashscore-early-goal-status.any {
+  background: #f0c14d;
+  color: #5c4300;
+}
+
+.flashscore-early-goal-status.open {
+  background: #fff1c9;
+  color: #8a5a08;
+}
+
+.flashscore-early-goal-status.idle {
+  background: #edf1f5;
+  color: #637080;
 }
 
 .flashscore-alert-status {

@@ -792,6 +792,7 @@ describe("App", () => {
     expect(await screen.findByText("Cuota local")).toBeInTheDocument();
     expect(screen.getAllByText("1,45").length).toBeGreaterThan(0);
     expect(screen.getByText("Esperando SofaScore")).toBeInTheDocument();
+    expect(screen.getByText("Gol <30'")).toBeInTheDocument();
   }, 30000);
 
   it("emails once when SofaScore shows the low-odds team scored before minute 30", async () => {
@@ -857,6 +858,7 @@ describe("App", () => {
       }));
     });
     expect(await screen.findByText("Email enviado")).toBeInTheDocument();
+    expect(screen.getByText(/Favorito marco/)).toBeInTheDocument();
   }, 30000);
 
   it("lets the user choose the Forebet goal prediction view", async () => {

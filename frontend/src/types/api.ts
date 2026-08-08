@@ -519,6 +519,11 @@ export type FlashscoreMatch = {
   favorite_team?: string | null;
   favorite_odds?: number | null;
   alert_eligible: boolean;
+  /** Sticky: any goal was observed while minute ≤ 30. */
+  early_goal?: boolean;
+  /** Sticky: the watched favorite team scored while minute ≤ 30. */
+  early_favorite_goal?: boolean;
+  early_goal_minute?: number | null;
 };
 
 export type FlashscoreMatchesResult = {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isAlertEligible, mergeFlashscoreWithSofaScore } from "./flashscoreWatch";
+import { isAlertEligible, mergeFlashscoreWithSofaScore, withEarlyGoalFlags } from "./flashscoreWatch";
 import type { FlashscoreMatch } from "../types/api";
 
 function baseMatch(overrides: Partial<FlashscoreMatch> = {}): FlashscoreMatch {
@@ -21,7 +21,7 @@ function baseMatch(overrides: Partial<FlashscoreMatch> = {}): FlashscoreMatch {
 }
 
 describe("flashscoreWatch", () => {
-  it("merges SofaScore minute and score onto a captured Flashscore row", () => {
+  it("marks sticky early favorite goal from SofaScore before minute 30", () => {
     const merged = mergeFlashscoreWithSofaScore(
       [baseMatch()],
       [{
@@ -39,7 +39,40 @@ describe("flashscoreWatch", () => {
 
     expect(merged[0].minute).toBe(18);
     expect(merged[0].home_score).toBe(1);
+    expect(merged[0].early_goal).toBe(true);
+    expect(merged[0].early_favorite_goal).toBe(true);
+    expect(merged[0].early_goal_minute).toBe(18);
     expect(merged[0].alert_eligible).toBe(true);
+  });
+
+  it("keeps the early-goal signal after the match leaves the first 30 minutes", () => {
+    const flagged = withEarlyGoalFlags(baseMatch({
+      minute: 18,
+      home_score: 1,
+      away_score: 0,
+    }));
+    const later = withEarlyGoalFlags({
+      ...flagged,
+      minute: 55,
+      home_score: 2,
+      away_score: 0,
+    });
+
+    expect(later.early_goal).toBe(true);
+    expect(later.early_favorite_goal).toBe(true);
+    expect(later.early_goal_minute).toBe(18);
+  });
+
+  it("flags any early goal even when the favorite has not scored", () => {
+    const match = withEarlyGoalFlags(baseMatch({
+      minute: 12,
+      home_score: 0,
+      away_score: 1,
+    }));
+
+    expect(match.early_goal).toBe(true);
+    expect(match.early_favorite_goal).toBe(false);
+    expect(isAlertEligible(match)).toBe(false);
   });
 
   it("does not alert when favorite odds are above 1.50", () => {

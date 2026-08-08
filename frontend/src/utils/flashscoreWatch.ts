@@ -4,6 +4,7 @@ import { sameTeam } from "./teamMatch";
 export const FLASHSCORE_WATCH_KEY = "within_flashscore_watch_v1";
 export const ALERT_ODDS_THRESHOLD = 1.5;
 export const LIST_ODDS_THRESHOLD = 1.6;
+export const EARLY_GOAL_MINUTE = 30;
 
 export type FlashscoreWatchState = {
   capturedAt: string;
@@ -20,7 +21,7 @@ export function readFlashscoreWatch(): FlashscoreWatchState | null {
     return {
       capturedAt: typeof raw.capturedAt === "string" ? raw.capturedAt : new Date().toISOString(),
       day: typeof raw.day === "number" ? raw.day : 0,
-      matches: raw.matches.filter(isFlashscoreMatch),
+      matches: raw.matches.filter(isFlashscoreMatch).map(withEarlyGoalFlags),
     };
   } catch {
     return null;
@@ -44,32 +45,57 @@ export function mergeFlashscoreWithSofaScore(
       sameTeam(match.home_team, candidate.home_team) &&
       sameTeam(match.away_team, candidate.away_team)
     );
-    if (!event) {
-      return {
-        ...match,
-        alert_eligible: isAlertEligible(match),
-      };
-    }
-    const merged: FlashscoreMatch = {
-      ...match,
-      status: event.status || match.status,
-      minute: event.minute ?? match.minute,
-      home_score: event.home_score ?? match.home_score,
-      away_score: event.away_score ?? match.away_score,
-      alert_eligible: false,
-    };
-    merged.alert_eligible = isAlertEligible(merged);
-    return merged;
+    const base = event
+      ? {
+          ...match,
+          status: event.status || match.status,
+          minute: event.minute ?? match.minute,
+          home_score: event.home_score ?? match.home_score,
+          away_score: event.away_score ?? match.away_score,
+        }
+      : { ...match };
+    return withEarlyGoalFlags(base);
   });
 }
 
+export function withEarlyGoalFlags(match: FlashscoreMatch): FlashscoreMatch {
+  const minute = match.minute;
+  const homeScore = match.home_score ?? 0;
+  const awayScore = match.away_score ?? 0;
+  const totalGoals = homeScore + awayScore;
+  const favoriteScore = match.favorite_side === "away" ? awayScore : homeScore;
+  const inEarlyWindow = minute != null && minute <= EARLY_GOAL_MINUTE;
+  const sawEarlyGoal = Boolean(match.early_goal) || (inEarlyWindow && totalGoals > 0);
+  const sawEarlyFavoriteGoal = Boolean(match.early_favorite_goal) || (
+    inEarlyWindow &&
+    match.favorite_team != null &&
+    match.favorite_odds != null &&
+    match.favorite_odds <= ALERT_ODDS_THRESHOLD &&
+    favoriteScore > 0
+  );
+  const earlyGoalMinute = match.early_goal_minute ?? (
+    sawEarlyGoal && inEarlyWindow ? minute : null
+  );
+
+  return {
+    ...match,
+    early_goal: sawEarlyGoal,
+    early_favorite_goal: sawEarlyFavoriteGoal,
+    early_goal_minute: earlyGoalMinute,
+    alert_eligible: sawEarlyFavoriteGoal || isAlertEligible(match),
+  };
+}
+
 export function isAlertEligible(match: FlashscoreMatch) {
+  if (match.early_favorite_goal) {
+    return true;
+  }
   if (
     !match.favorite_team ||
     match.favorite_odds == null ||
     match.favorite_odds > ALERT_ODDS_THRESHOLD ||
     match.minute == null ||
-    match.minute > 30 ||
+    match.minute > EARLY_GOAL_MINUTE ||
     match.home_score == null ||
     match.away_score == null
   ) {
@@ -77,6 +103,26 @@ export function isAlertEligible(match: FlashscoreMatch) {
   }
   const favoriteScore = match.favorite_side === "away" ? match.away_score : match.home_score;
   return (favoriteScore || 0) > 0;
+}
+
+export function sortFlashscoreMatches(matches: FlashscoreMatch[]) {
+  return [...matches].sort((left, right) => {
+    const leftRank = earlyGoalRank(left);
+    const rightRank = earlyGoalRank(right);
+    if (leftRank !== rightRank) {
+      return leftRank - rightRank;
+    }
+    const leftStart = left.start_time || "";
+    const rightStart = right.start_time || "";
+    return leftStart.localeCompare(rightStart);
+  });
+}
+
+function earlyGoalRank(match: FlashscoreMatch) {
+  if (match.early_favorite_goal || match.alert_eligible) return 0;
+  if (match.early_goal) return 1;
+  if (match.minute != null && match.minute <= EARLY_GOAL_MINUTE) return 2;
+  return 3;
 }
 
 function isFlashscoreMatch(value: unknown): value is FlashscoreMatch {
