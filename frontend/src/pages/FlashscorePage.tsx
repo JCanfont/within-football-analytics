@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchFlashscoreMatches, sendFlashscoreGoalEmail } from "../services/api";
 import type { FlashscoreMatch } from "../types/api";
 
-const REFRESH_MS = 60 * 1000;
+const REFRESH_MS = 5 * 60 * 1000;
 const ALERTED_EVENTS_KEY = "within_flashscore_alerted_events";
 const AUTO_REFRESH_KEY = "within_flashscore_auto_refresh";
 
