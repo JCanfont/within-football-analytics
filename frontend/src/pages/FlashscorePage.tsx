@@ -16,6 +16,7 @@ import {
   clearFlashscoreWatch,
   hasMatchStarted,
   isMatchFinished,
+  isPastKickoff,
   liveRefreshIntervalMs,
   mergeFlashscoreLiveBoard,
   readFlashscoreWatch,
@@ -175,7 +176,8 @@ export function FlashscorePage() {
         const captured = sortFlashscoreMatches(
           result.matches
             .map(withEarlyGoalFlags)
-            .filter((match) => match.favorite_odds != null && match.favorite_odds <= LIST_ODDS_THRESHOLD),
+            .filter((match) => match.favorite_odds != null && match.favorite_odds <= LIST_ODDS_THRESHOLD)
+            .filter((match) => !isMatchFinished(match)),
         );
         setCapturedAt(stamp);
         setMatches(captured);
@@ -457,7 +459,8 @@ function alertLabel(match: FlashscoreMatch, alerted: boolean) {
   if (match.early_favorite_goal || match.alert_eligible) return "Gol favorito <30'";
   if (match.early_goal) return "Gol rival/otro <30'";
   if (isMatchFinished(match)) return "Acabado";
-  if (!hasMatchStarted(match)) return "Pendiente de inicio";
+  if (!hasMatchStarted(match) && !isPastKickoff(match)) return "Pendiente de inicio";
+  if (!hasMatchStarted(match)) return "Esperando inicio real";
   if (!match.favorite_team) return "Sin cuota ≤ 1,60";
   if (match.favorite_odds != null && match.favorite_odds > ALERT_ODDS_THRESHOLD) return "Listado (aviso ≤ 1,50)";
   if (match.minute == null) return "Esperando Flashscore";

@@ -188,6 +188,43 @@ def test_flashscore_provider_ignores_scalar_average_as_home_odd() -> None:
     assert away == 3.40
 
 
+def test_flashscore_provider_excludes_finished_favorites(monkeypatch) -> None:
+    now = datetime.now(UTC)
+    schedule = [{
+        "name": "LaLiga",
+        "matches": [
+            {
+                "match_id": "done-1",
+                "timestamp": (now - timedelta(hours=3)).isoformat().replace("+00:00", "Z"),
+                "home_team": {"name": "A"},
+                "away_team": {"name": "B"},
+                "match_status": "scheduled",
+                "odds": {"1": "1.20", "X": "5.00", "2": "10.00"},
+                "scores": {"home": 2, "away": 0},
+            },
+            {
+                "match_id": "live-1",
+                "timestamp": (now + timedelta(hours=2)).isoformat().replace("+00:00", "Z"),
+                "home_team": {"name": "C"},
+                "away_team": {"name": "D"},
+                "match_status": "scheduled",
+                "odds": {"1": "1.40", "X": "4.50", "2": "8.00"},
+            },
+        ],
+    }]
+    monkeypatch.setattr(
+        flashscore_provider,
+        "_get_json",
+        lambda url, headers, params: schedule if "matches/list" in url else (_ for _ in ()).throw(
+            flashscore_provider.requests.RequestException("skip")
+        ),
+    )
+
+    result = flashscore_provider.fetch_flashscore_matches(settings=settings())
+    assert [match.event_id for match in result.matches] == ["live-1"]
+    assert "acabados excluidos" in result.message
+
+
 def test_flashscore_provider_excludes_friendly_and_youth(monkeypatch) -> None:
     schedule = [
         {
