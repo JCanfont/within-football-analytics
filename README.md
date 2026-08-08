@@ -524,10 +524,10 @@ En Vercel hacen falta `RAPIDAPI_KEY` (FlashScore4 en RapidAPI),
 `RESEND_API_KEY`, `FOREBET_ALERT_EMAIL` y `CRON_SECRET`.
 
 Los emails se envian al detectar un gol del favorito (cuota ≤ 1,50) antes del
-minuto 30. Con la pagina Flashscore abierta y auto-refresh cada 10 minutos ya
-sale el aviso. Para el mismo chequeo en segundo plano (cuenta Hobby de Vercel),
-añade en GitHub Secrets el mismo `CRON_SECRET` que en Vercel; el workflow
-`flashscore-tick` llama a `/api/flashscore/tick`.
+minuto 30. Con la pagina Flashscore abierta y auto-refresh cada 1 minuto ya
+sale el aviso. En segundo plano, el workflow `flashscore-tick` (con secret
+`CRON_SECRET`) revisa aproximadamente cada minuto llamando a
+`/api/flashscore/tick`.
 
 ## Formatos CSV fase 3
 

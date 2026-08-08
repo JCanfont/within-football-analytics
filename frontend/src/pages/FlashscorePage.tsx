@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchFlashscoreMatches, sendFlashscoreGoalEmail } from "../services/api";
 import type { FlashscoreMatch } from "../types/api";
 
-const REFRESH_MS = 10 * 60 * 1000;
+const REFRESH_MS = 60 * 1000;
 const ALERTED_EVENTS_KEY = "within_flashscore_alerted_events";
 const AUTO_REFRESH_KEY = "within_flashscore_auto_refresh";
 
@@ -112,7 +112,7 @@ export function FlashscorePage() {
         <FlashscoreMetric
           icon={RefreshCw}
           label="Actualizacion"
-          value={autoRefresh && day === 0 ? "10 min" : "Manual"}
+          value={autoRefresh && day === 0 ? "1 min" : "Manual"}
           detail={lastRefresh ? `Ultima ${formatTime(lastRefresh)}` : "Sin capturas"}
         />
       </div>
@@ -138,7 +138,7 @@ export function FlashscorePage() {
               onClick={() => setAutoRefresh((current) => !current)}
             >
               <RefreshCw size={15} aria-hidden="true" />
-              {autoRefresh ? "Cada 10 min" : "Auto desactivado"}
+              {autoRefresh ? "Cada 1 min" : "Auto desactivado"}
             </button>
             <button className="row-action" type="button" onClick={refresh} disabled={isLoading}>
               <RefreshCw size={15} aria-hidden="true" />
