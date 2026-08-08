@@ -1,4 +1,4 @@
-import { BarChart3, Bell, CalendarDays, DatabaseZap, Gauge, Goal, HelpCircle, ListChecks, Radio, SearchCheck, Settings, Shield, Scale, Trophy, UsersRound } from "lucide-react";
+import { BarChart3, Bell, CalendarDays, DatabaseZap, Gauge, Goal, HelpCircle, ListChecks, Newspaper, Radio, SearchCheck, Settings, Shield, Scale, Trophy, UsersRound } from "lucide-react";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { AlertsPage } from "./pages/AlertsPage";
 import { CompetitionsPage, TeamsPage } from "./pages/CatalogPages";
@@ -9,6 +9,7 @@ import { ForebetStatsPage } from "./pages/ForebetStatsPage";
 import { FlashscorePage } from "./pages/FlashscorePage";
 import { ImportsPage } from "./pages/ImportsPage";
 import { LiveMatchesPage } from "./pages/LiveMatchesPage";
+import { NewsPage } from "./pages/NewsPage";
 import { PlayersPage } from "./pages/PlayersPage";
 import { QuestionsPage } from "./pages/QuestionsPage";
 import { SettingsPage } from "./pages/SettingsPage";
@@ -22,6 +23,7 @@ const navigation = [
   { label: "Forebet", icon: SearchCheck, path: "/forebet" },
   { label: "Estadisticas Forebet", icon: BarChart3, path: "/forebet-stats" },
   { label: "Flashscore", icon: Radio, path: "/flashscore" },
+  { label: "Noticias", icon: Newspaper, path: "/news" },
   { label: "A la contra", icon: Scale, path: "/contra" },
   { label: "Preguntas", icon: HelpCircle, path: "/questions" },
   { label: "Importaciones", icon: DatabaseZap, path: "/imports" },
@@ -77,6 +79,7 @@ export default function App() {
           <Route path="/forebet" element={<ForebetPage />} />
           <Route path="/forebet-stats" element={<ForebetStatsPage />} />
           <Route path="/flashscore" element={<FlashscorePage />} />
+          <Route path="/news" element={<NewsPage />} />
           <Route path="/contra" element={<ContraPage />} />
           <Route path="/questions" element={<QuestionsPage />} />
           <Route path="/imports" element={<ImportsPage />} />

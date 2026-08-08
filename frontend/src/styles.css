@@ -1160,6 +1160,154 @@ td {
   gap: 22px;
 }
 
+.news-page {
+  display: grid;
+  gap: 22px;
+}
+
+.news-page .page-subtitle {
+  margin: 6px 0 0;
+  color: #637080;
+  font-size: 14px;
+}
+
+.news-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 18px 14px;
+}
+
+.news-filter {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+  background: #f9fbfc;
+  color: #314155;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.news-filter.active {
+  border-color: #111827;
+  background: #111827;
+  color: #eef4f5;
+}
+
+.news-source-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0 18px 16px;
+}
+
+.news-source-chip,
+.news-fetched-at {
+  font-size: 12px;
+  font-weight: 700;
+  color: #536174;
+}
+
+.news-source-chip {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #eef2f6;
+}
+
+.news-source-chip.news-source-ok {
+  background: #dff7eb;
+  color: #146c43;
+}
+
+.news-source-chip.news-source-partial,
+.news-source-chip.news-source-empty,
+.news-source-chip.news-source-http_error,
+.news-source-chip.news-source-blocked,
+.news-source-chip.news-source-request_failed {
+  background: #fff1e8;
+  color: #9a4f12;
+}
+
+.news-list {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid #e4ebf1;
+}
+
+.news-row {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border-bottom: 1px solid #e4ebf1;
+}
+
+.news-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  color: #637080;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.news-source-badge {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #edf1f4;
+  color: #18212f;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.news-source-badge.source-marca {
+  background: #ffe4e1;
+}
+
+.news-source-badge.source-sport {
+  background: #ffe9c7;
+}
+
+.news-source-badge.source-as {
+  background: #dcecff;
+}
+
+.news-source-badge.source-mundo_deportivo {
+  background: #d9f3e4;
+}
+
+.news-source-badge.source-athletic {
+  background: #ece7ff;
+}
+
+.news-title-link {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #111827;
+  text-decoration: none;
+}
+
+.news-title-link:hover strong {
+  text-decoration: underline;
+}
+
+.news-title-link svg {
+  flex: 0 0 auto;
+  margin-top: 3px;
+  color: #637080;
+}
+
+.news-row p {
+  margin: 0;
+  color: #536174;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
 .flashscore-panel .panel-heading,
 .flashscore-actions {
   display: flex;

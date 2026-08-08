@@ -10,6 +10,7 @@ from app.routers.health import router as health_router
 from app.routers.imports import router as imports_router
 from app.routers.live import router as live_router
 from app.routers.matches import router as matches_router
+from app.routers.news import router as news_router
 from app.services.schema_migrate import ensure_schema
 
 
@@ -44,3 +45,4 @@ app.include_router(analytics_router)
 app.include_router(config_router)
 app.include_router(live_router)
 app.include_router(flashscore_router)
+app.include_router(news_router)
