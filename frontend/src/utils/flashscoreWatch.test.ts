@@ -110,4 +110,23 @@ describe("flashscoreWatch", () => {
       status: "inprogress",
     })])).toBe(SLOW_LIVE_REFRESH_MS);
   });
+
+  it("stops polling finished matches and scheduled matches long after kickoff", () => {
+    const now = Date.parse("2026-08-08T20:00:00Z");
+    expect(liveRefreshIntervalMs([baseMatch({
+      favorite_odds: 1.4,
+      status: "finished",
+      home_score: 2,
+      away_score: 1,
+      start_time: "2026-08-08T17:00:00Z",
+    })], now)).toBeNull();
+
+    expect(liveRefreshIntervalMs([baseMatch({
+      favorite_odds: 1.4,
+      status: "scheduled",
+      home_score: 2,
+      away_score: 1,
+      start_time: "2026-08-08T17:00:00Z",
+    })], now)).toBeNull();
+  });
 });

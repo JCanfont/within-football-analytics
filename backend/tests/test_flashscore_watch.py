@@ -131,6 +131,87 @@ def test_signal_tick_skips_flashscore_when_slow_window_was_just_polled(monkeypat
     assert "5 min" in result.message
 
 
+def test_finished_and_stale_scheduled_matches_do_not_need_live_poll() -> None:
+    now = datetime(2026, 8, 8, 20, 0, tzinfo=UTC)
+    finished = FlashscoreMatchRead(
+        event_id="done",
+        competition="LaLiga",
+        home_team="A",
+        away_team="B",
+        status="finished",
+        home_score=2,
+        away_score=1,
+        favorite_odds=1.4,
+        favorite_team="A",
+        favorite_side="home",
+        start_time=now - timedelta(hours=3),
+    )
+    stale = FlashscoreMatchRead(
+        event_id="stale",
+        competition="LaLiga",
+        home_team="C",
+        away_team="D",
+        status="scheduled",
+        home_score=1,
+        away_score=0,
+        favorite_odds=1.4,
+        favorite_team="C",
+        favorite_side="home",
+        start_time=now - timedelta(hours=3),
+    )
+    assert flashscore_watch.is_match_finished(finished, now) is True
+    assert flashscore_watch.is_match_finished(stale, now) is True
+    assert flashscore_watch.needs_live_poll(finished, now) is False
+    assert flashscore_watch.needs_live_poll(stale, now) is False
+
+
+def test_signal_tick_skips_finished_watchlist(monkeypatch) -> None:
+    now = datetime.now(UTC)
+    with SessionLocal() as db:
+        flashscore_watch.save_flashscore_watch(
+            db,
+            day=0,
+            captured_at=now,
+            matches=[
+                FlashscoreMatchRead(
+                    event_id="fs-done",
+                    competition="LaLiga",
+                    home_team="Getafe",
+                    away_team="Celta",
+                    status="scheduled",
+                    home_score=2,
+                    away_score=0,
+                    home_odds=1.4,
+                    away_odds=7.0,
+                    favorite_side="home",
+                    favorite_team="Getafe",
+                    favorite_odds=1.4,
+                    start_time=now - timedelta(hours=3),
+                )
+            ],
+        )
+
+    called = {"live": False}
+    monkeypatch.setattr(
+        flashscore_watch,
+        "fetch_flashscore_live_board",
+        lambda *args, **kwargs: called.__setitem__("live", True) or [],
+    )
+
+    with SessionLocal() as db:
+        result = flashscore_watch.run_flashscore_signal_tick(
+            db,
+            settings=SimpleNamespace(rapidapi_key="test-key"),
+        )
+        watch = flashscore_watch.load_flashscore_watch(db)
+
+    assert result.status == "idle"
+    assert called["live"] is False
+    assert "acabados" in result.message
+    assert watch is not None
+    assert watch.matches[0].status == "finished"
+
+
 def test_signal_tick_uses_flashscore_ultra_watchlist(monkeypatch) -> None:
     with SessionLocal() as db:
         flashscore_watch.save_flashscore_watch(

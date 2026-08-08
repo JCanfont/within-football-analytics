@@ -8,6 +8,8 @@ export const EARLY_GOAL_MINUTE = 30;
 export const FAST_LIVE_REFRESH_MS = 60 * 1000;
 /** After minute 30, slow to one Flashscore board pull every 5 minutes. */
 export const SLOW_LIVE_REFRESH_MS = 5 * 60 * 1000;
+/** Without a live minute, stop asking for signals this long after kickoff. */
+export const FINISHED_WITHOUT_CLOCK_MS = 105 * 60 * 1000;
 
 export type FlashscoreWatchState = {
   capturedAt: string;
@@ -27,7 +29,10 @@ export function readFlashscoreWatch(): FlashscoreWatchState | null {
       matches: (raw.matches as unknown[])
         .filter(isFlashscoreMatch)
         .map(withEarlyGoalFlags)
-        .filter((match: FlashscoreMatch) => match.favorite_odds != null && match.favorite_odds <= LIST_ODDS_THRESHOLD),
+        .filter((match: FlashscoreMatch) => match.favorite_odds != null && match.favorite_odds <= LIST_ODDS_THRESHOLD)
+        .map((match) => (isMatchFinished(match) && match.status !== "finished"
+          ? { ...match, status: "finished" }
+          : match)),
     };
   } catch {
     return null;
@@ -63,7 +68,10 @@ export function mergeFlashscoreLiveBoard(
           away_score: live.away_score ?? match.away_score,
         }
       : { ...match };
-    return withEarlyGoalFlags(base);
+    const stamped = isMatchFinished(base) && base.status !== "finished"
+      ? { ...base, status: "finished" }
+      : base;
+    return withEarlyGoalFlags(stamped);
   });
 }
 
@@ -127,22 +135,80 @@ export function sortFlashscoreMatches(matches: FlashscoreMatch[]) {
   });
 }
 
-/** 1 min before/at minute 30 for ≤1.60 favorites; 5 min afterwards while still live. */
-export function liveRefreshIntervalMs(matches: FlashscoreMatch[], now = Date.now()): number {
-  return matches.some((match) => isCriticalSignalWatch(match, now))
+export function isMatchFinished(match: FlashscoreMatch, now = Date.now()): boolean {
+  const status = (match.status || "").toLowerCase().trim();
+  if (
+    status === "finished" ||
+    status === "ft" ||
+    status === "aet" ||
+    status === "ap" ||
+    status.includes("finish") ||
+    status.includes("ended") ||
+    status.includes("final") ||
+    status.includes("full time") ||
+    status.includes("after extra") ||
+    status.includes("after pen") ||
+    status.includes("penalties") ||
+    status.includes("awarded") ||
+    status.includes("abandoned") ||
+    status.includes("cancelled") ||
+    status.includes("canceled") ||
+    status.includes("postponed") ||
+    status.includes("walkover") ||
+    status.includes("retired") ||
+    status.includes("closed")
+  ) {
+    return true;
+  }
+  if (match.minute != null) {
+    return false;
+  }
+  if (!match.start_time) {
+    return false;
+  }
+  const start = new Date(match.start_time).getTime();
+  if (!Number.isFinite(start)) {
+    return false;
+  }
+  return now >= start + FINISHED_WITHOUT_CLOCK_MS;
+}
+
+export function needsLivePoll(match: FlashscoreMatch, now = Date.now()): boolean {
+  if (match.favorite_odds == null || match.favorite_odds > LIST_ODDS_THRESHOLD) {
+    return false;
+  }
+  if (isMatchFinished(match, now)) {
+    return false;
+  }
+  if (match.minute != null) {
+    return true;
+  }
+  if (!match.start_time) {
+    return true;
+  }
+  const start = new Date(match.start_time).getTime();
+  if (!Number.isFinite(start)) {
+    return false;
+  }
+  return start - 20 * 60_000 <= now && now < start + FINISHED_WITHOUT_CLOCK_MS;
+}
+
+/** 1 min before/at minute 30; 5 min afterwards while still live; null when nothing active. */
+export function liveRefreshIntervalMs(matches: FlashscoreMatch[], now = Date.now()): number | null {
+  const active = matches.filter((match) => needsLivePoll(match, now));
+  if (active.length === 0) {
+    return null;
+  }
+  return active.some((match) => isCriticalSignalWatch(match, now))
     ? FAST_LIVE_REFRESH_MS
     : SLOW_LIVE_REFRESH_MS;
 }
 
 export function isCriticalSignalWatch(match: FlashscoreMatch, now = Date.now()): boolean {
-  if (match.favorite_odds == null || match.favorite_odds > LIST_ODDS_THRESHOLD) {
+  if (!needsLivePoll(match, now)) {
     return false;
   }
   if (match.early_favorite_goal || match.alert_eligible) {
-    return false;
-  }
-  const status = (match.status || "").toLowerCase();
-  if (status.includes("finish") || status.includes("ended") || status.includes("afterpen")) {
     return false;
   }
   if (match.minute != null) {
@@ -155,7 +221,6 @@ export function isCriticalSignalWatch(match: FlashscoreMatch, now = Date.now()):
   if (!Number.isFinite(start)) {
     return false;
   }
-  // Kickoff window: 20 minutes before to 45 minutes after scheduled start.
   return start <= now + 20 * 60_000 && start >= now - 45 * 60_000;
 }
 
@@ -163,6 +228,7 @@ function earlyGoalRank(match: FlashscoreMatch) {
   if (match.early_favorite_goal || match.alert_eligible) return 0;
   if (match.early_goal) return 1;
   if (match.minute != null && match.minute <= EARLY_GOAL_MINUTE) return 2;
+  if (isMatchFinished(match)) return 4;
   return 3;
 }
 

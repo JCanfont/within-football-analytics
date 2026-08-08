@@ -12,7 +12,9 @@ import {
   ALERT_ODDS_THRESHOLD,
   FAST_LIVE_REFRESH_MS,
   LIST_ODDS_THRESHOLD,
+  SLOW_LIVE_REFRESH_MS,
   clearFlashscoreWatch,
+  isMatchFinished,
   liveRefreshIntervalMs,
   mergeFlashscoreLiveBoard,
   readFlashscoreWatch,
@@ -48,7 +50,7 @@ export function FlashscorePage() {
 
   useEffect(() => {
     matchesRef.current = matches;
-    setRefreshEveryMs(liveRefreshIntervalMs(matches));
+    setRefreshEveryMs(liveRefreshIntervalMs(matches) ?? SLOW_LIVE_REFRESH_MS);
   }, [matches]);
 
   useEffect(() => {
@@ -141,9 +143,15 @@ export function FlashscorePage() {
         setLastLiveRefresh(new Date().toISOString());
         const linked = merged.filter((match) => match.minute != null || match.home_score != null).length;
         const earlyGoals = merged.filter((match) => match.early_goal).length;
-        const intervalLabel = liveRefreshIntervalMs(merged) === FAST_LIVE_REFRESH_MS ? "1 min" : "5 min";
+        const nextWait = liveRefreshIntervalMs(merged);
+        const finished = merged.filter((match) => isMatchFinished(match)).length;
+        const intervalLabel = nextWait == null
+          ? "parado (sin activos)"
+          : nextWait === FAST_LIVE_REFRESH_MS
+            ? "1 min"
+            : "5 min";
         setMessage(
-          `${linked}/${merged.length} vigilados actualizados · ${earlyGoals} con gol antes del 30' · proximo refresh ${intervalLabel}.`,
+          `${linked}/${merged.length} vigilados · ${finished} acabados · ${earlyGoals} con gol antes del 30' · proximo refresh ${intervalLabel}.`,
         );
         sendEligibleAlerts(merged);
       })
@@ -197,6 +205,15 @@ export function FlashscorePage() {
     let timer = 0;
     const tick = () => {
       const wait = liveRefreshIntervalMs(matchesRef.current);
+      if (wait == null) {
+        setRefreshEveryMs(SLOW_LIVE_REFRESH_MS);
+        setMessage((current) => (
+          current.includes("sin activos")
+            ? current
+            : `${current} · Auto-refresh parado: no quedan partidos activos.`
+        ));
+        return;
+      }
       setRefreshEveryMs(wait);
       timer = window.setTimeout(() => {
         if (cancelled) return;
@@ -216,8 +233,9 @@ export function FlashscorePage() {
   const alertWatch = listed.filter((match) => match.favorite_odds != null && match.favorite_odds <= ALERT_ODDS_THRESHOLD).length;
   const earlyGoals = matches.filter((match) => match.early_goal).length;
   const favoriteEarlyGoals = matches.filter((match) => match.early_favorite_goal || match.alert_eligible).length;
+  const activeLive = listed.some((match) => liveRefreshIntervalMs([match]) != null);
   const refreshLabel = liveRefresh && listed.length
-    ? (refreshEveryMs === FAST_LIVE_REFRESH_MS ? "1 min" : "5 min")
+    ? (!activeLive ? "Parado" : refreshEveryMs === FAST_LIVE_REFRESH_MS ? "1 min" : "5 min")
     : "Manual";
 
   return (
@@ -435,6 +453,7 @@ function alertLabel(match: FlashscoreMatch, alerted: boolean) {
   if (alerted) return "Email enviado";
   if (match.early_favorite_goal || match.alert_eligible) return "Gol favorito <30'";
   if (match.early_goal) return "Gol rival/otro <30'";
+  if (isMatchFinished(match)) return "Acabado";
   if (!match.favorite_team) return "Sin cuota ≤ 1,60";
   if (match.favorite_odds != null && match.favorite_odds > ALERT_ODDS_THRESHOLD) return "Listado (aviso ≤ 1,50)";
   if (match.minute == null) return "Esperando Flashscore";
