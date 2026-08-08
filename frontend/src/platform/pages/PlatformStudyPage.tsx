@@ -4,10 +4,12 @@ import { Link } from "react-router-dom";
 import { ArchitecturalModelPanel } from "../components/ArchitecturalModelPanel";
 import { EnvelopePanel } from "../components/EnvelopePanel";
 import { MassingPanel } from "../components/MassingPanel";
+import { PlanSheetsPanel } from "../components/PlanSheetsPanel";
 import { UrbanismPanel } from "../components/UrbanismPanel";
 import { generateArchitecturalModel } from "../services/architecturalModelGenerator";
 import { generateBuildingEnvelope } from "../services/buildingEnvelopeGenerator";
 import { generateMassingStudy } from "../services/massingGenerator";
+import { generatePlanSetFromModel } from "../services/modelPlanGenerator";
 import {
   analyzeParcel,
   isUrbanismEngineConfigured,
@@ -21,6 +23,7 @@ const SCENARIO_KEY = "platform.designScenario.urbanLink.v1";
 const ENVELOPE_KEY = "platform.designScenario.envelope.v1";
 const MASSING_KEY = "platform.designScenario.massing.v1";
 const ARCH_MODEL_KEY = "platform.designScenario.architecturalModel.v1";
+const PLAN_SET_KEY = "platform.designScenario.planSet.v1";
 
 function readScenarioLink(): DesignScenarioUrbanLink | null {
   try {
@@ -77,6 +80,13 @@ export function PlatformStudyPage() {
     });
   }, [analysis, envelope, selectedMassingAlternative]);
 
+  const planSet = useMemo(() => {
+    if (!architecturalModel) {
+      return null;
+    }
+    return generatePlanSetFromModel(architecturalModel);
+  }, [architecturalModel]);
+
   useEffect(() => {
     if (!massingStudy) {
       return;
@@ -116,7 +126,7 @@ export function PlatformStudyPage() {
   };
 
   const bindToFloorPlanScenario = () => {
-    if (!analysis || !envelope || !massingStudy || !architecturalModel) {
+    if (!analysis || !envelope || !massingStudy || !architecturalModel || !planSet) {
       return;
     }
     const link: DesignScenarioUrbanLink = {
@@ -125,6 +135,7 @@ export function PlatformStudyPage() {
       massing_study_id: massingStudy.study_id,
       massing_selected_key: selectedMassing,
       architectural_model_id: architecturalModel.model_id,
+      plan_set_id: planSet.plan_set_id,
     };
     localStorage.setItem(SCENARIO_KEY, JSON.stringify(link));
     localStorage.setItem(ENVELOPE_KEY, JSON.stringify(envelope));
@@ -133,6 +144,7 @@ export function PlatformStudyPage() {
       JSON.stringify({ ...massingStudy, selected_key: selectedMassing }),
     );
     localStorage.setItem(ARCH_MODEL_KEY, JSON.stringify(architecturalModel));
+    localStorage.setItem(PLAN_SET_KEY, JSON.stringify(planSet));
     setScenarioLink(link);
   };
 
@@ -140,11 +152,11 @@ export function PlatformStudyPage() {
     <section className="platform-study-page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Plataforma inmobiliaria · P4</p>
+          <p className="eyebrow">Plataforma inmobiliaria · P5</p>
           <h1>Estudio de finca</h1>
           <p className="page-lead">
-            Urbanismo → envolvente → massing → modelo semántico ARCH + IFC. El Urbanismo Engine no se implementa
-            en este repositorio.
+            Urbanismo → envolvente → massing → BIM → planos 2D derivados del modelo. El Urbanismo Engine no se
+            implementa en este repositorio.
           </p>
         </div>
       </header>
@@ -214,6 +226,12 @@ export function PlatformStudyPage() {
             </section>
           ) : null}
 
+          {planSet ? (
+            <section className="panel">
+              <PlanSheetsPanel planSet={planSet} />
+            </section>
+          ) : null}
+
           <section className="panel platform-next-steps">
             <div className="panel-heading">
               <div>
@@ -229,7 +247,7 @@ export function PlatformStudyPage() {
 
             <div className="platform-actions">
               <button type="button" className="primary-action" onClick={bindToFloorPlanScenario}>
-                Vincular análisis + envolvente + massing + BIM al escenario
+                Vincular análisis + envolvente + massing + BIM + planos al escenario
               </button>
               <Link className="secondary-action" to="/floor-plan">
                 <DraftingCompass size={16} aria-hidden="true" />
@@ -256,6 +274,10 @@ export function PlatformStudyPage() {
                 <div>
                   <dt>architectural_model_id</dt>
                   <dd>{scenarioLink.architectural_model_id ?? "—"}</dd>
+                </div>
+                <div>
+                  <dt>plan_set_id</dt>
+                  <dd>{scenarioLink.plan_set_id ?? "—"}</dd>
                 </div>
                 <div>
                   <dt>api_version</dt>

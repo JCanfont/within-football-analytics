@@ -4301,3 +4301,58 @@ button.analysis-card:disabled {
 .arch-model-tree li span {
   color: #5b677a;
 }
+
+.plan-sheets-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.plan-sheet-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.plan-sheet-tabs button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #d5dde7;
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.plan-sheet-tabs button.active {
+  border-color: #2f6f73;
+  background: #e7f3f3;
+  color: #18494c;
+  font-weight: 700;
+}
+
+.plan-sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.plan-sheet-canvas {
+  overflow: auto;
+  border: 1px solid #d5dde7;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.plan-sheet-svg {
+  display: block;
+  width: 100%;
+  min-height: 420px;
+}
+
+.plan-sheet-notes {
+  margin: 0;
+  padding-left: 18px;
+  color: #5b677a;
+  font-size: 13px;
+}

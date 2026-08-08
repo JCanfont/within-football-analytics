@@ -56,3 +56,13 @@ Capas DXF: `A-WALL`, `A-DOOR`, `A-GLAZ`, `A-FURN`, `A-FLOR-APPL`, `A-FLOR-SANR`,
 - Disciplinas reservadas para Structure/MEP futuros; IDs estables.
 - Adaptador BIM aislado `services/bim/ifcAdapter.ts` → export IFC4 SPF + JSON semántico (fuente de verdad).
 - Escenario guarda `architectural_model_id`.
+
+## Nuevo en P5 plataforma
+- Planos 2D derivados del modelo (`generatePlanSetFromModel`):
+  - plantas por storey
+  - planta de cubierta
+  - alzado sur
+  - sección A-A
+- Cotas, ejes, nombres, superficies, puertas/ventanas.
+- Export **DXF** y **SVG** por hoja.
+- Escenario guarda `plan_set_id`.
