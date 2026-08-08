@@ -340,7 +340,6 @@ export function FlashscorePage() {
                 <th>Minuto</th>
                 <th>Marcador</th>
                 <th>Gol &lt;30&apos;</th>
-                <th>Equipo vigilado</th>
                 <th>Alerta</th>
               </tr>
             </thead>
@@ -384,14 +383,6 @@ export function FlashscorePage() {
                       <span className={`flashscore-early-goal-status ${earlyGoalTone(match)}`}>
                         {earlyGoalLabel(match)}
                       </span>
-                    </td>
-                    <td>
-                      {match.favorite_team ? (
-                        <>
-                          <strong>{match.favorite_team}</strong>
-                          <span className="table-subtext">Cuota {formatOdds(match.favorite_odds)}</span>
-                        </>
-                      ) : "—"}
                     </td>
                     <td><span className={`flashscore-alert-status ${alertTone(match, alerted)}`}>{alertLabel(match, alerted)}</span></td>
                   </tr>

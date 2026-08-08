@@ -1275,13 +1275,7 @@ td {
 
 .flashscore-table th:nth-child(7),
 .flashscore-table td:nth-child(7) {
-  width: 9.5rem;
-  white-space: normal;
-}
-
-.flashscore-table th:nth-child(8),
-.flashscore-table td:nth-child(8) {
-  width: 10.5rem;
+  width: 11rem;
   white-space: normal;
 }
 
