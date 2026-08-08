@@ -7,12 +7,14 @@ import { MassingPanel } from "../components/MassingPanel";
 import { OptimizerPanel } from "../components/OptimizerPanel";
 import { PlanSheetsPanel } from "../components/PlanSheetsPanel";
 import { RenderPanel } from "../components/RenderPanel";
+import { MepPanel } from "../components/MepPanel";
 import { StructurePanel } from "../components/StructurePanel";
 import { UrbanismPanel } from "../components/UrbanismPanel";
 import { generateArchitecturalModel } from "../services/architecturalModelGenerator";
 import { generateBuildingEnvelope } from "../services/buildingEnvelopeGenerator";
 import { optimizeDesign } from "../services/designOptimizer";
 import { generateMassingStudy } from "../services/massingGenerator";
+import { generateMepModel } from "../services/mepGenerator";
 import { generatePlanSetFromModel } from "../services/modelPlanGenerator";
 import { generateStructuralModel } from "../services/structureGenerator";
 import {
@@ -34,6 +36,7 @@ const PLAN_SET_KEY = "platform.designScenario.planSet.v1";
 const OPTIMIZATION_KEY = "platform.designScenario.optimization.v1";
 const RENDER_JOB_KEY = "platform.designScenario.renderJob.v1";
 const STRUCT_MODEL_KEY = "platform.designScenario.structuralModel.v1";
+const MEP_MODEL_KEY = "platform.designScenario.mepModel.v1";
 
 function readScenarioLink(): DesignScenarioUrbanLink | null {
   try {
@@ -120,6 +123,13 @@ export function PlatformStudyPage() {
     return generateStructuralModel({ architecturalModel });
   }, [architecturalModel]);
 
+  const mepModel = useMemo(() => {
+    if (!architecturalModel) {
+      return null;
+    }
+    return generateMepModel({ architecturalModel });
+  }, [architecturalModel]);
+
   useEffect(() => {
     if (!massingStudy) {
       return;
@@ -171,7 +181,8 @@ export function PlatformStudyPage() {
       !architecturalModel ||
       !planSet ||
       !optimization ||
-      !structuralModel
+      !structuralModel ||
+      !mepModel
     ) {
       return;
     }
@@ -188,6 +199,7 @@ export function PlatformStudyPage() {
       render_job_id: renderJob?.job_id ?? null,
       render_scene_id: renderJob?.scene_id ?? null,
       structural_model_id: structuralModel.structural_model_id,
+      mep_model_id: mepModel.mep_model_id,
     };
     localStorage.setItem(SCENARIO_KEY, JSON.stringify(link));
     localStorage.setItem(ENVELOPE_KEY, JSON.stringify(envelope));
@@ -199,6 +211,7 @@ export function PlatformStudyPage() {
     localStorage.setItem(PLAN_SET_KEY, JSON.stringify(planSet));
     localStorage.setItem(OPTIMIZATION_KEY, JSON.stringify(optimization));
     localStorage.setItem(STRUCT_MODEL_KEY, JSON.stringify(structuralModel));
+    localStorage.setItem(MEP_MODEL_KEY, JSON.stringify(mepModel));
     if (renderJob) {
       localStorage.setItem(RENDER_JOB_KEY, JSON.stringify(renderJob));
     } else {
@@ -211,11 +224,11 @@ export function PlatformStudyPage() {
     <section className="platform-study-page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Plataforma inmobiliaria · P8</p>
+          <p className="eyebrow">Plataforma inmobiliaria · P9</p>
           <h1>Estudio de finca</h1>
           <p className="page-lead">
-            Urbanismo → envolvente → massing → optimizador → BIM → planos → render → estructura preliminar. El
-            Urbanismo Engine no se implementa en este repositorio.
+            Urbanismo → envolvente → massing → optimizador → BIM → planos → render → estructura → MEP
+            preliminar. El Urbanismo Engine no se implementa en este repositorio.
           </p>
         </div>
       </header>
@@ -320,6 +333,12 @@ export function PlatformStudyPage() {
             </section>
           ) : null}
 
+          {mepModel ? (
+            <section className="panel">
+              <MepPanel model={mepModel} />
+            </section>
+          ) : null}
+
           <section className="panel platform-next-steps">
             <div className="panel-heading">
               <div>
@@ -335,8 +354,8 @@ export function PlatformStudyPage() {
 
             <div className="platform-actions">
               <button type="button" className="primary-action" onClick={bindToFloorPlanScenario}>
-                Vincular análisis + envolvente + massing + optimización + BIM + planos + render + estructura al
-                escenario
+                Vincular análisis + envolvente + massing + optimización + BIM + planos + render + estructura +
+                MEP al escenario
               </button>
               <Link className="secondary-action" to="/floor-plan">
                 <DraftingCompass size={16} aria-hidden="true" />
@@ -384,6 +403,10 @@ export function PlatformStudyPage() {
                 <div>
                   <dt>structural_model_id</dt>
                   <dd>{scenarioLink.structural_model_id ?? "—"}</dd>
+                </div>
+                <div>
+                  <dt>mep_model_id</dt>
+                  <dd>{scenarioLink.mep_model_id ?? "—"}</dd>
                 </div>
                 <div>
                   <dt>api_version</dt>

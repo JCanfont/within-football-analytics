@@ -86,3 +86,10 @@ Capas DXF: `A-WALL`, `A-DOOR`, `A-GLAZ`, `A-FURN`, `A-FLOR-APPL`, `A-FLOR-SANR`,
 - Elementos: pilares, vigas, muros estructurales, forjados, cimentación, huecos.
 - Flags explícitos `is_preliminary=true` / `is_signed_calculation=false` (no cálculo firmado).
 - UI `StructurePanel` + export JSON; escenario guarda `structural_model_id`.
+
+## Nuevo en P9 plataforma
+- `generateMepModel`: MEP preliminar coordinado con ARCH (espacios, núcleos, shafts).
+- Elementos: equipos, terminales, tuberías, conductos, bandejas, cables, conexiones, circuitos, shafts.
+- Disciplinas: eléctrico, iluminación, fontanería, saneamiento, ACS, HVAC, ventilación, gas, telecom, PCI.
+- Vista filtrada por sistema; flags `is_preliminary` / `is_sized_design=false`.
+- UI `MepPanel` + export JSON; escenario guarda `mep_model_id`.

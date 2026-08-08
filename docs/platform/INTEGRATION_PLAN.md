@@ -16,7 +16,8 @@ Dos repositorios, un contrato. Este repo **solo consume** la API.
 | 7 | Optimizador | — | ✅ P6 DesignOptimizer |
 | 8 | Render / visor 3D | — | ✅ P7 RenderJob + visor 3D + bridge Blender |
 | 9 | Structure preliminar | — | ✅ P8 STRUCT (no cálculo firmado) |
-| 10+ | MEP, clash/mediciones | Solo si aparecen parámetros urbanísticos nuevos |
+| 10 | MEP preliminar | — | ✅ P9 MEP (no dimensionado firmado) |
+| 11+ | Clash / mediciones / presupuesto | Solo si aparecen parámetros urbanísticos nuevos |
 
 ## Cliente en plataforma
 - Env: `VITE_URBANISMO_API_BASE_URL` (vacío → modo fixture/mock).

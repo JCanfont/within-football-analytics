@@ -4598,3 +4598,31 @@ button.analysis-card:disabled {
     grid-template-columns: 1fr;
   }
 }
+
+.mep-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.mep-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+}
+
+.mep-filter-row label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #5b677a;
+  min-width: 220px;
+}
+
+.mep-filter-row select {
+  padding: 10px 12px;
+  border: 1px solid #d5dde7;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+}
