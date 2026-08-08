@@ -27,17 +27,22 @@ describe("PlatformStudyPage", () => {
     expect(screen.getByRole("heading", { name: /Massing paramétrico/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Modelo arquitectónico paramétrico/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Planos 2D \(desde modelo\)/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Optimizador de diseño/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Exportar IFC4/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Exportar DXF/i })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /B · Patio interior/i }));
+    fireEvent.change(screen.getByLabelText(/Objetivo de optimización/i), {
+      target: { value: "maximize_courtyard" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Aplicar recomendada/i }));
     fireEvent.click(
       screen.getByRole("button", {
-        name: /Vincular análisis \+ envolvente \+ massing \+ BIM \+ planos al escenario/i,
+        name: /Vincular análisis \+ envolvente \+ massing \+ optimización \+ BIM \+ planos al escenario/i,
       }),
     );
     expect(screen.getAllByText("ua-fixture-cat-001").length).toBeGreaterThan(0);
     expect(screen.getByText(/plan_set_id/i)).toBeInTheDocument();
+    expect(screen.getByText(/optimization_id/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Abrir planos \/ AutoCAD DXF/i })).toHaveAttribute(
       "href",
       "/floor-plan",

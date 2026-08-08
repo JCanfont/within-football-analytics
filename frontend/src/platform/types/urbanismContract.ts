@@ -107,4 +107,7 @@ export type DesignScenarioUrbanLink = {
   massing_selected_key?: "A" | "B" | "C" | null;
   architectural_model_id?: string | null;
   plan_set_id?: string | null;
+  optimization_id?: string | null;
+  optimization_objective?: string | null;
+  optimization_recommended_key?: "A" | "B" | "C" | null;
 };

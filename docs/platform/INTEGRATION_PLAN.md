@@ -13,8 +13,8 @@ Dos repositorios, un contrato. Este repo **solo consume** la API.
 | 4 | Panel Urbanismo en UI | — |
 | 5 | `BuildingEnvelopeGenerator` con `constraint → urban_parameter → source_refs` | — | ✅ P2 |
 | 6 | Massing / BIM / planos (evolucionar DXF actual desde modelo) | — | ✅ P3 Massing + P4 BIM/IFC + P5 planos desde modelo |
-| 7 | Optimizador | — | siguiente |
-| 7+ | Optimizador, render, Structure/MEP | Solo si aparecen parámetros urbanísticos nuevos |
+| 7 | Optimizador | — | ✅ P6 DesignOptimizer |
+| 8+ | Render, Structure/MEP, clash/mediciones | Solo si aparecen parámetros urbanísticos nuevos |
 
 ## Cliente en plataforma
 - Env: `VITE_URBANISMO_API_BASE_URL` (vacío → modo fixture/mock).

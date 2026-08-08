@@ -4,10 +4,12 @@ import { Link } from "react-router-dom";
 import { ArchitecturalModelPanel } from "../components/ArchitecturalModelPanel";
 import { EnvelopePanel } from "../components/EnvelopePanel";
 import { MassingPanel } from "../components/MassingPanel";
+import { OptimizerPanel } from "../components/OptimizerPanel";
 import { PlanSheetsPanel } from "../components/PlanSheetsPanel";
 import { UrbanismPanel } from "../components/UrbanismPanel";
 import { generateArchitecturalModel } from "../services/architecturalModelGenerator";
 import { generateBuildingEnvelope } from "../services/buildingEnvelopeGenerator";
+import { optimizeDesign } from "../services/designOptimizer";
 import { generateMassingStudy } from "../services/massingGenerator";
 import { generatePlanSetFromModel } from "../services/modelPlanGenerator";
 import {
@@ -17,6 +19,7 @@ import {
   readCachedUrbanismAnalysis,
   UrbanismClientError,
 } from "../services/urbanismClient";
+import type { OptimizerObjective } from "../types/optimizer";
 import type { DesignScenarioUrbanLink, UrbanismAnalysis } from "../types/urbanismContract";
 
 const SCENARIO_KEY = "platform.designScenario.urbanLink.v1";
@@ -24,6 +27,7 @@ const ENVELOPE_KEY = "platform.designScenario.envelope.v1";
 const MASSING_KEY = "platform.designScenario.massing.v1";
 const ARCH_MODEL_KEY = "platform.designScenario.architecturalModel.v1";
 const PLAN_SET_KEY = "platform.designScenario.planSet.v1";
+const OPTIMIZATION_KEY = "platform.designScenario.optimization.v1";
 
 function readScenarioLink(): DesignScenarioUrbanLink | null {
   try {
@@ -40,6 +44,9 @@ export function PlatformStudyPage() {
   const [scenarioLink, setScenarioLink] = useState<DesignScenarioUrbanLink | null>(() => readScenarioLink());
   const [selectedMassing, setSelectedMassing] = useState<"A" | "B" | "C">(
     () => readScenarioLink()?.massing_selected_key ?? "A",
+  );
+  const [optimizerObjective, setOptimizerObjective] = useState<OptimizerObjective>(
+    () => (readScenarioLink()?.optimization_objective as OptimizerObjective | undefined) ?? "balanced",
   );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -87,6 +94,18 @@ export function PlatformStudyPage() {
     return generatePlanSetFromModel(architecturalModel);
   }, [architecturalModel]);
 
+  const optimization = useMemo(() => {
+    if (!envelope || !massingStudy) {
+      return null;
+    }
+    return optimizeDesign({
+      envelope,
+      massingStudy,
+      objective: optimizerObjective,
+      prefer_compliant: true,
+    });
+  }, [envelope, massingStudy, optimizerObjective]);
+
   useEffect(() => {
     if (!massingStudy) {
       return;
@@ -126,7 +145,7 @@ export function PlatformStudyPage() {
   };
 
   const bindToFloorPlanScenario = () => {
-    if (!analysis || !envelope || !massingStudy || !architecturalModel || !planSet) {
+    if (!analysis || !envelope || !massingStudy || !architecturalModel || !planSet || !optimization) {
       return;
     }
     const link: DesignScenarioUrbanLink = {
@@ -136,6 +155,9 @@ export function PlatformStudyPage() {
       massing_selected_key: selectedMassing,
       architectural_model_id: architecturalModel.model_id,
       plan_set_id: planSet.plan_set_id,
+      optimization_id: optimization.optimization_id,
+      optimization_objective: optimization.objective,
+      optimization_recommended_key: optimization.recommended_massing_key,
     };
     localStorage.setItem(SCENARIO_KEY, JSON.stringify(link));
     localStorage.setItem(ENVELOPE_KEY, JSON.stringify(envelope));
@@ -145,6 +167,7 @@ export function PlatformStudyPage() {
     );
     localStorage.setItem(ARCH_MODEL_KEY, JSON.stringify(architecturalModel));
     localStorage.setItem(PLAN_SET_KEY, JSON.stringify(planSet));
+    localStorage.setItem(OPTIMIZATION_KEY, JSON.stringify(optimization));
     setScenarioLink(link);
   };
 
@@ -152,10 +175,10 @@ export function PlatformStudyPage() {
     <section className="platform-study-page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Plataforma inmobiliaria · P5</p>
+          <p className="eyebrow">Plataforma inmobiliaria · P6</p>
           <h1>Estudio de finca</h1>
           <p className="page-lead">
-            Urbanismo → envolvente → massing → BIM → planos 2D derivados del modelo. El Urbanismo Engine no se
+            Urbanismo → envolvente → massing → optimizador → BIM → planos 2D. El Urbanismo Engine no se
             implementa en este repositorio.
           </p>
         </div>
@@ -220,6 +243,18 @@ export function PlatformStudyPage() {
             </section>
           ) : null}
 
+          {optimization ? (
+            <section className="panel">
+              <OptimizerPanel
+                result={optimization}
+                objective={optimizerObjective}
+                onObjectiveChange={setOptimizerObjective}
+                onApplyRecommended={() => setSelectedMassing(optimization.recommended_massing_key)}
+                selectedMassingKey={selectedMassing}
+              />
+            </section>
+          ) : null}
+
           {architecturalModel ? (
             <section className="panel">
               <ArchitecturalModelPanel model={architecturalModel} />
@@ -247,7 +282,7 @@ export function PlatformStudyPage() {
 
             <div className="platform-actions">
               <button type="button" className="primary-action" onClick={bindToFloorPlanScenario}>
-                Vincular análisis + envolvente + massing + BIM + planos al escenario
+                Vincular análisis + envolvente + massing + optimización + BIM + planos al escenario
               </button>
               <Link className="secondary-action" to="/floor-plan">
                 <DraftingCompass size={16} aria-hidden="true" />
@@ -278,6 +313,15 @@ export function PlatformStudyPage() {
                 <div>
                   <dt>plan_set_id</dt>
                   <dd>{scenarioLink.plan_set_id ?? "—"}</dd>
+                </div>
+                <div>
+                  <dt>optimization_id</dt>
+                  <dd>
+                    {scenarioLink.optimization_id ?? "—"}
+                    {scenarioLink.optimization_recommended_key
+                      ? ` · rec. ${scenarioLink.optimization_recommended_key}`
+                      : ""}
+                  </dd>
                 </div>
                 <div>
                   <dt>api_version</dt>

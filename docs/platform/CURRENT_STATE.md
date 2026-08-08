@@ -66,3 +66,10 @@ Capas DXF: `A-WALL`, `A-DOOR`, `A-GLAZ`, `A-FURN`, `A-FLOR-APPL`, `A-FLOR-SANR`,
 - Cotas, ejes, nombres, superficies, puertas/ventanas.
 - Export **DXF** y **SVG** por hoja.
 - Escenario guarda `plan_set_id`.
+
+## Nuevo en P6 plataforma
+- `DesignOptimizer` (`frontend/src/platform/services/designOptimizer.ts`): ranking matemático ponderado de massing A/B/C.
+- Objetivos: maximizar GFA, maximizar patio, minimizar altura, maximizar cumplimiento, equilibrio.
+- UI `OptimizerPanel` con selector de objetivo y aplicación de la alternativa recomendada al massing seleccionado.
+- Escenario guarda `optimization_id`, `optimization_objective`, `optimization_recommended_key`.
+- No usa LLM como motor geométrico.
