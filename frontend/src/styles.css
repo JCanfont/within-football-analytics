@@ -3831,3 +3831,29 @@ button.analysis-card:disabled {
     justify-content: center;
   }
 }
+
+.fp-cad-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #d5dde7;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.fp-cad-toolbar p {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  max-width: 52ch;
+  color: #334155;
+  font-size: 13px;
+}
+
+.fp-download-full {
+  width: 100%;
+  justify-content: center;
+}

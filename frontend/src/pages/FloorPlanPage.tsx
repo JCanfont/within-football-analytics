@@ -1,4 +1,4 @@
-import { Building2, ChevronLeft, ChevronRight, DoorOpen, Ruler } from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, DoorOpen, Download, DraftingCompass, Ruler } from "lucide-react";
 import { useMemo, useState } from "react";
 import { FloorPlanDrawing } from "../components/FloorPlanDrawing";
 import type {
@@ -13,6 +13,7 @@ import type {
   WallSide,
   WindowSpec,
 } from "../types/floorPlan";
+import { downloadFloorPlanDxf, floorPlanDxfFilename } from "../utils/floorPlanDxf";
 import {
   bathroomFactory,
   buildFloorPlan,
@@ -162,10 +163,11 @@ export function FloorPlanPage() {
     <section className="floor-plan-page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Asistente de proyecto</p>
+          <p className="eyebrow">AutoCAD automatizado</p>
           <h1>Plano técnico descriptivo</h1>
           <p className="page-lead">
-            Responde el cuestionario y genera un plano de planta a escala de arquitecto (1:50 o 1:100).
+            Cuestionario guiado que genera un dibujo DXF de AutoCAD a escala de arquitecto (1:50 o 1:100),
+            con capas A-WALL, A-DOOR, A-GLAZ, cotas y memoria.
           </p>
         </div>
       </header>
@@ -520,6 +522,21 @@ export function FloorPlanPage() {
           {step === 10 && model ? (
             <div className="fp-result">
               <div className="fp-drawing-wrap">
+                <div className="fp-cad-toolbar">
+                  <p>
+                    <DraftingCompass size={16} aria-hidden="true" />
+                    Vista previa del plano. La entrega nativa es un <strong>DXF AutoCAD</strong> en metros
+                    (INSUNITS=6), listo para abrir o xref.
+                  </p>
+                  <button
+                    type="button"
+                    className="primary-action"
+                    onClick={() => downloadFloorPlanDxf(model)}
+                  >
+                    <Download size={16} aria-hidden="true" />
+                    Descargar {floorPlanDxfFilename(model)}
+                  </button>
+                </div>
                 <FloorPlanDrawing model={model} />
               </div>
               <aside className="fp-memory">
@@ -532,6 +549,10 @@ export function FloorPlanPage() {
                   ))}
                 </ul>
                 <dl className="fp-summary">
+                  <div>
+                    <dt>Formato</dt>
+                    <dd>DXF AC1024</dd>
+                  </div>
                   <div>
                     <dt>Escala</dt>
                     <dd>{model.scale}</dd>
@@ -546,7 +567,19 @@ export function FloorPlanPage() {
                     <dt>Estancias</dt>
                     <dd>{model.rooms.filter((room) => room.kind !== "terraza").length}</dd>
                   </div>
+                  <div>
+                    <dt>Capas CAD</dt>
+                    <dd>A-WALL · A-DOOR · A-GLAZ · A-ANNO-*</dd>
+                  </div>
                 </dl>
+                <button
+                  type="button"
+                  className="primary-action fp-download-full"
+                  onClick={() => downloadFloorPlanDxf(model)}
+                >
+                  <Download size={16} aria-hidden="true" />
+                  Exportar AutoCAD (.dxf)
+                </button>
               </aside>
             </div>
           ) : null}
@@ -592,7 +625,7 @@ function stepHelp(step: number): string {
     "Ventanas de la planta: cuántas y en qué muro.",
     "Pasillos: cuántos y dónde conectan.",
     "Puertas, con especial atención a la entrada a la vivienda.",
-    "Plano técnico descriptivo generado a escala de arquitecto.",
+    "Plano AutoCAD automatizado: vista previa + descarga DXF a escala de arquitecto.",
   ];
   return help[step] ?? "";
 }

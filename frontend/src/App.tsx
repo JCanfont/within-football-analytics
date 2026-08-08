@@ -25,7 +25,7 @@ const navigation = [
   { label: "Flashscore", icon: Radio, path: "/flashscore" },
   { label: "A la contra", icon: Scale, path: "/contra" },
   { label: "Preguntas", icon: HelpCircle, path: "/questions" },
-  { label: "Plano vivienda", icon: Building2, path: "/floor-plan" },
+  { label: "AutoCAD plano", icon: Building2, path: "/floor-plan" },
   { label: "Importaciones", icon: DatabaseZap, path: "/imports" },
   { label: "Alertas", icon: Bell, path: "/alerts" },
   { label: "Configuracion", icon: Settings, path: "/settings" },

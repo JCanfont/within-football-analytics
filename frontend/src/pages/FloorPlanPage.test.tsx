@@ -43,6 +43,7 @@ describe("FloorPlanPage", () => {
 
     expect(screen.getByRole("img", { name: /Plano técnico/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Memoria descriptiva/i })).toBeInTheDocument();
-    expect(screen.getByText("Escala")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Exportar AutoCAD \(\.dxf\)/i })).toBeInTheDocument();
+    expect(screen.getByText("DXF AC1024")).toBeInTheDocument();
   });
 });
