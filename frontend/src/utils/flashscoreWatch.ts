@@ -300,6 +300,53 @@ export function liveRefreshIntervalMs(matches: FlashscoreMatch[], now = Date.now
     : SLOW_LIVE_REFRESH_MS;
 }
 
+/** Keep polling until the next kickoff instead of stopping forever. */
+export function nextPollWaitMs(matches: FlashscoreMatch[], now = Date.now()): number {
+  const activeWait = liveRefreshIntervalMs(matches, now);
+  if (activeWait != null) {
+    return activeWait;
+  }
+  const upcoming = matches
+    .map((match) => (match.start_time ? new Date(match.start_time).getTime() : NaN))
+    .filter((start) => Number.isFinite(start) && start > now)
+    .sort((left, right) => left - right);
+  if (upcoming.length) {
+    return Math.max(15_000, Math.min(upcoming[0] - now, SLOW_LIVE_REFRESH_MS));
+  }
+  return SLOW_LIVE_REFRESH_MS;
+}
+
+/** Display clock when Flashscore omits live_time (common on the day list). */
+export function displayMatchMinute(match: FlashscoreMatch, now = Date.now()): string {
+  if (isHalfTime(match)) {
+    return "Descanso";
+  }
+  if (match.minute != null) {
+    return `${match.minute}'`;
+  }
+  if (!hasMatchStarted(match, now) || !match.start_time) {
+    return "Pendiente";
+  }
+  const start = new Date(match.start_time).getTime();
+  if (!Number.isFinite(start)) {
+    return "En juego";
+  }
+  const elapsed = Math.floor((now - start) / 60_000);
+  if (elapsed < 0) {
+    return "Pendiente";
+  }
+  if (elapsed < 45) {
+    return `~${elapsed}'`;
+  }
+  if (elapsed < 60) {
+    return "Descanso";
+  }
+  if (elapsed < 120) {
+    return `~${Math.min(90, 45 + (elapsed - 60))}'`;
+  }
+  return "FT?";
+}
+
 export function isCriticalSignalWatch(match: FlashscoreMatch, now = Date.now()): boolean {
   if (!needsLivePoll(match, now)) {
     return false;

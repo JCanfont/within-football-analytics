@@ -1,6 +1,7 @@
 import { Activity, RefreshCw, Save } from "lucide-react";
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
+  fetchFlashscoreLiveBoard,
   fetchLiveMatchSnapshot,
   fetchLiveProviderStatus,
   fetchSofaScoreEventSnapshot,
@@ -8,7 +9,7 @@ import {
   storeSofaScoreLiveEvents,
   storeSofaScoreTeamEvents,
 } from "../services/api";
-import type { ForebetRangeItem, LiveMatchSnapshot, LiveProviderStatus, SofaScoreTeamEvent } from "../types/api";
+import type { FlashscoreMatch, ForebetRangeItem, LiveMatchSnapshot, LiveProviderStatus, SofaScoreTeamEvent } from "../types/api";
 import {
   evaluateForecastState,
   formatCurrentScore,
@@ -25,6 +26,7 @@ const SOFASCORE_TEAMS_KEY = "within_sofascore_live_teams";
 const SOFASCORE_TEAM_NAMES_KEY = "within_sofascore_live_team_names";
 const LIVE_COMMENTARY_HISTORY_KEY = "within_live_commentary_history";
 const DASHBOARD_HIGHLIGHTED_EVENTS_KEY = "within_dashboard_highlighted_sofascore_events";
+const LIVE_AUTO_REFRESH_MS = 60 * 1000;
 
 type LiveMatchParameters = {
   minute: number;
@@ -72,10 +74,14 @@ export function LiveMatchesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
   const [isLoadingLiveEvents, setIsLoadingLiveEvents] = useState(false);
+  const [autoLiveRefresh, setAutoLiveRefresh] = useState(true);
+  const [lastAutoRefresh, setLastAutoRefresh] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(() => initialLiveMessage());
-
-  const watchedIds = useMemo(() => readWatchedForebetMatchIds(), []);
-  const selectedMatches = matches.filter((match) => watchedIds.includes(match.match_id));
+  const [watchedIds, setWatchedIds] = useState<number[]>(() => readWatchedForebetMatchIds());
+  const selectedMatches = useMemo(
+    () => matches.filter((match) => watchedIds.includes(match.match_id)),
+    [matches, watchedIds],
+  );
 
   useEffect(() => {
     fetchLiveProviderStatus()
@@ -88,6 +94,17 @@ export function LiveMatchesPage() {
           message: "No se pudo consultar el estado del proveedor live.",
         }),
       );
+  }, []);
+
+  useEffect(() => {
+    const syncWatched = () => setWatchedIds(readWatchedForebetMatchIds());
+    syncWatched();
+    window.addEventListener("focus", syncWatched);
+    const timer = window.setInterval(syncWatched, 15_000);
+    return () => {
+      window.removeEventListener("focus", syncWatched);
+      window.clearInterval(timer);
+    };
   }, []);
 
   function saveParameters(nextParameters: Record<number, LiveMatchParameters>) {
@@ -107,23 +124,40 @@ export function LiveMatchesPage() {
     });
   }
 
-  function refreshMatches() {
+  const refreshMatches = useCallback((opts?: { silent?: boolean }) => {
     if (!targetDate) {
-      return;
+      return Promise.resolve();
     }
-    setIsLoading(true);
-    setMessage("Actualizando partidos seleccionados desde Forebet...");
-    loadForebetDate(targetDate, false)
-      .then((result) => {
-        setMatches(result.matches);
-        setMessage(`${result.matches.length} partidos Forebet revisados; ${readWatchedForebetMatchIds().length} seleccionados para directo.`);
-        refreshSnapshots(result.matches.filter((match) => readWatchedForebetMatchIds().includes(match.match_id)));
+    if (!opts?.silent) {
+      setIsLoading(true);
+      setMessage("Actualizando partidos seleccionados desde Forebet...");
+    }
+    return Promise.allSettled([loadForebetDate(targetDate, false), fetchFlashscoreLiveBoard(0)])
+      .then(([forebetResult, flashResult]) => {
+        if (forebetResult.status === "rejected") {
+          throw forebetResult.reason;
+        }
+        const result = forebetResult.value;
+        const board = flashResult.status === "fulfilled" ? flashResult.value.matches ?? [] : [];
+        const merged = mergeFlashscoreIntoForebet(result.matches, board);
+        const currentWatched = readWatchedForebetMatchIds();
+        setWatchedIds(currentWatched);
+        setMatches(merged);
+        const selected = merged.filter((match) => currentWatched.includes(match.match_id));
+        const liveCount = selected.filter((match) => isLiveMatch(match) && match.home_score != null).length;
+        setMessage(
+          `${merged.length} partidos Forebet · ${currentWatched.length} vigilados · ${liveCount} con marcador live` +
+          (board.length ? ` · Flashscore board ${board.length}` : " · Flashscore no disponible") +
+          ".",
+        );
+        setLastAutoRefresh(new Date().toISOString());
+        refreshSnapshots(selected);
       })
       .catch(() => {
         setMessage("No se pudieron cargar los partidos de Forebet.");
       })
       .finally(() => setIsLoading(false));
-  }
+  }, [targetDate]);
 
   function refreshSnapshots(items: ForebetRangeItem[] = selectedMatches) {
     for (const match of items) {
@@ -234,10 +268,12 @@ export function LiveMatchesPage() {
     return liveEvents.find((event) => event.event_id === eventId) ?? Object.values(teamEvents).flat().find((event) => event.event_id === eventId);
   }
 
-  function refreshLiveEvents() {
-    setIsLoadingLiveEvents(true);
-    setMessage("Consultando y guardando partidos de futbol en directo desde SofaScore...");
-    storeSofaScoreLiveEvents("football")
+  const refreshLiveEvents = useCallback((opts?: { silent?: boolean }) => {
+    if (!opts?.silent) {
+      setIsLoadingLiveEvents(true);
+      setMessage("Consultando y guardando partidos de futbol en directo desde SofaScore...");
+    }
+    return storeSofaScoreLiveEvents("football")
       .then((result) => {
         const liveOnlyEvents = result.events.filter(isLiveSofaScoreEvent);
         setLiveEvents(liveOnlyEvents);
@@ -245,13 +281,46 @@ export function LiveMatchesPage() {
         setTeamEvents((current) => ({ ...current, ...groupLiveEventsByTeam(liveOnlyEvents) }));
         liveOnlyEvents.forEach((event) => rememberLiveCommentary(event));
         setMessage(`${result.message} Ya estan sumados al total de partidos.`);
+        setLastAutoRefresh(new Date().toISOString());
       })
       .catch(() => {
         setLiveEvents([]);
-        setMessage("No se pudieron cargar los partidos en directo de SofaScore.");
+        setMessage(
+          "SofaScore live no disponible (falta CRAWLORA_API_KEY en Vercel). Se sigue usando Forebet/Flashscore para vigilados.",
+        );
       })
       .finally(() => setIsLoadingLiveEvents(false));
-  }
+  }, []);
+
+  useEffect(() => {
+    // First paint: load watched Forebet matches immediately.
+    void refreshMatches({ silent: false });
+  }, [refreshMatches]);
+
+  useEffect(() => {
+    if (!autoLiveRefresh) {
+      return;
+    }
+    let cancelled = false;
+    let timer = 0;
+    const tick = () => {
+      timer = window.setTimeout(() => {
+        if (cancelled) return;
+        void Promise.allSettled([
+          refreshMatches({ silent: true }),
+          refreshLiveEvents({ silent: true }),
+        ]).finally(() => {
+          if (!cancelled) tick();
+        });
+      }, LIVE_AUTO_REFRESH_MS);
+    };
+    void refreshLiveEvents({ silent: true });
+    tick();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [autoLiveRefresh, refreshLiveEvents, refreshMatches]);
 
   function refreshAndFollowLiveEvents() {
     setIsLoadingLiveEvents(true);
@@ -352,7 +421,15 @@ export function LiveMatchesPage() {
             <span>Fecha</span>
             <input type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} />
           </label>
-          <button className="filter-show" type="button" onClick={refreshMatches} disabled={isLoading}>
+          <button
+            className={autoLiveRefresh ? "filter-show active" : "filter-show"}
+            type="button"
+            onClick={() => setAutoLiveRefresh((current) => !current)}
+          >
+            <RefreshCw size={17} aria-hidden="true" />
+            {autoLiveRefresh ? "LIVE 60s on" : "LIVE off"}
+          </button>
+          <button className="filter-show" type="button" onClick={() => void refreshMatches()} disabled={isLoading}>
             <RefreshCw size={17} aria-hidden="true" />
             {isLoading ? "Actualizando" : "Actualizar"}
           </button>
@@ -366,6 +443,9 @@ export function LiveMatchesPage() {
             <p>{message}</p>
             <p className={providerStatus?.configured ? "live-provider-status ready" : "live-provider-status pending"}>
               Sofascore: {providerStatus?.message ?? "Comprobando proveedor live..."}
+              {autoLiveRefresh
+                ? ` · Auto cada 60s${lastAutoRefresh ? ` · ultima ${new Date(lastAutoRefresh).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}` : ""}`
+                : " · Auto off"}
             </p>
           </div>
           <Activity size={20} aria-hidden="true" />
@@ -410,7 +490,7 @@ export function LiveMatchesPage() {
             <RefreshCw size={17} aria-hidden="true" />
             {isLoadingTeams ? "Consultando" : "Cargar equipos"}
           </button>
-          <button className="filter-show" type="button" onClick={refreshLiveEvents} disabled={isLoadingLiveEvents}>
+          <button className="filter-show" type="button" onClick={() => void refreshLiveEvents()} disabled={isLoadingLiveEvents}>
             <RefreshCw size={17} aria-hidden="true" />
             {isLoadingLiveEvents ? "Buscando live" : "Cargar partidos en directo"}
           </button>
@@ -872,6 +952,40 @@ function isLiveSofaScoreEvent(event: SofaScoreTeamEvent) {
   return ["inprogress", "halftime", "live"].includes(event.status.toLowerCase());
 }
 
+function mergeFlashscoreIntoForebet(matches: ForebetRangeItem[], board: FlashscoreMatch[]) {
+  if (!board.length) {
+    return matches;
+  }
+  return matches.map((match) => {
+    const event = board.find((candidate) =>
+      sameLooseTeam(match.home_team, candidate.home_team) &&
+      sameLooseTeam(match.away_team, candidate.away_team) &&
+      (candidate.home_score != null || candidate.away_score != null)
+    );
+    if (!event) {
+      return match;
+    }
+    return {
+      ...match,
+      status: match.status === "finished" ? match.status : "live",
+      home_score: event.home_score ?? match.home_score,
+      away_score: event.away_score ?? match.away_score,
+    };
+  });
+}
+
+function sameLooseTeam(left: string, right: string) {
+  const normalize = (value: string) =>
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+  const a = normalize(left);
+  const b = normalize(right);
+  return a === b || (Math.min(a.length, b.length) >= 5 && (a.includes(b) || b.includes(a)));
+}
+
 function readWatchedForebetMatchIds() {
   try {
     const raw = localStorage.getItem(FOREBET_WATCH_KEY);
@@ -890,7 +1004,7 @@ function initialLiveMessage() {
   if (!watchedCount) {
     return "Se muestran los partidos marcados con aviso en la pantalla Forebet.";
   }
-  return `${watchedCount} partidos seleccionados. Pulsa Actualizar para cargar datos live cuando lo necesites.`;
+  return `${watchedCount} partidos seleccionados. Auto-refresh cada 60s (Forebet + Flashscore; SofaScore si hay CRAWLORA_API_KEY).`;
 }
 
 function readLiveParameters() {
