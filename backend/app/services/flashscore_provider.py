@@ -204,9 +204,9 @@ def enrich_matches_with_goal_minutes(
     matches: list[FlashscoreMatchRead],
     settings: Settings | None = None,
     *,
-    max_lookups: int = 10,
+    max_lookups: int = 24,
 ) -> list[FlashscoreMatchRead]:
-    """Attach first-goal minute from /matches/match/summary when the scoreline has goals."""
+    """Attach first-goal minute from summary/commentary/details when the scoreline has goals."""
     settings = settings or get_settings()
     if not settings.rapidapi_key or not matches:
         return matches
@@ -214,15 +214,22 @@ def enrich_matches_with_goal_minutes(
     def needs_goals(match: FlashscoreMatchRead) -> bool:
         if match.favorite_odds is None:
             return False
-        if match.early_goal_minute is not None:
-            return False
         home = match.home_score
         away = match.away_score
-        if home is None or away is None:
+        if home is None or away is None or (home + away) <= 0:
             return False
-        return (home + away) > 0
+        if match.early_goal_minute is None:
+            return True
+        # If the stamp still equals the live clock, it is likely provisional — refine via incidents.
+        return (
+            match.minute is not None
+            and match.early_goal_minute == match.minute
+            and match.minute <= 30
+        )
 
-    targets = [match for match in matches if needs_goals(match)][:max_lookups]
+    missing = [match for match in matches if needs_goals(match) and match.early_goal_minute is None]
+    refine = [match for match in matches if needs_goals(match) and match.early_goal_minute is not None]
+    targets = (missing + refine)[:max_lookups]
     if not targets:
         return matches
 
@@ -239,6 +246,7 @@ def enrich_matches_with_goal_minutes(
         for path in (
             f"{base_url}/api/flashscore/v2/matches/match/summary",
             f"{base_url}/api/flashscore/v2/matches/match/commentary",
+            f"{base_url}/api/flashscore/v2/matches/details",
         ):
             try:
                 payload = _get_json(path, headers, {"match_id": match.event_id})
@@ -249,7 +257,7 @@ def enrich_matches_with_goal_minutes(
                 return match.event_id, minutes[0]
         return None
 
-    workers = min(4, len(targets))
+    workers = min(6, len(targets))
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = [executor.submit(lookup, match) for match in targets]
         for future in as_completed(futures):
@@ -266,11 +274,16 @@ def enrich_matches_with_goal_minutes(
         if first_goal is None:
             updated.append(match)
             continue
+        resolved = (
+            first_goal
+            if match.early_goal_minute is None
+            else min(match.early_goal_minute, first_goal)
+        )
         updated.append(
             match.model_copy(
                 update={
-                    "early_goal_minute": first_goal,
-                    "early_goal": bool(match.early_goal) or first_goal <= 30,
+                    "early_goal_minute": resolved,
+                    "early_goal": bool(match.early_goal) or resolved <= 30,
                 }
             )
         )
@@ -280,28 +293,67 @@ def enrich_matches_with_goal_minutes(
 def _extract_goal_minutes(payload: Any) -> list[int]:
     minutes: list[int] = []
     for record in _walk_dicts(payload):
-        kind = " ".join(
-            str(record.get(key) or "")
-            for key in ("type", "incident_type", "event_type", "name", "class", "incident")
-        ).lower()
-        if "goal" not in kind and "score" not in kind:
-            # Some payloads only mark goals via "is_goal".
-            if record.get("is_goal") is not True and record.get("goal") is not True:
-                continue
+        if not _is_goal_incident(record):
+            continue
         minute = _minute_value(record)
         if minute is None:
-            minute = _parse_minute_candidate(record.get("time") or record.get("value"))
+            minute = _parse_minute_candidate(
+                record.get("time")
+                or record.get("value")
+                or record.get("elapsed")
+                or record.get("minute_label")
+            )
         if minute is not None and 0 <= minute <= 130:
             minutes.append(minute)
-    # Preserve chronological order without duplicates.
-    seen: set[int] = set()
-    ordered: list[int] = []
-    for minute in minutes:
-        if minute in seen:
-            continue
-        seen.add(minute)
-        ordered.append(minute)
-    return ordered
+    # First goal = earliest minute, de-duplicated.
+    return sorted(set(minutes))
+
+
+def _is_goal_incident(record: dict[str, Any]) -> bool:
+    if record.get("is_goal") is True or record.get("goal") is True:
+        return True
+    # Flashscore event rows usually carry the score after a goal.
+    if record.get("home_score_after") is not None or record.get("away_score_after") is not None:
+        return True
+    if record.get("homeScoreAfter") is not None or record.get("awayScoreAfter") is not None:
+        return True
+    kind = " ".join(
+        str(record.get(key) or "")
+        for key in (
+            "type",
+            "type_label",
+            "incident_type",
+            "event_type",
+            "name",
+            "class",
+            "incident",
+            "text",
+            "description",
+            "title",
+            "message",
+            "commentary",
+        )
+    ).lower()
+    if not kind:
+        return False
+    if any(
+        token in kind
+        for token in (
+            "goal kick",
+            "no goal",
+            "disallowed",
+            "anulado",
+            "cancelled goal",
+            "canceled goal",
+            "var cancel",
+        )
+    ):
+        return False
+    if "assist" in kind and "goal" not in kind:
+        return False
+    return bool(
+        re.search(r"\b(goal|gol|scored|own[-\s]?goal|penalty\s+scored)\b", kind)
+    )
 
 
 def _load_day_board(

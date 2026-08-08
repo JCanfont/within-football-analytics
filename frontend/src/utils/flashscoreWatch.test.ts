@@ -70,6 +70,33 @@ describe("flashscoreWatch", () => {
     expect(later.early_goal_minute).toBe(18);
   });
 
+  it("keeps the scored minute through half-time when the live clock disappears", () => {
+    const later = withEarlyGoalFlags(baseMatch({
+      status: "halftime",
+      minute: null,
+      home_score: 1,
+      away_score: 0,
+      early_goal_minute: 14,
+      early_goal: true,
+      early_favorite_goal: true,
+    }));
+
+    expect(later.early_goal).toBe(true);
+    expect(later.early_favorite_goal).toBe(true);
+    expect(later.early_goal_minute).toBe(14);
+    expect(later.alert_eligible).toBe(true);
+  });
+
+  it("stamps the live minute when the first goal arrives before 30'", () => {
+    const merged = mergeFlashscoreLiveBoard(
+      [baseMatch({ status: "inprogress", minute: 9, home_score: 0, away_score: 0 })],
+      [baseMatch({ status: "inprogress", minute: 14, home_score: 1, away_score: 0 })],
+    );
+
+    expect(merged[0].early_goal_minute).toBe(14);
+    expect(merged[0].early_goal).toBe(true);
+  });
+
   it("flags any early goal even when the favorite has not scored", () => {
     const match = withEarlyGoalFlags(baseMatch({
       minute: 12,
