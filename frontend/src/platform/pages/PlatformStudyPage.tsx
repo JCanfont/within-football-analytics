@@ -7,11 +7,13 @@ import { MassingPanel } from "../components/MassingPanel";
 import { OptimizerPanel } from "../components/OptimizerPanel";
 import { PlanSheetsPanel } from "../components/PlanSheetsPanel";
 import { RenderPanel } from "../components/RenderPanel";
+import { CoordinationPanel } from "../components/CoordinationPanel";
 import { MepPanel } from "../components/MepPanel";
 import { StructurePanel } from "../components/StructurePanel";
 import { UrbanismPanel } from "../components/UrbanismPanel";
 import { generateArchitecturalModel } from "../services/architecturalModelGenerator";
 import { generateBuildingEnvelope } from "../services/buildingEnvelopeGenerator";
+import { generateCoordinationPack } from "../services/coordinationPack";
 import { optimizeDesign } from "../services/designOptimizer";
 import { generateMassingStudy } from "../services/massingGenerator";
 import { generateMepModel } from "../services/mepGenerator";
@@ -37,6 +39,7 @@ const OPTIMIZATION_KEY = "platform.designScenario.optimization.v1";
 const RENDER_JOB_KEY = "platform.designScenario.renderJob.v1";
 const STRUCT_MODEL_KEY = "platform.designScenario.structuralModel.v1";
 const MEP_MODEL_KEY = "platform.designScenario.mepModel.v1";
+const COORDINATION_KEY = "platform.designScenario.coordination.v1";
 
 function readScenarioLink(): DesignScenarioUrbanLink | null {
   try {
@@ -130,6 +133,17 @@ export function PlatformStudyPage() {
     return generateMepModel({ architecturalModel });
   }, [architecturalModel]);
 
+  const coordinationPack = useMemo(() => {
+    if (!architecturalModel || !structuralModel || !mepModel) {
+      return null;
+    }
+    return generateCoordinationPack({
+      architecturalModel,
+      structuralModel,
+      mepModel,
+    });
+  }, [architecturalModel, structuralModel, mepModel]);
+
   useEffect(() => {
     if (!massingStudy) {
       return;
@@ -182,7 +196,8 @@ export function PlatformStudyPage() {
       !planSet ||
       !optimization ||
       !structuralModel ||
-      !mepModel
+      !mepModel ||
+      !coordinationPack
     ) {
       return;
     }
@@ -200,6 +215,10 @@ export function PlatformStudyPage() {
       render_scene_id: renderJob?.scene_id ?? null,
       structural_model_id: structuralModel.structural_model_id,
       mep_model_id: mepModel.mep_model_id,
+      coordination_id: coordinationPack.coordination_id,
+      clash_report_id: coordinationPack.clash.clash_report_id,
+      takeoff_id: coordinationPack.takeoff.takeoff_id,
+      budget_id: coordinationPack.budget.budget_id,
     };
     localStorage.setItem(SCENARIO_KEY, JSON.stringify(link));
     localStorage.setItem(ENVELOPE_KEY, JSON.stringify(envelope));
@@ -212,6 +231,7 @@ export function PlatformStudyPage() {
     localStorage.setItem(OPTIMIZATION_KEY, JSON.stringify(optimization));
     localStorage.setItem(STRUCT_MODEL_KEY, JSON.stringify(structuralModel));
     localStorage.setItem(MEP_MODEL_KEY, JSON.stringify(mepModel));
+    localStorage.setItem(COORDINATION_KEY, JSON.stringify(coordinationPack));
     if (renderJob) {
       localStorage.setItem(RENDER_JOB_KEY, JSON.stringify(renderJob));
     } else {
@@ -224,11 +244,11 @@ export function PlatformStudyPage() {
     <section className="platform-study-page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Plataforma inmobiliaria · P9</p>
+          <p className="eyebrow">Plataforma inmobiliaria · P10</p>
           <h1>Estudio de finca</h1>
           <p className="page-lead">
-            Urbanismo → envolvente → massing → optimizador → BIM → planos → render → estructura → MEP
-            preliminar. El Urbanismo Engine no se implementa en este repositorio.
+            Urbanismo → envolvente → massing → optimizador → BIM → planos → render → estructura → MEP →
+            clash/mediciones/presupuesto. El Urbanismo Engine no se implementa en este repositorio.
           </p>
         </div>
       </header>
@@ -339,6 +359,12 @@ export function PlatformStudyPage() {
             </section>
           ) : null}
 
+          {coordinationPack ? (
+            <section className="panel">
+              <CoordinationPanel pack={coordinationPack} />
+            </section>
+          ) : null}
+
           <section className="panel platform-next-steps">
             <div className="panel-heading">
               <div>
@@ -355,7 +381,7 @@ export function PlatformStudyPage() {
             <div className="platform-actions">
               <button type="button" className="primary-action" onClick={bindToFloorPlanScenario}>
                 Vincular análisis + envolvente + massing + optimización + BIM + planos + render + estructura +
-                MEP al escenario
+                MEP + coordinación al escenario
               </button>
               <Link className="secondary-action" to="/floor-plan">
                 <DraftingCompass size={16} aria-hidden="true" />
@@ -407,6 +433,10 @@ export function PlatformStudyPage() {
                 <div>
                   <dt>mep_model_id</dt>
                   <dd>{scenarioLink.mep_model_id ?? "—"}</dd>
+                </div>
+                <div>
+                  <dt>coordination_id</dt>
+                  <dd>{scenarioLink.coordination_id ?? "—"}</dd>
                 </div>
                 <div>
                   <dt>api_version</dt>

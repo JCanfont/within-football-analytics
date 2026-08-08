@@ -114,4 +114,8 @@ export type DesignScenarioUrbanLink = {
   render_scene_id?: string | null;
   structural_model_id?: string | null;
   mep_model_id?: string | null;
+  coordination_id?: string | null;
+  clash_report_id?: string | null;
+  takeoff_id?: string | null;
+  budget_id?: string | null;
 };

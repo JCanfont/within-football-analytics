@@ -4626,3 +4626,37 @@ button.analysis-card:disabled {
   background: #fff;
   font: inherit;
 }
+
+.coordination-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.coordination-section {
+  display: grid;
+  gap: 12px;
+}
+
+.coordination-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.coordination-table th,
+.coordination-table td {
+  border-bottom: 1px solid #e5eaf0;
+  padding: 8px 6px;
+  text-align: left;
+}
+
+.coordination-table th {
+  color: #5b677a;
+  font-weight: 700;
+}
+
+.coordination-total {
+  margin: 0;
+  font-size: 15px;
+  color: #18494c;
+}

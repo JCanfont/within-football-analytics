@@ -93,3 +93,10 @@ Capas DXF: `A-WALL`, `A-DOOR`, `A-GLAZ`, `A-FURN`, `A-FLOR-APPL`, `A-FLOR-SANR`,
 - Disciplinas: eléctrico, iluminación, fontanería, saneamiento, ACS, HVAC, ventilación, gas, telecom, PCI.
 - Vista filtrada por sistema; flags `is_preliminary` / `is_sized_design=false`.
 - UI `MepPanel` + export JSON; escenario guarda `mep_model_id`.
+
+## Nuevo en P10 plataforma
+- Clash detection STRUCT↔MEP con tolerancias hard/soft/clearance configurables.
+- Mediciones (`quantityTakeoff`) desde ARCH/STRUCT/MEP (muros, puertas, ventanas, forjados, hormigón, tubería, conductos, cable, luminarias, equipos).
+- Presupuesto estimativo con catálogo de precios **versionado aparte** (`priceCatalog`).
+- Paquete `generateCoordinationPack` + UI `CoordinationPanel`.
+- Escenario guarda `coordination_id`, `clash_report_id`, `takeoff_id`, `budget_id`.
