@@ -1804,6 +1804,14 @@ td {
   text-transform: uppercase;
 }
 
+.question-missing-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--muted, #6b7280);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
 .question-answer-text strong {
   color: #18212f;
   font-size: 16px;

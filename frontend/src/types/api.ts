@@ -156,15 +156,30 @@ export type QuestionMatchRow = {
   signal: string;
 };
 
+export type QuestionRankingRow = {
+  rank: number;
+  label: string;
+  value: number;
+  unit?: string;
+  detail?: string | null;
+  sample_size?: number | null;
+};
+
 export type StatisticalQuestionAnswer = {
   question: string;
   answer: string;
   scope: string;
+  question_type?: string;
+  data_status?: string;
   matched_team?: string | null;
+  matched_competition?: string | null;
   sample_size: number;
   under_25: StreakSummary;
   over_25: StreakSummary;
+  rankings?: QuestionRankingRow[];
+  metrics?: Record<string, string | number | null | undefined>;
   recent_matches: QuestionMatchRow[];
+  missing_requirements?: string[];
 };
 
 export type TeamReferenceStanding = {
