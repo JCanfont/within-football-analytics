@@ -354,9 +354,11 @@ export function FlashscorePage() {
                     <td>{formatStartTime(match.start_time)}</td>
                     <td>
                       <div className="flashscore-match-cell">
-                        <strong>{match.home_team}</strong>
-                        <span className="flashscore-match-vs">vs</span>
-                        <strong>{match.away_team}</strong>
+                        <div className="flashscore-match-line">
+                          <strong>{match.home_team}</strong>
+                          <span className="flashscore-match-vs">vs</span>
+                          <strong>{match.away_team}</strong>
+                        </div>
                         <span className="table-subtext flashscore-match-competition">{match.competition}</span>
                       </div>
                     </td>
