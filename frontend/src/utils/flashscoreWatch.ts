@@ -24,10 +24,10 @@ export function readFlashscoreWatch(): FlashscoreWatchState | null {
     return {
       capturedAt: typeof raw.capturedAt === "string" ? raw.capturedAt : new Date().toISOString(),
       day: typeof raw.day === "number" ? raw.day : 0,
-      matches: raw.matches
+      matches: (raw.matches as unknown[])
         .filter(isFlashscoreMatch)
         .map(withEarlyGoalFlags)
-        .filter((match) => match.favorite_odds != null && match.favorite_odds <= LIST_ODDS_THRESHOLD),
+        .filter((match: FlashscoreMatch) => match.favorite_odds != null && match.favorite_odds <= LIST_ODDS_THRESHOLD),
     };
   } catch {
     return null;
