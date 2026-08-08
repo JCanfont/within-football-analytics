@@ -15,7 +15,9 @@ import {
   SLOW_LIVE_REFRESH_MS,
   clearFlashscoreWatch,
   hasMatchStarted,
+  isHalfTime,
   isMatchFinished,
+  isWatchableCompetition,
   liveRefreshIntervalMs,
   readFlashscoreWatch,
   sortFlashscoreMatches,
@@ -180,6 +182,7 @@ export function FlashscorePage() {
           result.matches
             .map(withEarlyGoalFlags)
             .filter((match) => match.favorite_odds != null && match.favorite_odds <= LIST_ODDS_THRESHOLD)
+            .filter((match) => isWatchableCompetition(match))
             .filter((match) => !isMatchFinished(match)),
         );
         setCapturedAt(stamp);
@@ -385,7 +388,11 @@ export function FlashscorePage() {
                       </div>
                     </td>
                     <td>{match.minute != null ? `${match.minute}'` : formatMatchClock(match)}</td>
-                    <td>{formatScore(match)}</td>
+                    <td>
+                      <span className={isHalfTime(match) ? "flashscore-score-ht" : "flashscore-score"}>
+                        {formatScore(match)}
+                      </span>
+                    </td>
                     <td>
                       <span className={`flashscore-early-goal-status ${earlyGoalTone(match)}`}>
                         {earlyGoalLabel(match)}
@@ -428,19 +435,26 @@ function FlashscoreMetric({
 }
 
 function earlyGoalLabel(match: FlashscoreMatch) {
+  const goalMinute = match.early_goal_minute;
+  const totalGoals = (match.home_score ?? 0) + (match.away_score ?? 0);
   if (match.early_favorite_goal || match.alert_eligible) {
-    const minute = match.early_goal_minute ?? match.minute;
+    const minute = goalMinute ?? match.minute;
     return minute != null ? `Favorito marco (${minute}')` : "Favorito marco <30'";
   }
-  if (match.early_goal) {
-    const minute = match.early_goal_minute ?? match.minute;
-    return minute != null ? `Gol al ${minute}'` : "Gol antes del 30'";
+  if (match.early_goal || (totalGoals > 0 && goalMinute != null)) {
+    return goalMinute != null ? `Gol al ${goalMinute}'` : "Gol antes del 30'";
+  }
+  if (totalGoals > 0 && goalMinute == null) {
+    return "Gol (minuto ?)";
   }
   if (match.minute != null && match.minute <= 30) {
     return "Ventana abierta";
   }
   if (match.minute != null && match.minute > 30) {
     return "Sin gol <30'";
+  }
+  if (isHalfTime(match)) {
+    return "Descanso";
   }
   return "—";
 }
@@ -492,11 +506,10 @@ function formatScore(match: FlashscoreMatch) {
 }
 
 function formatMatchClock(match: FlashscoreMatch) {
+  if (isHalfTime(match)) {
+    return "Descanso";
+  }
   if (hasMatchStarted(match)) {
-    const status = (match.status || "").toLowerCase();
-    if (status.includes("half") && !status.includes("1st") && !status.includes("2nd")) {
-      return "Descanso";
-    }
     return "En juego";
   }
   return formatStatus(match.status);
@@ -505,7 +518,13 @@ function formatMatchClock(match: FlashscoreMatch) {
 function formatStatus(status: string) {
   const normalized = status.toLowerCase();
   if (normalized.includes("finish")) return "Finalizado";
-  if (normalized.includes("half")) return "Descanso";
+  if (
+    normalized.includes("halftime")
+    || normalized === "ht"
+    || (normalized.includes("half") && !normalized.includes("1st") && !normalized.includes("2nd"))
+  ) {
+    return "Descanso";
+  }
   if (normalized.includes("progress") || normalized.includes("live")) return "En directo";
   return normalized.includes("sched") ? "Pendiente" : status;
 }

@@ -17,6 +17,7 @@ from app.schemas.api import (
 from app.services.email_alerts import send_flashscore_goal_email
 from app.services.flashscore_provider import (
     enrich_matches_with_details,
+    enrich_matches_with_goal_minutes,
     fetch_flashscore_live_board,
     fetch_flashscore_matches,
 )
@@ -87,6 +88,7 @@ def refresh_flashscore_watch_live(
         return watch.model_copy(update={"message": f"No se pudo refrescar con Flashscore Ultra: {exc}"})
     merged = merge_flashscore_live_board(watch.matches, board)
     merged = enrich_matches_with_details(merged)
+    merged = enrich_matches_with_goal_minutes(merged)
     saved = save_flashscore_watch(
         db,
         day=watch.day,

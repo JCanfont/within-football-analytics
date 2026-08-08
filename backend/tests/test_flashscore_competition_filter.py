@@ -23,6 +23,17 @@ def test_rejects_norway_third_and_second_named_divisions() -> None:
     assert is_watchable_competition(match("NORWAY: 2. Divisjon")) is False
 
 
+def test_rejects_poland_third_and_women_competitions() -> None:
+    assert is_watchable_competition(match("POLAND: Ekstraklasa")) is True
+    assert is_watchable_competition(match("POLAND: Division 1")) is True
+    assert is_watchable_competition(match("POLAND: Division 2")) is False
+    assert is_watchable_competition(match("POLAND: III Liga - Group II")) is False
+    assert is_watchable_competition(match("POLAND: Ekstraliga Women")) is False
+    assert is_watchable_competition(match("NORWAY: Toppserien Women")) is False
+    assert is_watchable_competition(match("EUROPE: Champions League Women - Placement matches")) is False
+    assert is_watchable_competition(match("JAPAN: J1 League", home="Gintra W", away="Riga FC W")) is False
+
+
 def test_allows_third_tier_only_for_spain_england_portugal() -> None:
     assert is_watchable_competition(match("ENGLAND: League One")) is True
     assert is_watchable_competition(match("ENGLAND: League Two")) is False
