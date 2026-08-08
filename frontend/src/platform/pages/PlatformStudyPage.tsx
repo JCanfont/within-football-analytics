@@ -1,7 +1,9 @@
 import { Building2, DraftingCompass, Link2, Radar } from "lucide-react";
 import { FormEvent, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { EnvelopePanel } from "../components/EnvelopePanel";
 import { UrbanismPanel } from "../components/UrbanismPanel";
+import { generateBuildingEnvelope } from "../services/buildingEnvelopeGenerator";
 import {
   analyzeParcel,
   isUrbanismEngineConfigured,
@@ -12,6 +14,7 @@ import {
 import type { DesignScenarioUrbanLink, UrbanismAnalysis } from "../types/urbanismContract";
 
 const SCENARIO_KEY = "platform.designScenario.urbanLink.v1";
+const ENVELOPE_KEY = "platform.designScenario.envelope.v1";
 
 function readScenarioLink(): DesignScenarioUrbanLink | null {
   try {
@@ -29,6 +32,18 @@ export function PlatformStudyPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const engineConfigured = useMemo(() => isUrbanismEngineConfigured(), []);
+
+  const envelope = useMemo(() => {
+    if (!analysis) {
+      return null;
+    }
+    return generateBuildingEnvelope({
+      urbanism_analysis_id: analysis.analysis_id,
+      api_version: analysis.api_version,
+      parameters: analysis.parameters,
+      plot_area_m2: analysis.parcel?.area_m2 ?? null,
+    });
+  }, [analysis]);
 
   const onAnalyze = (event: FormEvent) => {
     event.preventDefault();
@@ -57,11 +72,15 @@ export function PlatformStudyPage() {
   };
 
   const bindToFloorPlanScenario = () => {
-    if (!analysis) {
+    if (!analysis || !envelope) {
       return;
     }
-    const link = linkScenarioToUrbanism(analysis);
+    const link = {
+      ...linkScenarioToUrbanism(analysis),
+      envelope_id: envelope.envelope_id,
+    };
     localStorage.setItem(SCENARIO_KEY, JSON.stringify(link));
+    localStorage.setItem(ENVELOPE_KEY, JSON.stringify(envelope));
     setScenarioLink(link);
   };
 
@@ -69,11 +88,11 @@ export function PlatformStudyPage() {
     <section className="platform-study-page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Plataforma inmobiliaria</p>
+          <p className="eyebrow">Plataforma inmobiliaria · P2</p>
           <h1>Estudio de finca</h1>
           <p className="page-lead">
-            Consume el Urbanismo Engine por API v1 (sin implementar el motor aquí) y enlaza el análisis al
-            escenario de planos/DXF existente.
+            Urbanismo por API → panel → envolvente trazable → vínculo al escenario de planos/DXF. El motor
+            urbanístico no vive en este repositorio.
           </p>
         </div>
       </header>
@@ -120,6 +139,12 @@ export function PlatformStudyPage() {
             }
           />
 
+          {envelope ? (
+            <section className="panel">
+              <EnvelopePanel envelope={envelope} />
+            </section>
+          ) : null}
+
           <section className="panel platform-next-steps">
             <div className="panel-heading">
               <div>
@@ -135,7 +160,7 @@ export function PlatformStudyPage() {
 
             <div className="platform-actions">
               <button type="button" className="primary-action" onClick={bindToFloorPlanScenario}>
-                Vincular análisis al escenario de plano
+                Vincular análisis + envolvente al escenario
               </button>
               <Link className="secondary-action" to="/floor-plan">
                 <DraftingCompass size={16} aria-hidden="true" />
@@ -148,6 +173,10 @@ export function PlatformStudyPage() {
                 <div>
                   <dt>urbanism_analysis_id</dt>
                   <dd>{scenarioLink.urbanism_analysis_id}</dd>
+                </div>
+                <div>
+                  <dt>envelope_id</dt>
+                  <dd>{scenarioLink.envelope_id ?? "—"}</dd>
                 </div>
                 <div>
                   <dt>api_version</dt>

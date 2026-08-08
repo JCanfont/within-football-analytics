@@ -4073,3 +4073,86 @@ button.analysis-card:disabled {
   margin: 8px 0 0;
   padding-left: 18px;
 }
+
+.envelope-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.envelope-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.8fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.envelope-svg {
+  width: 100%;
+  min-height: 300px;
+  border: 1px solid #d5dde7;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.envelope-legend {
+  fill: #475569;
+  font-size: 10px;
+}
+
+.envelope-side {
+  display: grid;
+  gap: 12px;
+}
+
+.envelope-warnings,
+.envelope-constraints {
+  display: grid;
+  gap: 8px;
+}
+
+.envelope-warnings {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.envelope-warnings h3,
+.envelope-constraints h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 15px;
+}
+
+.envelope-warnings ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.envelope-constraints table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.envelope-constraints th,
+.envelope-constraints td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5eaf0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.envelope-note {
+  margin-top: 4px;
+  color: #5b677a;
+  font-size: 12px;
+}
+
+@media (max-width: 960px) {
+  .envelope-layout {
+    grid-template-columns: 1fr;
+  }
+}

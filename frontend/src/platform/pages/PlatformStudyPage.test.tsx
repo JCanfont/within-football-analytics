@@ -22,13 +22,14 @@ describe("PlatformStudyPage", () => {
       expect(screen.getByRole("heading", { name: "Panel urbanístico" })).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Edificabilidad/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Edificabilidad/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: /Envolvente edificable/i })).toBeInTheDocument();
+    expect(screen.getByText(/Restricciones trazables/i)).toBeInTheDocument();
     expect(screen.getAllByText("unknown").length).toBeGreaterThan(0);
-    expect(screen.getByText(/Parcela mínima/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /Vincular análisis al escenario de plano/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Vincular análisis \+ envolvente al escenario/i }));
     expect(screen.getAllByText("ua-fixture-cat-001").length).toBeGreaterThan(0);
-    expect(screen.getByText(/parameters_hash/i)).toBeInTheDocument();
+    expect(screen.getByText(/env-ua-fixture-cat-001/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Abrir planos \/ AutoCAD DXF/i })).toHaveAttribute(
       "href",
       "/floor-plan",

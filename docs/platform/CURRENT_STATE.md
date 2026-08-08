@@ -35,3 +35,10 @@ Capas DXF: `A-WALL`, `A-DOOR`, `A-GLAZ`, `A-FURN`, `A-FLOR-APPL`, `A-FLOR-SANR`,
 - Cliente HTTP + fixtures OpenAPI v1 (consumo).
 - Panel Urbanismo (lectura de análisis + confianza/fuentes).
 - Vínculo estudio: `urbanism_analysis_id` + snapshot de parámetros → escenario de plano.
+
+## Nuevo en P2 plataforma
+- `BuildingEnvelopeGenerator` (`frontend/src/platform/services/buildingEnvelopeGenerator.ts`).
+- Huella máxima a partir de retranqueos, ocupación, edificabilidad, altura/plantas.
+- Trazabilidad `constraint → urban_parameter → source_refs` en UI (`EnvelopePanel`).
+- Escenario guarda también `envelope_id`.
+- Avisos si parámetros `unknown`/`conflict` (sin defaults silenciosos).

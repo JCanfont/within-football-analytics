@@ -102,4 +102,5 @@ export type DesignScenarioUrbanLink = {
   parameters_snapshot: UrbanParameter[];
   parameters_hash: string;
   overrides: ScenarioUrbanOverride[];
+  envelope_id?: string | null;
 };
