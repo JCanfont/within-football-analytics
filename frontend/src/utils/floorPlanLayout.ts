@@ -11,6 +11,7 @@ import type {
   WallSide,
   WindowSpec,
 } from "../types/floorPlan";
+import { placeFixtures } from "./floorPlanFixtures";
 import { chooseScale, orientationToNorthAngle } from "./floorPlanScale";
 
 function clamp(value: number, min: number, max: number): number {
@@ -70,6 +71,7 @@ function buildDescription(answers: FloorPlanAnswers, widthM: number, depthM: num
     `Circulaciones: ${halls}.`,
     `Carpintería de paso: ${doors}.`,
     `Representación técnica a ${scale} (escala de proyecto de vivienda habitual). Cotas en metros. Norte indicado según orientación declarada.`,
+    "Equipamiento dibujado: camas y armarios en dormitorios; encimera, fregadero, placa y hueco de frigorífico en cocina; inodoro, lavabo y ducha/bañera en baños; sofá y mesa de comedor en salón.",
     answers.floorLevels === "duplex"
       ? "Dúplex: se representa la planta baja con indicación de núcleo de escalera; la planta alta se resume en la memoria descriptiva."
       : "Vivienda de una sola planta: distribución completa en la planta representada.",
@@ -334,6 +336,7 @@ export function buildFloorPlan(answers: FloorPlanAnswers): FloorPlanModel {
   const scale = chooseScale(safeArea, Math.max(widthM, depthM));
   const rooms = placeRooms(normalized, widthM, depthM);
   const openings = openingsFromAnswers(normalized, widthM, depthM, rooms);
+  const fixtures = placeFixtures(rooms, normalized);
 
   return {
     answers: normalized,
@@ -342,6 +345,7 @@ export function buildFloorPlan(answers: FloorPlanAnswers): FloorPlanModel {
     depthM,
     rooms,
     openings,
+    fixtures,
     dimensions: [
       {
         id: "dim-width",

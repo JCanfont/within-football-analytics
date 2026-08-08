@@ -1,5 +1,6 @@
 import type { FloorPlanModel, PlannedOpening, WallSide } from "../types/floorPlan";
 import { metersToPaperMm, scaleLabel } from "../utils/floorPlanScale";
+import { FloorPlanFixtures } from "./FloorPlanFixtures";
 
 type Props = {
   model: FloorPlanModel;
@@ -158,15 +159,15 @@ export function FloorPlanDrawing({ model }: Props) {
             return (
               <g key={room.id}>
                 <rect x={x} y={y} width={w} height={h} fill={fill} stroke="#334155" strokeWidth={0.9} />
-                <text x={x + w / 2} y={y + h / 2 - 3} textAnchor="middle" className="fp-room-label">
+                <text x={x + w / 2} y={y + 8} textAnchor="middle" className="fp-room-label">
                   {room.label.split("\n")[0]}
                 </text>
                 {room.label.includes("\n") ? (
-                  <text x={x + w / 2} y={y + h / 2 + 7} textAnchor="middle" className="fp-room-sub">
+                  <text x={x + w / 2} y={y + 15} textAnchor="middle" className="fp-room-sub">
                     {room.label.split("\n")[1]}
                   </text>
                 ) : null}
-                <text x={x + w / 2} y={y + h / 2 + (room.label.includes("\n") ? 16 : 9)} textAnchor="middle" className="fp-room-area">
+                <text x={x + w / 2} y={y + (room.label.includes("\n") ? 22 : 16)} textAnchor="middle" className="fp-room-area">
                   {room.areaM2.toFixed(1)} m²
                 </text>
                 {room.kind === "escalera" ? (
@@ -187,6 +188,8 @@ export function FloorPlanDrawing({ model }: Props) {
               </g>
             );
           })}
+
+        <FloorPlanFixtures fixtures={model.fixtures} mm={mm} />
 
         {hasTerrace
           ? model.rooms

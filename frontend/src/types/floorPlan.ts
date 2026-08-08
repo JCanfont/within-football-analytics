@@ -97,6 +97,39 @@ export type DimensionLine = {
   label: string;
 };
 
+export type FixtureKind =
+  | "cama"
+  | "mesilla"
+  | "armario"
+  | "encimera"
+  | "fregadero"
+  | "placa"
+  | "frigorifico"
+  | "lavadora"
+  | "inodoro"
+  | "lavabo"
+  | "ducha"
+  | "banera"
+  | "sofa"
+  | "mesa_comedor"
+  | "silla";
+
+export type PlannedFixture = {
+  id: string;
+  kind: FixtureKind;
+  roomId: string;
+  label: string;
+  /** Bounding box in model meters (same coords as rooms). */
+  rect: Rect;
+  /** Optional rotation in degrees (0 = aligned to axes). */
+  rotationDeg?: number;
+  /** Extra drawing hints for CAD symbols. */
+  meta?: {
+    bedSize?: "individual" | "doble";
+    seatCount?: number;
+  };
+};
+
 export type FloorPlanModel = {
   answers: FloorPlanAnswers;
   scale: "1:50" | "1:100";
@@ -104,6 +137,7 @@ export type FloorPlanModel = {
   depthM: number;
   rooms: PlannedRoom[];
   openings: PlannedOpening[];
+  fixtures: PlannedFixture[];
   dimensions: DimensionLine[];
   northAngleDeg: number;
   title: string;

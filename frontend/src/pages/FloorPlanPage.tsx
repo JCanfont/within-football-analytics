@@ -569,7 +569,11 @@ export function FloorPlanPage() {
                   </div>
                   <div>
                     <dt>Capas CAD</dt>
-                    <dd>A-WALL · A-DOOR · A-GLAZ · A-ANNO-*</dd>
+                    <dd>A-WALL · A-FURN · A-FLOR-APPL · A-FLOR-SANR</dd>
+                  </div>
+                  <div>
+                    <dt>Equipamiento</dt>
+                    <dd>{model.fixtures.length} bloques</dd>
                   </div>
                 </dl>
                 <button

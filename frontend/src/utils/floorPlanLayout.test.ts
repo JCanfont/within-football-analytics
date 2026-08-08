@@ -31,8 +31,20 @@ describe("buildFloorPlan", () => {
     expect(model.rooms.filter((room) => room.kind === "dormitorio")).toHaveLength(2);
     expect(model.openings.some((opening) => opening.type === "puerta" && opening.label === "ENTRADA")).toBe(true);
     expect(model.openings.some((opening) => opening.type === "ventana")).toBe(true);
+    expect(model.fixtures.some((fixture) => fixture.kind === "cama")).toBe(true);
+    expect(model.fixtures.some((fixture) => fixture.kind === "frigorifico")).toBe(true);
+    expect(model.fixtures.some((fixture) => fixture.kind === "ducha")).toBe(true);
+    expect(model.fixtures.some((fixture) => fixture.kind === "encimera")).toBe(true);
     expect(model.description.length).toBeGreaterThan(3);
     expect(model.title).toContain("Finca urbana");
+  });
+
+  it("places a bathtub when the bathroom fixture is banera", () => {
+    const answers = createDefaultAnswers();
+    answers.bathrooms = [{ id: "bano-1", fixture: "banera" }];
+    const model = buildFloorPlan(answers);
+    expect(model.fixtures.some((fixture) => fixture.kind === "banera")).toBe(true);
+    expect(model.fixtures.some((fixture) => fixture.kind === "ducha")).toBe(false);
   });
 
   it("marks stair core for duplex dwellings", () => {

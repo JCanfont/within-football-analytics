@@ -13,9 +13,14 @@ describe("buildFloorPlanDxf", () => {
     expect(dxf).toContain("A-WALL");
     expect(dxf).toContain("A-DOOR");
     expect(dxf).toContain("A-GLAZ");
+    expect(dxf).toContain("A-FURN");
+    expect(dxf).toContain("A-FLOR-APPL");
+    expect(dxf).toContain("A-FLOR-SANR");
     expect(dxf).toContain("A-ANNO-DIMS");
     expect(dxf).toContain("LWPOLYLINE");
     expect(dxf).toContain("ENTRADA");
+    expect(dxf).toContain("FRIGO");
+    expect(dxf).toContain("DUCHA");
     expect(dxf).toContain("ESCALA");
     expect(dxf.trim().endsWith("EOF")).toBe(true);
     expect(floorPlanDxfFilename(model)).toMatch(/\.dxf$/);

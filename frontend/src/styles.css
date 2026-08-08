@@ -3857,3 +3857,9 @@ button.analysis-card:disabled {
   width: 100%;
   justify-content: center;
 }
+
+.fp-fixture-label {
+  fill: #475569;
+  font-size: 4.5px;
+  font-weight: 700;
+}

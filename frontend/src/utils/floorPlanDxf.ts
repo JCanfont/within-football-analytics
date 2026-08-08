@@ -1,4 +1,5 @@
-import type { FloorPlanModel, PlannedOpening, PlannedRoom, WallSide } from "../types/floorPlan";
+import type { FloorPlanModel, PlannedFixture, PlannedOpening, PlannedRoom, WallSide } from "../types/floorPlan";
+import { fixtureCadLayer } from "./floorPlanFixtures";
 
 /**
  * Automated AutoCAD output (DXF R2010 / AC1024).
@@ -18,6 +19,9 @@ const LAYERS: DxfLayer[] = [
   { name: "A-DOOR", color: 3 },
   { name: "A-GLAZ", color: 4 },
   { name: "A-FLOR-IDEN", color: 2 },
+  { name: "A-FURN", color: 30 },
+  { name: "A-FLOR-APPL", color: 5 },
+  { name: "A-FLOR-SANR", color: 4 },
   { name: "A-ANNO-TEXT", color: 7 },
   { name: "A-ANNO-TTLB", color: 7 },
   { name: "A-ANNO-DIMS", color: 1 },
@@ -575,6 +579,116 @@ function drawOpenings(dxf: DxfBuilder, model: FloorPlanModel) {
   }
 }
 
+function fixtureCadBox(model: FloorPlanModel, fixture: PlannedFixture) {
+  const [x, yTop] = toCad(model, fixture.rect.x, fixture.rect.y);
+  const y = yTop - fixture.rect.h;
+  return {
+    x,
+    y,
+    w: fixture.rect.w,
+    h: fixture.rect.h,
+    cx: x + fixture.rect.w / 2,
+    cy: y + fixture.rect.h / 2,
+  };
+}
+
+function drawFixtures(dxf: DxfBuilder, model: FloorPlanModel) {
+  for (const fixture of model.fixtures) {
+    const layer = fixtureCadLayer(fixture.kind);
+    const b = fixtureCadBox(model, fixture);
+
+    dxf.lwpolyline(
+      layer,
+      [
+        [b.x, b.y],
+        [b.x + b.w, b.y],
+        [b.x + b.w, b.y + b.h],
+        [b.x, b.y + b.h],
+      ],
+      true,
+    );
+
+    if (fixture.kind === "cama") {
+      // Headboard + pillow lines
+      dxf.line(layer, b.x, b.y + b.h * 0.88, b.x + b.w, b.y + b.h * 0.88);
+      dxf.lwpolyline(
+        layer,
+        [
+          [b.x + b.w * 0.08, b.y + b.h * 0.7],
+          [b.x + b.w * 0.42, b.y + b.h * 0.7],
+          [b.x + b.w * 0.42, b.y + b.h * 0.85],
+          [b.x + b.w * 0.08, b.y + b.h * 0.85],
+        ],
+        true,
+      );
+      dxf.lwpolyline(
+        layer,
+        [
+          [b.x + b.w * 0.58, b.y + b.h * 0.7],
+          [b.x + b.w * 0.92, b.y + b.h * 0.7],
+          [b.x + b.w * 0.92, b.y + b.h * 0.85],
+          [b.x + b.w * 0.58, b.y + b.h * 0.85],
+        ],
+        true,
+      );
+      dxf.text(layer, b.cx, b.cy, 0.12, fixture.label, 0, true);
+    } else if (fixture.kind === "frigorifico") {
+      dxf.line(layer, b.x + 0.05, b.cy, b.x + b.w - 0.05, b.cy);
+      dxf.text(layer, b.cx, b.cy - 0.12, 0.11, "FRIGO", 0, true);
+    } else if (fixture.kind === "fregadero") {
+      dxf.circle(layer, b.cx - b.w * 0.2, b.cy, Math.min(b.w, b.h) * 0.22);
+      dxf.circle(layer, b.cx + b.w * 0.2, b.cy, Math.min(b.w, b.h) * 0.22);
+      dxf.text(layer, b.cx, b.y - 0.08, 0.1, "FREG.", 0, true);
+    } else if (fixture.kind === "placa") {
+      const r = Math.min(b.w, b.h) * 0.12;
+      dxf.circle(layer, b.cx - b.w * 0.22, b.cy - b.h * 0.18, r);
+      dxf.circle(layer, b.cx + b.w * 0.22, b.cy - b.h * 0.18, r);
+      dxf.circle(layer, b.cx - b.w * 0.22, b.cy + b.h * 0.18, r);
+      dxf.circle(layer, b.cx + b.w * 0.22, b.cy + b.h * 0.18, r);
+      dxf.text(layer, b.cx, b.y - 0.08, 0.1, "PLACA", 0, true);
+    } else if (fixture.kind === "encimera") {
+      dxf.text(layer, b.cx, b.cy, 0.11, "ENCIMERA", 0, true);
+    } else if (fixture.kind === "lavadora") {
+      dxf.circle(layer, b.cx, b.cy, Math.min(b.w, b.h) * 0.28);
+      dxf.text(layer, b.cx, b.y - 0.08, 0.1, "LAVAD.", 0, true);
+    } else if (fixture.kind === "inodoro") {
+      dxf.lwpolyline(
+        layer,
+        [
+          [b.x, b.y + b.h * 0.72],
+          [b.x + b.w, b.y + b.h * 0.72],
+          [b.x + b.w, b.y + b.h],
+          [b.x, b.y + b.h],
+        ],
+        true,
+      );
+      dxf.circle(layer, b.cx, b.y + b.h * 0.38, Math.min(b.w, b.h) * 0.28);
+      dxf.text(layer, b.cx, b.y - 0.08, 0.1, "WC", 0, true);
+    } else if (fixture.kind === "lavabo") {
+      dxf.circle(layer, b.cx, b.cy, Math.min(b.w, b.h) * 0.28);
+      dxf.text(layer, b.cx, b.y - 0.08, 0.1, "LAVABO", 0, true);
+    } else if (fixture.kind === "ducha") {
+      dxf.line(layer, b.x, b.y, b.x + b.w, b.y + b.h);
+      dxf.line(layer, b.x + b.w, b.y, b.x, b.y + b.h);
+      dxf.circle(layer, b.x + b.w * 0.78, b.y + b.h * 0.78, 0.06);
+      dxf.text(layer, b.cx, b.cy, 0.11, "DUCHA", 0, true);
+    } else if (fixture.kind === "banera") {
+      dxf.circle(layer, b.x + 0.2, b.cy, Math.min(0.18, b.h * 0.35));
+      dxf.text(layer, b.cx, b.cy, 0.11, "BANERA", 0, true);
+    } else if (fixture.kind === "sofa") {
+      dxf.line(layer, b.x, b.y + b.h * 0.7, b.x + b.w, b.y + b.h * 0.7);
+      dxf.text(layer, b.cx, b.cy, 0.11, "SOFA", 0, true);
+    } else if (fixture.kind === "mesa_comedor") {
+      dxf.text(layer, b.cx, b.cy, 0.11, "MESA", 0, true);
+    } else if (fixture.kind === "armario") {
+      dxf.line(layer, b.cx, b.y + 0.05, b.cx, b.y + b.h - 0.05);
+      dxf.text(layer, b.cx, b.cy, 0.1, "ARM.", 0, true);
+    } else if (fixture.kind === "mesilla") {
+      dxf.text(layer, b.cx, b.cy, 0.09, "MES.", 0, true);
+    }
+  }
+}
+
 function drawDimensions(dxf: DxfBuilder, model: FloorPlanModel) {
   const y = -0.7;
   dxf.line("A-ANNO-DIMS", 0, y, model.widthM, y);
@@ -635,6 +749,7 @@ function drawNorthAndTitle(dxf: DxfBuilder, model: FloorPlanModel) {
 export function buildFloorPlanDxf(model: FloorPlanModel): string {
   const dxf = new DxfBuilder();
   drawWalls(dxf, model);
+  drawFixtures(dxf, model);
   drawOpenings(dxf, model);
   drawDimensions(dxf, model);
   drawNorthAndTitle(dxf, model);
