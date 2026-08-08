@@ -129,4 +129,22 @@ describe("flashscoreWatch", () => {
       start_time: "2026-08-08T17:00:00Z",
     })], now)).toBeNull();
   });
+
+  it("does not activate signals before kickoff", () => {
+    const now = Date.parse("2026-08-08T17:50:00Z");
+    expect(liveRefreshIntervalMs([baseMatch({
+      favorite_odds: 1.4,
+      status: "scheduled",
+      start_time: "2026-08-08T18:00:00Z",
+    })], now)).toBeNull();
+  });
+
+  it("activates 1-minute polling once the match has started", () => {
+    const now = Date.parse("2026-08-08T18:05:00Z");
+    expect(liveRefreshIntervalMs([baseMatch({
+      favorite_odds: 1.4,
+      status: "scheduled",
+      start_time: "2026-08-08T18:00:00Z",
+    })], now)).toBe(FAST_LIVE_REFRESH_MS);
+  });
 });

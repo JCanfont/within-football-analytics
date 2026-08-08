@@ -103,7 +103,10 @@ export function withEarlyGoalFlags(match: FlashscoreMatch): FlashscoreMatch {
   };
 }
 
-export function isAlertEligible(match: FlashscoreMatch) {
+export function isAlertEligible(match: FlashscoreMatch, now = Date.now()) {
+  if (!hasMatchStarted(match, now)) {
+    return false;
+  }
   if (match.early_favorite_goal) {
     return true;
   }
@@ -173,11 +176,40 @@ export function isMatchFinished(match: FlashscoreMatch, now = Date.now()): boole
   return now >= start + FINISHED_WITHOUT_CLOCK_MS;
 }
 
+export function hasMatchStarted(match: FlashscoreMatch, now = Date.now()): boolean {
+  if (match.minute != null) {
+    return true;
+  }
+  const status = (match.status || "").toLowerCase();
+  if (
+    status.includes("live") ||
+    status.includes("1st") ||
+    status.includes("2nd") ||
+    status.includes("half") ||
+    status.includes("progress") ||
+    status.includes("inplay") ||
+    status.includes("in play")
+  ) {
+    return true;
+  }
+  if (!match.start_time) {
+    return false;
+  }
+  const start = new Date(match.start_time).getTime();
+  if (!Number.isFinite(start)) {
+    return false;
+  }
+  return now >= start;
+}
+
 export function needsLivePoll(match: FlashscoreMatch, now = Date.now()): boolean {
   if (match.favorite_odds == null || match.favorite_odds > LIST_ODDS_THRESHOLD) {
     return false;
   }
   if (isMatchFinished(match, now)) {
+    return false;
+  }
+  if (!hasMatchStarted(match, now)) {
     return false;
   }
   if (match.minute != null) {
@@ -190,10 +222,10 @@ export function needsLivePoll(match: FlashscoreMatch, now = Date.now()): boolean
   if (!Number.isFinite(start)) {
     return false;
   }
-  return start - 20 * 60_000 <= now && now < start + FINISHED_WITHOUT_CLOCK_MS;
+  return now < start + FINISHED_WITHOUT_CLOCK_MS;
 }
 
-/** 1 min before/at minute 30; 5 min afterwards while still live; null when nothing active. */
+/** 1 min after kickoff until minute 30; 5 min afterwards while still live; null when nothing active. */
 export function liveRefreshIntervalMs(matches: FlashscoreMatch[], now = Date.now()): number | null {
   const active = matches.filter((match) => needsLivePoll(match, now));
   if (active.length === 0) {
@@ -221,7 +253,7 @@ export function isCriticalSignalWatch(match: FlashscoreMatch, now = Date.now()):
   if (!Number.isFinite(start)) {
     return false;
   }
-  return start <= now + 20 * 60_000 && start >= now - 45 * 60_000;
+  return now >= start && now <= start + 45 * 60_000;
 }
 
 function earlyGoalRank(match: FlashscoreMatch) {

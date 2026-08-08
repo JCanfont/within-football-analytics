@@ -165,6 +165,8 @@ def with_early_goal_flags(match: FlashscoreMatchRead) -> FlashscoreMatchRead:
 
 
 def is_alert_eligible(match: FlashscoreMatchRead) -> bool:
+    if not has_match_started(match):
+        return False
     if match.early_favorite_goal:
         return True
     if (
@@ -217,12 +219,30 @@ def is_match_finished(match: FlashscoreMatchRead, now: datetime | None = None) -
     return current >= start + FINISHED_WITHOUT_CLOCK
 
 
+def has_match_started(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
+    """Signals only after kickoff — never in the pre-match window."""
+    if match.minute is not None:
+        return True
+    status = (match.status or "").lower()
+    if any(token in status for token in ("live", "1st", "2nd", "half", "progress", "inplay", "in play")):
+        return True
+    if match.start_time is None:
+        return False
+    current = now or datetime.now(UTC)
+    start = match.start_time
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=UTC)
+    return current >= start
+
+
 def needs_live_poll(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
     """True while a ≤1.60 favorite still needs live Flashscore updates."""
     if match.favorite_odds is None or match.favorite_odds > LIST_ODDS_THRESHOLD:
         return False
     current = now or datetime.now(UTC)
     if is_match_finished(match, current):
+        return False
+    if not has_match_started(match, current):
         return False
     if match.minute is not None:
         return True
@@ -231,11 +251,11 @@ def needs_live_poll(match: FlashscoreMatchRead, now: datetime | None = None) -> 
     start = match.start_time
     if start.tzinfo is None:
         start = start.replace(tzinfo=UTC)
-    return start - timedelta(minutes=20) <= current < start + FINISHED_WITHOUT_CLOCK
+    return current < start + FINISHED_WITHOUT_CLOCK
 
 
 def needs_fast_live_poll(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
-    """1-minute cadence until minute 30 (or kickoff window before first minute arrives)."""
+    """1-minute cadence until minute 30 (only after the match has started)."""
     if not needs_live_poll(match, now):
         return False
     if match.early_favorite_goal or match.alert_eligible:
@@ -248,7 +268,7 @@ def needs_fast_live_poll(match: FlashscoreMatchRead, now: datetime | None = None
     start = match.start_time
     if start.tzinfo is None:
         start = start.replace(tzinfo=UTC)
-    return start - timedelta(minutes=20) <= current <= start + timedelta(minutes=45)
+    return current <= start + timedelta(minutes=45)
 
 
 def run_flashscore_signal_tick(db: Session, settings: Settings | None = None) -> FlashscoreTickResult:

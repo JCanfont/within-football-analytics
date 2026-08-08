@@ -14,6 +14,7 @@ import {
   LIST_ODDS_THRESHOLD,
   SLOW_LIVE_REFRESH_MS,
   clearFlashscoreWatch,
+  hasMatchStarted,
   isMatchFinished,
   liveRefreshIntervalMs,
   mergeFlashscoreLiveBoard,
@@ -456,6 +457,7 @@ function alertLabel(match: FlashscoreMatch, alerted: boolean) {
   if (match.early_favorite_goal || match.alert_eligible) return "Gol favorito <30'";
   if (match.early_goal) return "Gol rival/otro <30'";
   if (isMatchFinished(match)) return "Acabado";
+  if (!hasMatchStarted(match)) return "Pendiente de inicio";
   if (!match.favorite_team) return "Sin cuota ≤ 1,60";
   if (match.favorite_odds != null && match.favorite_odds > ALERT_ODDS_THRESHOLD) return "Listado (aviso ≤ 1,50)";
   if (match.minute == null) return "Esperando Flashscore";

@@ -805,7 +805,7 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "Capturar cuotas ≤ 1,60" }));
     expect(await screen.findByText("1X2")).toBeInTheDocument();
     expect(screen.getAllByText("1,45").length).toBeGreaterThan(0);
-    expect(screen.getByText("Esperando Flashscore")).toBeInTheDocument();
+    expect(screen.getByText("Pendiente de inicio")).toBeInTheDocument();
     expect(screen.getByText("Gol <30'")).toBeInTheDocument();
   }, 30000);
 
