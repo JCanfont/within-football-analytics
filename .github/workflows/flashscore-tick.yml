@@ -1,8 +1,8 @@
 name: Flashscore alert tick
 
-# Vercel Hobby cannot run sub-daily crons. GitHub schedules are at best every
-# 5 minutes, so each run checks once per minute for five minutes to approximate
-# a one-minute alert loop without leaving the website open.
+# Vercel Hobby cannot run sub-daily crons. Keep this to one call every 5 minutes
+# so FlashScore4 RapidAPI quota is not exhausted; the page can still refresh
+# more often using a short server-side cache.
 on:
   schedule:
     - cron: "*/5 * * * *"
@@ -11,9 +11,8 @@ on:
 jobs:
   tick:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
-      - name: Call Flashscore tick every minute
+      - name: Call Flashscore tick
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           APP_URL: ${{ secrets.APP_URL }}
@@ -25,13 +24,7 @@ jobs:
           fi
           BASE_URL="${APP_URL:-https://within-football-analytics.vercel.app}"
           BASE_URL="${BASE_URL%/}"
-          for minute in 1 2 3 4 5; do
-            echo "Tick ${minute}/5"
-            curl -fsS \
-              -H "Authorization: Bearer ${CRON_SECRET}" \
-              "${BASE_URL}/api/flashscore/tick"
-            echo
-            if [ "${minute}" -lt 5 ]; then
-              sleep 60
-            fi
-          done
+          curl -fsS \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${BASE_URL}/api/flashscore/tick"
+          echo
