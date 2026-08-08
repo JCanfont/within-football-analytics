@@ -131,6 +131,28 @@ def test_signal_tick_skips_flashscore_when_slow_window_was_just_polled(monkeypat
     assert "5 min" in result.message
 
 
+def test_signals_wait_until_kickoff() -> None:
+    now = datetime(2026, 8, 8, 17, 50, tzinfo=UTC)
+    upcoming = FlashscoreMatchRead(
+        event_id="soon",
+        competition="LaLiga",
+        home_team="A",
+        away_team="B",
+        status="scheduled",
+        favorite_odds=1.4,
+        favorite_team="A",
+        favorite_side="home",
+        start_time=now + timedelta(minutes=10),
+    )
+    started = upcoming.model_copy(update={"start_time": now - timedelta(minutes=5)})
+    assert flashscore_watch.has_match_started(upcoming, now) is False
+    assert flashscore_watch.needs_live_poll(upcoming, now) is False
+    assert flashscore_watch.needs_fast_live_poll(upcoming, now) is False
+    assert flashscore_watch.has_match_started(started, now) is True
+    assert flashscore_watch.needs_live_poll(started, now) is True
+    assert flashscore_watch.needs_fast_live_poll(started, now) is True
+
+
 def test_finished_and_stale_scheduled_matches_do_not_need_live_poll() -> None:
     now = datetime(2026, 8, 8, 20, 0, tzinfo=UTC)
     finished = FlashscoreMatchRead(
@@ -213,11 +235,12 @@ def test_signal_tick_skips_finished_watchlist(monkeypatch) -> None:
 
 
 def test_signal_tick_uses_flashscore_ultra_watchlist(monkeypatch) -> None:
+    now = datetime.now(UTC)
     with SessionLocal() as db:
         flashscore_watch.save_flashscore_watch(
             db,
             day=0,
-            captured_at=datetime.now(UTC),
+            captured_at=now,
             matches=[
                 FlashscoreMatchRead(
                     event_id="fs-1",
@@ -230,6 +253,7 @@ def test_signal_tick_uses_flashscore_ultra_watchlist(monkeypatch) -> None:
                     favorite_side="home",
                     favorite_team="Getafe",
                     favorite_odds=1.4,
+                    start_time=now - timedelta(minutes=5),
                 )
             ],
         )
