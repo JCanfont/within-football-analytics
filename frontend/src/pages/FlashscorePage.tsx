@@ -120,7 +120,7 @@ export function FlashscorePage() {
         <FlashscoreMetric
           icon={RefreshCw}
           label="Actualizacion"
-          value={autoRefresh && day === 0 ? "1 min" : "Manual"}
+          value={autoRefresh && day === 0 ? "5 min" : "Manual"}
           detail={lastRefresh ? `Ultima ${formatTime(lastRefresh)}` : "Sin capturas"}
         />
       </div>
@@ -146,7 +146,7 @@ export function FlashscorePage() {
               onClick={() => setAutoRefresh((current) => !current)}
             >
               <RefreshCw size={15} aria-hidden="true" />
-              {autoRefresh ? "Cada 1 min" : "Auto desactivado"}
+              {autoRefresh ? "Cada 5 min" : "Auto desactivado"}
             </button>
             <button className="row-action" type="button" onClick={refresh} disabled={isLoading}>
               <RefreshCw size={15} aria-hidden="true" />
@@ -296,7 +296,8 @@ function readAlertedEvents() {
 }
 
 function readAutoRefresh() {
-  return localStorage.getItem(AUTO_REFRESH_KEY) !== "false";
+  // Default off to protect RapidAPI request limits; user can enable manually.
+  return localStorage.getItem(AUTO_REFRESH_KEY) === "true";
 }
 
 function notifyBrowser(match: FlashscoreMatch) {
