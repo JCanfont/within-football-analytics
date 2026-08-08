@@ -1,11 +1,11 @@
 name: Flashscore alert tick
 
-# SofaScore-only background tick (no RapidAPI). Needs a captured watchlist
-# synced from the Flashscore page and CRAWLORA_API_KEY on Vercel.
+# Flashscore Ultra background tick. Needs a captured ≤1.60 watchlist
+# synced from the Flashscore page and RAPIDAPI_KEY on Vercel.
 on:
   schedule:
-    # Every 2 minutes — keep signal latency low for the early-goal edge.
-    - cron: "*/2 * * * *"
+    # Every minute — early window uses each tick; after 30' the API skips to 5 min cadence.
+    - cron: "* * * * *"
   workflow_dispatch:
 
 jobs:

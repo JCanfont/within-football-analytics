@@ -225,6 +225,7 @@ class FlashscoreWatchState(BaseModel):
     day: int = 0
     captured_at: datetime | None = None
     updated_at: datetime | None = None
+    last_live_poll_at: datetime | None = None
     matches: list[FlashscoreMatchRead] = Field(default_factory=list)
     message: str = ""
 
@@ -233,6 +234,7 @@ class FlashscoreWatchUpsertRequest(BaseModel):
     day: int = 0
     captured_at: datetime | None = None
     matches: list[FlashscoreMatchRead] = Field(default_factory=list)
+    last_live_poll_at: datetime | None = None
 
 
 class FlashscoreTickResult(BaseModel):

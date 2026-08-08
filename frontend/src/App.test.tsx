@@ -563,6 +563,14 @@ describe("App", () => {
       matches: [],
       message: "ok",
     });
+    mockedApi.fetchFlashscoreLiveBoard.mockResolvedValue({
+      provider: "flashscore",
+      status: "ok",
+      message: "Live board vacio.",
+      configured: true,
+      threshold: 1.6,
+      matches: [],
+    });
     mockedApi.fetchSofaScoreLiveEvents.mockResolvedValue({
       provider: "sofascore",
       sport: "football",
@@ -795,17 +803,17 @@ describe("App", () => {
     expect(await screen.findByRole("heading", { name: "Flashscore", level: 1 })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Flashscore" })).toHaveAttribute("href", "/flashscore");
     fireEvent.click(screen.getByRole("button", { name: "Capturar cuotas ≤ 1,60" }));
-    expect(await screen.findByText("Cuota local")).toBeInTheDocument();
+    expect(await screen.findByText("1X2")).toBeInTheDocument();
     expect(screen.getAllByText("1,45").length).toBeGreaterThan(0);
-    expect(screen.getByText("Esperando SofaScore")).toBeInTheDocument();
+    expect(screen.getByText("Esperando Flashscore")).toBeInTheDocument();
     expect(screen.getByText("Gol <30'")).toBeInTheDocument();
   }, 30000);
 
-  it("emails once when SofaScore shows the low-odds team scored before minute 30", async () => {
+  it("emails once when Flashscore Ultra shows the low-odds team scored before minute 30", async () => {
     mockedApi.fetchFlashscoreMatches.mockResolvedValue({
       provider: "flashscore",
       status: "ok",
-      message: "1 partido capturado.",
+      message: "1 favorito ≤ 1.60 vigilable.",
       configured: true,
       threshold: 1.6,
       alert_threshold: 1.5,
@@ -828,33 +836,42 @@ describe("App", () => {
         alert_eligible: false,
       }],
     });
-    mockedApi.fetchSofaScoreLiveEvents.mockResolvedValue({
-      provider: "sofascore",
-      sport: "football",
-      message: "1 evento live SofaScore.",
-      events: [{
-        event_id: 501,
+    mockedApi.fetchFlashscoreLiveBoard.mockResolvedValue({
+      provider: "flashscore",
+      status: "ok",
+      message: "Live board Flashscore Ultra.",
+      configured: true,
+      threshold: 1.6,
+      matches: [{
+        event_id: "flash-alert-1",
         start_time: "2026-08-07T20:00:00Z",
-        status: "inprogress",
-        minute: 24,
         competition: "LaLiga",
         home_team: "Getafe",
         away_team: "Celta",
+        status: "inprogress",
+        minute: 24,
         home_score: 1,
         away_score: 0,
+        home_odds: 1.45,
+        draw_odds: 4.2,
+        away_odds: 7.5,
+        favorite_side: "home",
+        favorite_team: "Getafe",
+        favorite_odds: 1.45,
+        alert_eligible: false,
       }],
     });
 
     renderApp("/flashscore");
     fireEvent.click(await screen.findByRole("button", { name: "Capturar cuotas ≤ 1,60" }));
-    expect(await screen.findByText("Esperando SofaScore")).toBeInTheDocument();
+    expect(await screen.findByText("Esperando Flashscore")).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Actualizar resultados" })).toBeEnabled();
     });
     fireEvent.click(screen.getByRole("button", { name: "Actualizar resultados" }));
 
     await waitFor(() => {
-      expect(mockedApi.fetchSofaScoreLiveEvents).toHaveBeenCalled();
+      expect(mockedApi.fetchFlashscoreLiveBoard).toHaveBeenCalled();
       expect(mockedApi.sendFlashscoreGoalEmail).toHaveBeenCalledWith(expect.objectContaining({
         event_id: "flash-alert-1",
         favorite_team: "Getafe",

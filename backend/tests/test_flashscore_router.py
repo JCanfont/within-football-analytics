@@ -16,7 +16,7 @@ def test_flashscore_tick_requires_cron_authorization(monkeypatch) -> None:
     assert error.value.status_code == 401
 
 
-def test_flashscore_tick_uses_sofascore_signal_service(monkeypatch) -> None:
+def test_flashscore_tick_uses_flashscore_signal_service(monkeypatch) -> None:
     monkeypatch.setattr(flashscore, "get_settings", lambda: SimpleNamespace(cron_secret="cron-secret"))
     monkeypatch.setattr(
         flashscore,

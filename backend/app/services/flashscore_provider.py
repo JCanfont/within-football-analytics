@@ -13,15 +13,43 @@ LIST_ODDS_THRESHOLD = 1.6
 ALERT_ODDS_THRESHOLD = 1.5
 ODDS_THRESHOLD = LIST_ODDS_THRESHOLD  # favorite marking / jornada list
 FOOTBALL_SPORT_ID = 1
-MAX_ODDS_LOOKUPS = 0  # never spend extra RapidAPI calls on per-match odds
+MAX_ODDS_LOOKUPS = 0  # list payload already includes 1X2; Ultra plan is used for live ticks
 ODDS_LOOKAHEAD = timedelta(hours=4)
-# One upstream call is reused for several minutes so a basic RapidAPI plan survives.
-CACHE_TTL = timedelta(minutes=12)
+# Odds capture can reuse a short board; live refresh uses a tighter TTL.
+CACHE_TTL = timedelta(minutes=8)
+LIVE_CACHE_TTL = timedelta(seconds=45)
 STALE_TTL = timedelta(hours=6)
 _RESULT_CACHE: dict[int, tuple[datetime, FlashscoreMatchesResult]] = {}
+_BOARD_CACHE: dict[int, tuple[datetime, list[FlashscoreMatchRead]]] = {}
+
+_NON_COMPETITIVE_TOKENS = (
+    "friendly",
+    "amistoso",
+    "women",
+    "femen",
+    "womens",
+    "women's",
+    "u15",
+    "u16",
+    "u17",
+    "u18",
+    "u19",
+    "u20",
+    "u21",
+    "u23",
+    "youth",
+    "reserve",
+    "junior",
+    "next pro",
+)
 
 
-def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> FlashscoreMatchesResult:
+def fetch_flashscore_matches(
+    day: int = 0,
+    settings: Settings | None = None,
+    *,
+    bypass_cache: bool = False,
+) -> FlashscoreMatchesResult:
     settings = settings or get_settings()
     if not settings.rapidapi_key:
         return FlashscoreMatchesResult(
@@ -32,18 +60,16 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
 
     cached = _RESULT_CACHE.get(day)
     now = datetime.now(UTC)
-    if cached and now - cached[0] < CACHE_TTL and cached[1].status == "ok":
+    if (
+        not bypass_cache
+        and cached
+        and now - cached[0] < CACHE_TTL
+        and cached[1].status == "ok"
+    ):
         return cached[1]
 
-    headers = {
-        "X-RapidAPI-Key": settings.rapidapi_key,
-        "X-RapidAPI-Host": settings.flashscore_api_host,
-        "Content-Type": "application/json",
-    }
-    base_url = f"https://{settings.flashscore_api_host}"
     try:
-        # Single request: the list payload already includes 1X2 odds, status and scores.
-        schedule_payload = _load_schedule_payload(base_url, headers, day)
+        board = _load_day_board(day, settings)
     except requests.RequestException as exc:
         if cached and cached[1].status == "ok" and now - cached[0] < STALE_TTL:
             stale = cached[1]
@@ -61,24 +87,20 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
             configured=True,
         )
 
-    matches = _parse_matches(schedule_payload)
-    enriched = []
-    for match in matches:
-        if match.home_odds is not None or match.away_odds is not None or match.draw_odds is not None:
-            enriched.append(
-                _with_odds_and_alert(match, (match.home_odds, match.draw_odds, match.away_odds))
-            )
-        else:
-            enriched.append(match)
+    enriched = [_ensure_odds_marking(match) for match in board]
     enriched.sort(key=lambda match: (match.start_time or datetime.max.replace(tzinfo=UTC), match.competition, match.home_team))
-    qualifying = sum(match.favorite_odds is not None for match in enriched)
     with_odds = sum(match.home_odds is not None or match.away_odds is not None for match in enriched)
-    listed = [match for match in enriched if match.favorite_odds is not None]
+    listed = [
+        match
+        for match in enriched
+        if match.favorite_odds is not None and _is_competitive_match(match)
+    ]
     result = FlashscoreMatchesResult(
         status="ok",
         message=(
-            f"{len(enriched)} partidos en la jornada · {with_odds} con cuotas · "
-            f"{qualifying} con cuota ≤ {LIST_ODDS_THRESHOLD:.2f}."
+            f"{len(listed)} favoritos ≤ {LIST_ODDS_THRESHOLD:.2f} vigilables "
+            f"(de {len(enriched)} en jornada · {with_odds} con alguna cuota). "
+            "Solo se guardan los ≤ 1.60; el resto no se vigila."
         ),
         configured=True,
         threshold=LIST_ODDS_THRESHOLD,
@@ -87,6 +109,60 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
     )
     _RESULT_CACHE[day] = (now, result)
     return result
+
+
+def fetch_flashscore_live_board(
+    day: int = 0,
+    settings: Settings | None = None,
+    *,
+    bypass_cache: bool = True,
+) -> list[FlashscoreMatchRead]:
+    """Full day board for live score/minute updates (not filtered by ≤1.60)."""
+    settings = settings or get_settings()
+    if not settings.rapidapi_key:
+        raise RuntimeError("Flashscore necesita RAPIDAPI_KEY.")
+    if bypass_cache:
+        _BOARD_CACHE.pop(day, None)
+    return _load_day_board(day, settings)
+
+
+def _load_day_board(
+    day: int,
+    settings: Settings,
+) -> list[FlashscoreMatchRead]:
+    cached = _BOARD_CACHE.get(day)
+    now = datetime.now(UTC)
+    # Board is always short-lived; the filtered ≤1.60 result uses CACHE_TTL separately.
+    if cached and now - cached[0] < LIVE_CACHE_TTL:
+        return cached[1]
+
+    headers = {
+        "X-RapidAPI-Key": settings.rapidapi_key,
+        "X-RapidAPI-Host": settings.flashscore_api_host,
+        "Content-Type": "application/json",
+    }
+    base_url = f"https://{settings.flashscore_api_host}"
+    schedule_payload = _load_schedule_payload(base_url, headers, day)
+    matches = [_ensure_odds_marking(match) for match in _parse_matches(schedule_payload)]
+    _BOARD_CACHE[day] = (now, matches)
+    return matches
+
+
+def _ensure_odds_marking(match: FlashscoreMatchRead) -> FlashscoreMatchRead:
+    if match.home_odds is None and match.away_odds is None and match.draw_odds is None:
+        return match
+    if match.favorite_odds is not None:
+        return match
+    return _with_odds_and_alert(match, (match.home_odds, match.draw_odds, match.away_odds))
+
+
+def _is_competitive_match(match: FlashscoreMatchRead) -> bool:
+    haystack = " ".join(
+        part
+        for part in (match.competition, match.home_team, match.away_team)
+        if part
+    ).lower()
+    return not any(token in haystack for token in _NON_COMPETITIVE_TOKENS)
 
 
 def _load_schedule_payload(base_url: str, headers: dict[str, str], day: int) -> Any:
@@ -328,7 +404,8 @@ def _extract_one_x_two(record: dict[str, Any]) -> tuple[float | None, float | No
         draw = draw or from_bookmakers[1]
         away = away or from_bookmakers[2]
     if isinstance(nested, dict):
-        home = home or _float_value(nested, "home", "1", "odds_1", "odd_1", "HOME", "avg", "average")
+        # Never treat market averages ("avg"/"average") as the home odd itself.
+        home = home or _float_value(nested, "home", "1", "odds_1", "odd_1", "HOME")
         draw = draw or _float_value(nested, "draw", "x", "X", "odds_x", "odd_x", "DRAW")
         away = away or _float_value(nested, "away", "2", "odds_2", "odd_2", "AWAY")
         # FlashScore4 often nests 1X2 as {"1": "...", "X": "...", "2": "..."} or lists under keys.
@@ -341,10 +418,11 @@ def _extract_one_x_two(record: dict[str, Any]) -> tuple[float | None, float | No
                 home = home or _float_value(market, "home", "1", "odds_1") or _coerce_odd(market.get("1"))
                 draw = draw or _float_value(market, "draw", "x", "X", "odds_x") or _coerce_odd(market.get("X") or market.get("x"))
                 away = away or _float_value(market, "away", "2", "odds_2") or _coerce_odd(market.get("2"))
-            if isinstance(market, list) and len(market) >= 3:
+            elif isinstance(market, list) and len(market) >= 3:
                 home = home or _coerce_odd(market[0])
                 draw = draw or _coerce_odd(market[1])
                 away = away or _coerce_odd(market[2])
+            # Scalar avg/average values are bookmaker means, not a 1X2 selection.
     if isinstance(nested, list) and nested and not isinstance(nested[0], dict):
         # Plain [home, draw, away] list
         if len(nested) >= 3:
