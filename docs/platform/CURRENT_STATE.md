@@ -73,3 +73,10 @@ Capas DXF: `A-WALL`, `A-DOOR`, `A-GLAZ`, `A-FURN`, `A-FLOR-APPL`, `A-FLOR-SANR`,
 - UI `OptimizerPanel` con selector de objetivo y aplicación de la alternativa recomendada al massing seleccionado.
 - Escenario guarda `optimization_id`, `optimization_objective`, `optimization_recommended_key`.
 - No usa LLM como motor geométrico.
+
+## Nuevo en P7 plataforma
+- Escena 3D derivada del modelo (`buildRenderSceneFromModel`) — no es fuente de verdad.
+- Visor 3D interactivo (`ModelViewer3D`): órbita, zoom, ortográfica, capas parcela/envolvente/edificio/patio/núcleo/cubierta.
+- `RenderJob` asíncrono con estado, preset, resolución y cámara; preview local SVG sin GPU cloud.
+- Adaptador Blender opcional (`blenderAdapter.ts`) como bridge JSON; Blender no es dependencia del núcleo BIM/planos.
+- Invalidación del render al cambiar `model_id`; escenario guarda `render_job_id` / `render_scene_id`.

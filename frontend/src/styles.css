@@ -4444,3 +4444,87 @@ button.analysis-card:disabled {
     grid-template-columns: 1fr;
   }
 }
+
+.render-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.model-viewer-3d {
+  display: grid;
+  gap: 10px;
+}
+
+.model-viewer-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+}
+
+.model-viewer-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #5b677a;
+}
+
+.model-viewer-canvas {
+  width: 100%;
+  min-height: 360px;
+  border: 1px solid #d5dde7;
+  border-radius: 12px;
+  background: #e8eef5;
+  touch-action: none;
+  cursor: grab;
+}
+
+.model-viewer-canvas:active {
+  cursor: grabbing;
+}
+
+.render-job-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 220px)) auto auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.render-job-controls label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #5b677a;
+}
+
+.render-job-controls select {
+  padding: 10px 12px;
+  border: 1px solid #d5dde7;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+}
+
+.render-job-status {
+  display: grid;
+  gap: 12px;
+}
+
+.render-preview-wrap {
+  display: grid;
+  gap: 10px;
+}
+
+.render-preview {
+  width: 100%;
+  border: 1px solid #d5dde7;
+  border-radius: 12px;
+  background: #fff;
+}
+
+@media (max-width: 1100px) {
+  .render-job-controls {
+    grid-template-columns: 1fr;
+  }
+}

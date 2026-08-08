@@ -6,6 +6,7 @@ import { EnvelopePanel } from "../components/EnvelopePanel";
 import { MassingPanel } from "../components/MassingPanel";
 import { OptimizerPanel } from "../components/OptimizerPanel";
 import { PlanSheetsPanel } from "../components/PlanSheetsPanel";
+import { RenderPanel } from "../components/RenderPanel";
 import { UrbanismPanel } from "../components/UrbanismPanel";
 import { generateArchitecturalModel } from "../services/architecturalModelGenerator";
 import { generateBuildingEnvelope } from "../services/buildingEnvelopeGenerator";
@@ -20,6 +21,7 @@ import {
   UrbanismClientError,
 } from "../services/urbanismClient";
 import type { OptimizerObjective } from "../types/optimizer";
+import type { RenderJob } from "../types/render";
 import type { DesignScenarioUrbanLink, UrbanismAnalysis } from "../types/urbanismContract";
 
 const SCENARIO_KEY = "platform.designScenario.urbanLink.v1";
@@ -28,6 +30,7 @@ const MASSING_KEY = "platform.designScenario.massing.v1";
 const ARCH_MODEL_KEY = "platform.designScenario.architecturalModel.v1";
 const PLAN_SET_KEY = "platform.designScenario.planSet.v1";
 const OPTIMIZATION_KEY = "platform.designScenario.optimization.v1";
+const RENDER_JOB_KEY = "platform.designScenario.renderJob.v1";
 
 function readScenarioLink(): DesignScenarioUrbanLink | null {
   try {
@@ -48,6 +51,7 @@ export function PlatformStudyPage() {
   const [optimizerObjective, setOptimizerObjective] = useState<OptimizerObjective>(
     () => (readScenarioLink()?.optimization_objective as OptimizerObjective | undefined) ?? "balanced",
   );
+  const [renderJob, setRenderJob] = useState<RenderJob | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const engineConfigured = useMemo(() => isUrbanismEngineConfigured(), []);
@@ -118,6 +122,11 @@ export function PlatformStudyPage() {
     });
   }, [massingStudy]);
 
+  useEffect(() => {
+    // Invalidate derived render when the architectural model changes.
+    setRenderJob(null);
+  }, [architecturalModel?.model_id]);
+
   const onAnalyze = (event: FormEvent) => {
     event.preventDefault();
     setLoading(true);
@@ -158,6 +167,8 @@ export function PlatformStudyPage() {
       optimization_id: optimization.optimization_id,
       optimization_objective: optimization.objective,
       optimization_recommended_key: optimization.recommended_massing_key,
+      render_job_id: renderJob?.job_id ?? null,
+      render_scene_id: renderJob?.scene_id ?? null,
     };
     localStorage.setItem(SCENARIO_KEY, JSON.stringify(link));
     localStorage.setItem(ENVELOPE_KEY, JSON.stringify(envelope));
@@ -168,6 +179,11 @@ export function PlatformStudyPage() {
     localStorage.setItem(ARCH_MODEL_KEY, JSON.stringify(architecturalModel));
     localStorage.setItem(PLAN_SET_KEY, JSON.stringify(planSet));
     localStorage.setItem(OPTIMIZATION_KEY, JSON.stringify(optimization));
+    if (renderJob) {
+      localStorage.setItem(RENDER_JOB_KEY, JSON.stringify(renderJob));
+    } else {
+      localStorage.removeItem(RENDER_JOB_KEY);
+    }
     setScenarioLink(link);
   };
 
@@ -175,11 +191,11 @@ export function PlatformStudyPage() {
     <section className="platform-study-page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Plataforma inmobiliaria · P6</p>
+          <p className="eyebrow">Plataforma inmobiliaria · P7</p>
           <h1>Estudio de finca</h1>
           <p className="page-lead">
-            Urbanismo → envolvente → massing → optimizador → BIM → planos 2D. El Urbanismo Engine no se
-            implementa en este repositorio.
+            Urbanismo → envolvente → massing → optimizador → BIM → planos 2D → visor 3D/render. El Urbanismo
+            Engine no se implementa en este repositorio.
           </p>
         </div>
       </header>
@@ -267,6 +283,17 @@ export function PlatformStudyPage() {
             </section>
           ) : null}
 
+          {architecturalModel && envelope ? (
+            <section className="panel">
+              <RenderPanel
+                model={architecturalModel}
+                envelope={envelope}
+                job={renderJob}
+                onJobChange={setRenderJob}
+              />
+            </section>
+          ) : null}
+
           <section className="panel platform-next-steps">
             <div className="panel-heading">
               <div>
@@ -282,7 +309,7 @@ export function PlatformStudyPage() {
 
             <div className="platform-actions">
               <button type="button" className="primary-action" onClick={bindToFloorPlanScenario}>
-                Vincular análisis + envolvente + massing + optimización + BIM + planos al escenario
+                Vincular análisis + envolvente + massing + optimización + BIM + planos + render al escenario
               </button>
               <Link className="secondary-action" to="/floor-plan">
                 <DraftingCompass size={16} aria-hidden="true" />
@@ -322,6 +349,10 @@ export function PlatformStudyPage() {
                       ? ` · rec. ${scenarioLink.optimization_recommended_key}`
                       : ""}
                   </dd>
+                </div>
+                <div>
+                  <dt>render_job_id</dt>
+                  <dd>{scenarioLink.render_job_id ?? "—"}</dd>
                 </div>
                 <div>
                   <dt>api_version</dt>
