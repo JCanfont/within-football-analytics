@@ -7,6 +7,7 @@ import requests
 
 from app.config import Settings, get_settings
 from app.schemas.api import FlashscoreMatchRead, FlashscoreMatchesResult
+from app.services.flashscore_competition_filter import is_watchable_competition
 
 
 LIST_ODDS_THRESHOLD = 1.6
@@ -21,27 +22,6 @@ LIVE_CACHE_TTL = timedelta(seconds=45)
 STALE_TTL = timedelta(hours=6)
 _RESULT_CACHE: dict[int, tuple[datetime, FlashscoreMatchesResult]] = {}
 _BOARD_CACHE: dict[int, tuple[datetime, list[FlashscoreMatchRead]]] = {}
-
-_NON_COMPETITIVE_TOKENS = (
-    "friendly",
-    "amistoso",
-    "women",
-    "femen",
-    "womens",
-    "women's",
-    "u15",
-    "u16",
-    "u17",
-    "u18",
-    "u19",
-    "u20",
-    "u21",
-    "u23",
-    "youth",
-    "reserve",
-    "junior",
-    "next pro",
-)
 FINISHED_WITHOUT_CLOCK = timedelta(minutes=105)
 
 
@@ -94,7 +74,7 @@ def fetch_flashscore_matches(
     favorites = [
         match
         for match in enriched
-        if match.favorite_odds is not None and _is_competitive_match(match)
+        if match.favorite_odds is not None and is_watchable_competition(match)
     ]
     finished = 0
     listed: list[FlashscoreMatchRead] = []
@@ -103,13 +83,18 @@ def fetch_flashscore_matches(
             finished += 1
             continue
         listed.append(match)
+    rejected = sum(
+        1
+        for match in enriched
+        if match.favorite_odds is not None and not is_watchable_competition(match)
+    )
     result = FlashscoreMatchesResult(
         status="ok",
         message=(
             f"{len(listed)} favoritos ≤ {LIST_ODDS_THRESHOLD:.2f} vigilables "
             f"(de {len(enriched)} en jornada · {with_odds} con alguna cuota · "
-            f"{finished} acabados excluidos). "
-            "Solo se guardan ≤ 1.60 no acabados; senales solo tras inicio real."
+            f"{rejected} fuera de 1ª/2ª · {finished} acabados excluidos). "
+            "Solo 1ª/2ª (3ª en ES/EN/PT), sin Under 20; senales tras inicio real."
         ),
         configured=True,
         threshold=LIST_ODDS_THRESHOLD,
@@ -163,15 +148,6 @@ def _ensure_odds_marking(match: FlashscoreMatchRead) -> FlashscoreMatchRead:
     if match.favorite_odds is not None:
         return match
     return _with_odds_and_alert(match, (match.home_odds, match.draw_odds, match.away_odds))
-
-
-def _is_competitive_match(match: FlashscoreMatchRead) -> bool:
-    haystack = " ".join(
-        part
-        for part in (match.competition, match.home_team, match.away_team)
-        if part
-    ).lower()
-    return not any(token in haystack for token in _NON_COMPETITIVE_TOKENS)
 
 
 def _is_match_finished_for_list(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
@@ -586,21 +562,31 @@ def _team_name(record: dict[str, Any], side: str) -> str | None:
 
 
 def _competition_name(record: dict[str, Any]) -> str:
+    country = _string_value(record, "country_name", "countryName", "country", "category_name")
+    league: str | None = None
     for key in ("competition", "tournament", "league", "category"):
         value = record.get(key)
         if isinstance(value, str) and value.strip():
-            return value.strip()
+            league = value.strip()
+            break
         if isinstance(value, dict):
             name = _string_value(value, "name", "tournament_name", "league_name", "competition_name")
             if name:
-                return name
-    named = _string_value(record, "competition_name", "tournament_name", "league_name", "tournamentName")
-    if named:
-        return named
-    # FlashScore4 lists tournaments as {name, tournament_id, matches:[...]}
-    if ("matches" in record or "events" in record) and isinstance(record.get("name"), str) and record["name"].strip():
-        return record["name"].strip()
-    return "Flashscore"
+                # Nested category often carries the country.
+                if not country:
+                    country = _string_value(value, "country_name", "countryName", "country")
+                league = name
+                break
+    if league is None:
+        league = _string_value(record, "competition_name", "tournament_name", "league_name", "tournamentName")
+    if league is None and ("matches" in record or "events" in record) and isinstance(record.get("name"), str):
+        league = record["name"].strip() or None
+    if not league:
+        return "Flashscore"
+    # Avoid "England: ENGLAND: Premier League" when the API already prefixes country.
+    if country and ":" not in league:
+        return f"{country}: {league}"
+    return league
 
 
 def _score_value(record: dict[str, Any], side: str) -> int | None:
