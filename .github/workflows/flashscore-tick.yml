@@ -1,8 +1,11 @@
 name: Flashscore alert tick
 
-# Schedule disabled while FlashScore4 RapidAPI request limits are exhausted.
-# Re-enable the cron after the plan limit resets or after upgrading the API plan.
+# Low-quota design: at most one check every 15 minutes during match hours
+# (12:00-23:45 Europe/Madrid => 10:00-21:45 UTC in summer). Each tick uses a
+# single FlashScore4 list request thanks to server-side caching.
 on:
+  schedule:
+    - cron: "0,15,30,45 10-21 * * *"
   workflow_dispatch:
 
 jobs:

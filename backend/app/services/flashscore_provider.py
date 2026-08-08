@@ -13,9 +13,11 @@ LIST_ODDS_THRESHOLD = 1.6
 ALERT_ODDS_THRESHOLD = 1.5
 ODDS_THRESHOLD = LIST_ODDS_THRESHOLD  # favorite marking / jornada list
 FOOTBALL_SPORT_ID = 1
-MAX_ODDS_LOOKUPS = 24
+MAX_ODDS_LOOKUPS = 0  # never spend extra RapidAPI calls on per-match odds
 ODDS_LOOKAHEAD = timedelta(hours=4)
-CACHE_TTL = timedelta(seconds=55)
+# One upstream call is reused for several minutes so a basic RapidAPI plan survives.
+CACHE_TTL = timedelta(minutes=12)
+STALE_TTL = timedelta(hours=6)
 _RESULT_CACHE: dict[int, tuple[datetime, FlashscoreMatchesResult]] = {}
 
 
@@ -40,8 +42,19 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
     }
     base_url = f"https://{settings.flashscore_api_host}"
     try:
+        # Single request: the list payload already includes 1X2 odds, status and scores.
         schedule_payload = _load_schedule_payload(base_url, headers, day)
     except requests.RequestException as exc:
+        if cached and cached[1].status == "ok" and now - cached[0] < STALE_TTL:
+            stale = cached[1]
+            return stale.model_copy(
+                update={
+                    "message": (
+                        f"Mostrando ultima captura (RapidAPI no disponible ahora). "
+                        f"{stale.message}"
+                    )
+                }
+            )
         return FlashscoreMatchesResult(
             status="request_failed",
             message=_request_error_message(exc),
@@ -49,25 +62,9 @@ def fetch_flashscore_matches(day: int = 0, settings: Settings | None = None) -> 
         )
 
     matches = _parse_matches(schedule_payload)
-    if day == 0:
-        try:
-            live_payload = _get_json(
-                f"{base_url}/api/flashscore/v2/matches/live",
-                headers,
-                {"sport_id": FOOTBALL_SPORT_ID, "timezone": "Europe/Madrid"},
-            )
-            matches = _merge_live_matches(matches, _parse_matches(live_payload))
-        except requests.RequestException:
-            pass
-
-    # Prefer odds already embedded in the list payload to save RapidAPI quota.
-    needs_odds = [match for match in matches if match.home_odds is None and match.away_odds is None]
-    odds_by_event = _fetch_odds_by_event(needs_odds, headers, base_url, day) if needs_odds else {}
     enriched = []
     for match in matches:
-        if match.event_id in odds_by_event:
-            enriched.append(_with_odds_and_alert(match, odds_by_event[match.event_id]))
-        elif match.home_odds is not None or match.away_odds is not None or match.draw_odds is not None:
+        if match.home_odds is not None or match.away_odds is not None or match.draw_odds is not None:
             enriched.append(
                 _with_odds_and_alert(match, (match.home_odds, match.draw_odds, match.away_odds))
             )

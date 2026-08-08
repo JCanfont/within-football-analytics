@@ -16,53 +16,27 @@ def settings(api_key: str | None = "rapid-key"):
 
 
 def test_flashscore_provider_marks_low_odds_goal_before_minute_30(monkeypatch) -> None:
-    schedule = {
-        "data": [{
-            "tournament": {"name": "LaLiga"},
-            "events": [{
-                "id": "match-1",
-                "start_time": "2026-08-07T20:00:00Z",
-                "home_team": {"name": "Getafe"},
-                "away_team": {"name": "Celta"},
-                "status": "scheduled",
-            }],
-        }]
-    }
-    live = {
+    schedule = [{
+        "name": "LaLiga",
         "matches": [{
-            "event_id": "match-1",
+            "match_id": "match-1",
+            "timestamp": "2026-08-07T20:00:00Z",
             "home_team": {"name": "Getafe"},
             "away_team": {"name": "Celta"},
-            "stage": "1st Half",
+            "match_status": "1st Half",
             "live_time": "24'",
-            "home_score": 1,
-            "away_score": 0,
-        }]
-    }
-    odds = {
-        "events": [{
-            "event_id": "match-1",
-            "odds": [
-                {"selection": "HOME", "odds": 1.45},
-                {"selection": "DRAW", "odds": 4.2},
-                {"selection": "AWAY", "odds": 7.5},
-            ],
-        }]
-    }
+            "scores": {"home": 1, "away": 0},
+            "odds": {"1": "1.45", "X": "4.20", "2": "7.50"},
+        }],
+    }]
 
-    def fake_get_json(url, headers, params):
-        if url.endswith("/matches/list"):
-            return schedule
-        if url.endswith("/matches/live"):
-            return live
-        if url.endswith("/matches/odds"):
-            assert params["match_id"] == "match-1"
-            return odds
-        if "/livescores/sports/" in url and url.endswith("/odds"):
-            raise flashscore_provider.requests.RequestException("bulk unavailable")
-        return odds
-
-    monkeypatch.setattr(flashscore_provider, "_get_json", fake_get_json)
+    monkeypatch.setattr(
+        flashscore_provider,
+        "_get_json",
+        lambda url, headers, params: schedule if url.endswith("/matches/list") else (_ for _ in ()).throw(
+            flashscore_provider.requests.RequestException("no extra calls")
+        ),
+    )
 
     result = flashscore_provider.fetch_flashscore_matches(settings=settings())
 
@@ -80,30 +54,26 @@ def test_flashscore_provider_marks_low_odds_goal_before_minute_30(monkeypatch) -
 
 def test_flashscore_provider_lists_up_to_1_60_but_alerts_only_to_1_50(monkeypatch) -> None:
     now = datetime.now(UTC)
-    payload = {
+    schedule = [{
+        "name": "Test League",
         "matches": [{
-            "id": "match-2",
-            "home_team": "Local",
-            "away_team": "Visitante",
+            "match_id": "match-2",
+            "timestamp": (now - timedelta(minutes=20)).isoformat().replace("+00:00", "Z"),
+            "home_team": {"name": "Local"},
+            "away_team": {"name": "Visitante"},
+            "match_status": "1st Half",
             "minute": 20,
-            "home_score": 2,
-            "away_score": 0,
-            "start_time": (now - timedelta(minutes=20)).isoformat().replace("+00:00", "Z"),
-        }]
-    }
-    odds = {
-        "events": [{
-            "id": "match-2",
-            "home_odds": 1.55,
-            "draw_odds": 3.5,
-            "away_odds": 6.0,
-        }]
-    }
+            "scores": {"home": 2, "away": 0},
+            "odds": {"1": "1.55", "X": "3.50", "2": "6.00"},
+        }],
+    }]
 
     monkeypatch.setattr(
         flashscore_provider,
         "_get_json",
-        lambda url, headers, params: odds if url.endswith("/odds") else payload,
+        lambda url, headers, params: schedule if url.endswith("/matches/list") else (_ for _ in ()).throw(
+            flashscore_provider.requests.RequestException("no extra calls")
+        ),
     )
 
     result = flashscore_provider.fetch_flashscore_matches(settings=settings())
@@ -144,6 +114,39 @@ def test_flashscore_provider_reports_missing_api_key() -> None:
     assert result.configured is False
     assert result.status == "not_configured"
     assert result.matches == []
+
+
+def test_flashscore_provider_serves_stale_cache_when_rapidapi_fails(monkeypatch) -> None:
+    schedule = [{
+        "name": "LaLiga",
+        "matches": [{
+            "match_id": "match-9",
+            "home_team": {"name": "A"},
+            "away_team": {"name": "B"},
+            "odds": {"1": "1.20", "X": "5.00", "2": "10.00"},
+        }],
+    }]
+    calls = {"n": 0}
+
+    def fake_get_json(url, headers, params):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return schedule
+        raise flashscore_provider.requests.HTTPError("429 too many requests", response=None)
+
+    monkeypatch.setattr(flashscore_provider, "_get_json", fake_get_json)
+    first = flashscore_provider.fetch_flashscore_matches(settings=settings())
+    assert first.status == "ok"
+    assert len(first.matches) == 1
+
+    # Expire fresh TTL but keep stale window.
+    cached_at, payload = flashscore_provider._RESULT_CACHE[0]
+    flashscore_provider._RESULT_CACHE[0] = (cached_at - flashscore_provider.CACHE_TTL - timedelta(seconds=1), payload)
+
+    second = flashscore_provider.fetch_flashscore_matches(settings=settings())
+    assert second.status == "ok"
+    assert "ultima captura" in second.message.lower()
+    assert len(second.matches) == 1
 
 
 def test_flashscore_provider_explains_missing_subscription(monkeypatch) -> None:

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchFlashscoreMatches, sendFlashscoreGoalEmail } from "../services/api";
 import type { FlashscoreMatch } from "../types/api";
 
-const REFRESH_MS = 5 * 60 * 1000;
+const REFRESH_MS = 15 * 60 * 1000;
 const ALERTED_EVENTS_KEY = "within_flashscore_alerted_events";
 const AUTO_REFRESH_KEY = "within_flashscore_auto_refresh";
 
@@ -120,7 +120,7 @@ export function FlashscorePage() {
         <FlashscoreMetric
           icon={RefreshCw}
           label="Actualizacion"
-          value={autoRefresh && day === 0 ? "5 min" : "Manual"}
+          value={autoRefresh && day === 0 ? "15 min" : "Manual"}
           detail={lastRefresh ? `Ultima ${formatTime(lastRefresh)}` : "Sin capturas"}
         />
       </div>
@@ -129,7 +129,7 @@ export function FlashscorePage() {
         <div className="panel-heading">
           <div>
             <h2>Jornada con cuota ≤ 1,60</h2>
-            <p>Solo partidos con local o visitante a 1,60 o menos. El email de gol temprano se limita a cuota ≤ 1,50.</p>
+            <p>Solo partidos con local o visitante a 1,60 o menos. El email de gol temprano se limita a cuota ≤ 1,50. Para no gastar RapidAPI, la captura es cada 15 minutos.</p>
           </div>
           <div className="flashscore-actions">
             <label>
@@ -146,7 +146,7 @@ export function FlashscorePage() {
               onClick={() => setAutoRefresh((current) => !current)}
             >
               <RefreshCw size={15} aria-hidden="true" />
-              {autoRefresh ? "Cada 5 min" : "Auto desactivado"}
+              {autoRefresh ? "Cada 15 min" : "Auto desactivado"}
             </button>
             <button className="row-action" type="button" onClick={refresh} disabled={isLoading}>
               <RefreshCw size={15} aria-hidden="true" />

@@ -525,10 +525,13 @@ En Vercel hacen falta `RAPIDAPI_KEY` (FlashScore4 en RapidAPI),
 
 La pantalla Flashscore lista la jornada filtrada a partidos con cuota de
 equipo ≤ 1,60. Los emails se envian al detectar un gol del favorito
-(cuota ≤ 1,50) antes del minuto 30. Con la pagina abierta y auto-refresh
-cada 1 minuto ya sale el aviso. En segundo plano, el workflow
-`flashscore-tick` (con secret `CRON_SECRET`) revisa aproximadamente cada
-minuto llamando a `/api/flashscore/tick`.
+(cuota ≤ 1,50) antes del minuto 30.
+
+Para no agotar RapidAPI, cada captura usa **una sola** peticion al listado
+FlashScore4 (las cuotas vienen en esa respuesta), se cachea unos 12 minutos
+y el cron de fondo (`flashscore-tick`) corre cada 15 minutos solo en horario
+de partidos. El auto-refresh de la pagina tambien es cada 15 minutos y va
+apagado por defecto.
 
 ## Formatos CSV fase 3
 
