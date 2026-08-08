@@ -1,0 +1,231 @@
+openapi: 3.0.3
+info:
+  title: Urbanismo Engine API (consumed by Platform)
+  version: v1
+  description: >
+    Contrato de consumo para la Plataforma. La implementación del motor
+    vive exclusivamente en el repositorio urbanismo-engine.
+servers:
+  - url: https://urbanismo-engine.example/api/v1
+paths:
+  /urbanism/analyze:
+    post:
+      operationId: analyzeParcel
+      summary: Analizar condiciones urbanísticas de una parcela
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UrbanismAnalyzeRequest"
+      responses:
+        "200":
+          description: Análisis completado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UrbanismAnalysis"
+        "202":
+          description: Análisis aceptado (async)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UrbanismJobAccepted"
+        "404":
+          description: Parcela no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UrbanismError"
+        "429":
+          description: Rate limit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UrbanismError"
+        "503":
+          description: Fuente no disponible / error temporal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UrbanismError"
+components:
+  schemas:
+    ParameterStatus:
+      type: string
+      enum: [confirmed, interpreted, manual_validated, conflict, unknown, not_applicable]
+    UrbanismAnalyzeRequest:
+      type: object
+      required: [request_id, api_version]
+      properties:
+        request_id:
+          type: string
+        api_version:
+          type: string
+          example: v1
+        cadastral_reference:
+          type: string
+          nullable: true
+        geometry:
+          type: object
+          nullable: true
+          description: GeoJSON Polygon/MultiPolygon opcional
+        coordinates:
+          type: object
+          nullable: true
+          properties:
+            lon:
+              type: number
+            lat:
+              type: number
+            srid:
+              type: integer
+              example: 4326
+    SourceRef:
+      type: object
+      required: [source_id, title]
+      properties:
+        source_id:
+          type: string
+        title:
+          type: string
+        organism:
+          type: string
+        document_url:
+          type: string
+          nullable: true
+        article:
+          type: string
+          nullable: true
+        consulted_at:
+          type: string
+          format: date-time
+    UrbanParameter:
+      type: object
+      required: [key, status, confidence]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        value:
+          nullable: true
+        unit:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/ParameterStatus"
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        extraction_method:
+          type: string
+          nullable: true
+        source_refs:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceRef"
+    UrbanismConflict:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        parameter_keys:
+          type: array
+          items:
+            type: string
+    UrbanismAnalysis:
+      type: object
+      required:
+        - analysis_id
+        - api_version
+        - municipality
+        - parameters
+        - sources
+        - conflicts
+        - requires_human_review
+        - overall_confidence
+        - generated_at
+      properties:
+        analysis_id:
+          type: string
+        api_version:
+          type: string
+        parcel:
+          type: object
+          properties:
+            cadastral_reference:
+              type: string
+              nullable: true
+            area_m2:
+              type: number
+              nullable: true
+        municipality:
+          type: string
+        classification:
+          type: string
+          nullable: true
+        qualification:
+          type: string
+          nullable: true
+        allowed_uses:
+          type: array
+          items:
+            type: string
+        parameters:
+          type: array
+          items:
+            $ref: "#/components/schemas/UrbanParameter"
+        instruments:
+          type: array
+          items:
+            type: object
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceRef"
+        conflicts:
+          type: array
+          items:
+            $ref: "#/components/schemas/UrbanismConflict"
+        requires_human_review:
+          type: boolean
+        overall_confidence:
+          type: number
+        generated_at:
+          type: string
+          format: date-time
+    UrbanismJobAccepted:
+      type: object
+      required: [job_id, status]
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+          example: accepted
+        poll_url:
+          type: string
+    UrbanismError:
+      type: object
+      required: [code, message, retryable]
+      properties:
+        code:
+          type: string
+          enum:
+            - parcel_not_found
+            - source_unavailable
+            - analysis_incomplete
+            - rate_limited
+            - internal_error
+        message:
+          type: string
+        retryable:
+          type: boolean
+        detail:
+          type: object
+          additionalProperties: true
