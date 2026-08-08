@@ -56,7 +56,8 @@ def test_flashscore_provider_marks_low_odds_goal_before_minute_30(monkeypatch) -
 def test_flashscore_provider_lists_up_to_1_60_but_alerts_only_to_1_50(monkeypatch) -> None:
     now = datetime.now(UTC)
     schedule = [{
-        "name": "Test League",
+        "name": "LaLiga",
+        "country_name": "Spain",
         "matches": [{
             "match_id": "match-2",
             "timestamp": (now - timedelta(minutes=20)).isoformat().replace("+00:00", "Z"),
@@ -287,7 +288,7 @@ def test_flashscore_provider_reads_tournament_grouped_list(monkeypatch) -> None:
 
     result = flashscore_provider.fetch_flashscore_matches(settings=settings())
     match = result.matches[0]
-    assert match.competition == "Premier League"
+    assert match.competition == "England: Premier League"
     assert match.home_team == "Arsenal"
     assert match.home_odds == 1.4
     assert match.favorite_team == "Arsenal"
