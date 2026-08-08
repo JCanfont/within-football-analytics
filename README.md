@@ -523,15 +523,13 @@ clave de envio se crea en `https://resend.com/api-keys`.
 En Vercel hacen falta `RAPIDAPI_KEY` (FlashScore4 en RapidAPI),
 `RESEND_API_KEY`, `FOREBET_ALERT_EMAIL` y `CRON_SECRET`.
 
-La pantalla Flashscore lista la jornada filtrada a partidos con cuota de
-equipo ≤ 1,60. Los emails se envian al detectar un gol del favorito
-(cuota ≤ 1,50) antes del minuto 30.
+Flujo hibrido de bajo consumo:
 
-Para no agotar RapidAPI, cada captura usa **una sola** peticion al listado
-FlashScore4 (las cuotas vienen en esa respuesta), se cachea unos 12 minutos
-y el cron de fondo (`flashscore-tick`) corre cada 15 minutos solo en horario
-de partidos. El auto-refresh de la pagina tambien es cada 15 minutos y va
-apagado por defecto.
+1. En Flashscore, **Capturar cuotas ≤ 1,60** (RapidAPI FlashScore4, solo bajo demanda).
+2. Los marcadores y el minuto se actualizan con **SofaScore** (boton o auto cada 5 min).
+3. Si el favorito (cuota ≤ 1,50) marca antes del minuto 30, se envia el email.
+
+Asi RapidAPI no se usa para el directo. La captura queda guardada en el navegador.
 
 ## Formatos CSV fase 3
 

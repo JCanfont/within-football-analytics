@@ -1,11 +1,8 @@
 name: Flashscore alert tick
 
-# Low-quota design: at most one check every 15 minutes during match hours
-# (12:00-23:45 Europe/Madrid => 10:00-21:45 UTC in summer). Each tick uses a
-# single FlashScore4 list request thanks to server-side caching.
+# Optional manual tick only. Live scores now come from SofaScore on the
+# Flashscore page; RapidAPI is reserved for on-demand odds capture.
 on:
-  schedule:
-    - cron: "0,15,30,45 10-21 * * *"
   workflow_dispatch:
 
 jobs:
