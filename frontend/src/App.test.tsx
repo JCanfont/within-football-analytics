@@ -557,6 +557,12 @@ describe("App", () => {
       status: "sent",
       message: "Alerta Flashscore enviada por email.",
     });
+    mockedApi.saveFlashscoreWatch.mockResolvedValue({
+      day: 0,
+      captured_at: "2026-08-08T10:00:00Z",
+      matches: [],
+      message: "ok",
+    });
     mockedApi.fetchSofaScoreLiveEvents.mockResolvedValue({
       provider: "sofascore",
       sport: "football",

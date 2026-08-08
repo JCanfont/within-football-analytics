@@ -194,6 +194,9 @@ class FlashscoreMatchRead(BaseModel):
     favorite_team: str | None = None
     favorite_odds: float | None = None
     alert_eligible: bool = False
+    early_goal: bool = False
+    early_favorite_goal: bool = False
+    early_goal_minute: int | None = None
 
 
 class FlashscoreMatchesResult(BaseModel):
@@ -216,6 +219,20 @@ class FlashscoreGoalEmailRequest(BaseModel):
     minute: int
     home_score: int
     away_score: int
+
+
+class FlashscoreWatchState(BaseModel):
+    day: int = 0
+    captured_at: datetime | None = None
+    updated_at: datetime | None = None
+    matches: list[FlashscoreMatchRead] = Field(default_factory=list)
+    message: str = ""
+
+
+class FlashscoreWatchUpsertRequest(BaseModel):
+    day: int = 0
+    captured_at: datetime | None = None
+    matches: list[FlashscoreMatchRead] = Field(default_factory=list)
 
 
 class FlashscoreTickResult(BaseModel):

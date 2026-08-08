@@ -1,8 +1,11 @@
 name: Flashscore alert tick
 
-# Optional manual tick only. Live scores now come from SofaScore on the
-# Flashscore page; RapidAPI is reserved for on-demand odds capture.
+# SofaScore-only background tick (no RapidAPI). Needs a captured watchlist
+# synced from the Flashscore page and CRAWLORA_API_KEY on Vercel.
 on:
+  schedule:
+    # Every 2 minutes — keep signal latency low for the early-goal edge.
+    - cron: "*/2 * * * *"
   workflow_dispatch:
 
 jobs:

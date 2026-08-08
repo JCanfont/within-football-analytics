@@ -548,6 +548,14 @@ export type FlashscoreGoalEmailRequest = {
   away_score: number;
 };
 
+export type FlashscoreWatchState = {
+  day: number;
+  captured_at?: string | null;
+  updated_at?: string | null;
+  matches: FlashscoreMatch[];
+  message?: string;
+};
+
 export type MatchInsightData = {
   detail: MatchDetail;
   analytics: MatchAnalytics;

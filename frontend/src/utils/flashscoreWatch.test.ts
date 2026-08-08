@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { isAlertEligible, mergeFlashscoreWithSofaScore, withEarlyGoalFlags } from "./flashscoreWatch";
+import {
+  FAST_LIVE_REFRESH_MS,
+  SLOW_LIVE_REFRESH_MS,
+  isAlertEligible,
+  liveRefreshIntervalMs,
+  mergeFlashscoreWithSofaScore,
+  withEarlyGoalFlags,
+} from "./flashscoreWatch";
 import type { FlashscoreMatch } from "../types/api";
 
 function baseMatch(overrides: Partial<FlashscoreMatch> = {}): FlashscoreMatch {
@@ -82,5 +89,26 @@ describe("flashscoreWatch", () => {
       home_score: 1,
       away_score: 0,
     }))).toBe(false);
+  });
+
+  it("uses a 1-minute SofaScore poll while an alert candidate is in the early window", () => {
+    const now = Date.parse("2026-08-08T18:20:00Z");
+    expect(liveRefreshIntervalMs([baseMatch({
+      favorite_odds: 1.4,
+      minute: 18,
+      home_score: 0,
+      away_score: 0,
+      status: "inprogress",
+    })], now)).toBe(FAST_LIVE_REFRESH_MS);
+  });
+
+  it("slows to 5 minutes when no critical alert window remains", () => {
+    expect(liveRefreshIntervalMs([baseMatch({
+      favorite_odds: 1.4,
+      minute: 55,
+      home_score: 0,
+      away_score: 0,
+      status: "inprogress",
+    })])).toBe(SLOW_LIVE_REFRESH_MS);
   });
 });

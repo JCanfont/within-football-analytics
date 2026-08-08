@@ -5,7 +5,9 @@ import type {
   DashboardData,
   Favorite,
   FlashscoreGoalEmailRequest,
+  FlashscoreMatch,
   FlashscoreMatchesResult,
+  FlashscoreWatchState,
   ForebetDateLoadResult,
   ForebetRangeItem,
   ForebetStartEmailRequest,
@@ -231,6 +233,15 @@ export async function fetchFlashscoreMatches(day = 0): Promise<FlashscoreMatches
 
 export async function sendFlashscoreGoalEmail(payload: FlashscoreGoalEmailRequest): Promise<ForebetStartEmailResult> {
   const response = await api.post<ForebetStartEmailResult>("/api/flashscore/goal-alert/email", payload);
+  return response.data;
+}
+
+export async function saveFlashscoreWatch(payload: {
+  day: number;
+  captured_at?: string | null;
+  matches: FlashscoreMatch[];
+}): Promise<FlashscoreWatchState> {
+  const response = await api.put<FlashscoreWatchState>("/api/flashscore/watch", payload);
   return response.data;
 }
 

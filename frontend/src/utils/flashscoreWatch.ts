@@ -5,6 +5,9 @@ export const FLASHSCORE_WATCH_KEY = "within_flashscore_watch_v1";
 export const ALERT_ODDS_THRESHOLD = 1.5;
 export const LIST_ODDS_THRESHOLD = 1.6;
 export const EARLY_GOAL_MINUTE = 30;
+/** Poll SofaScore every minute while alert candidates are in the early window. */
+export const FAST_LIVE_REFRESH_MS = 60 * 1000;
+export const SLOW_LIVE_REFRESH_MS = 5 * 60 * 1000;
 
 export type FlashscoreWatchState = {
   capturedAt: string;
@@ -116,6 +119,38 @@ export function sortFlashscoreMatches(matches: FlashscoreMatch[]) {
     const rightStart = right.start_time || "";
     return leftStart.localeCompare(rightStart);
   });
+}
+
+/** Faster refresh while a ≤1.50 favorite can still trigger the early-goal signal. */
+export function liveRefreshIntervalMs(matches: FlashscoreMatch[], now = Date.now()): number {
+  return matches.some((match) => isCriticalSignalWatch(match, now))
+    ? FAST_LIVE_REFRESH_MS
+    : SLOW_LIVE_REFRESH_MS;
+}
+
+export function isCriticalSignalWatch(match: FlashscoreMatch, now = Date.now()): boolean {
+  if (match.favorite_odds == null || match.favorite_odds > ALERT_ODDS_THRESHOLD) {
+    return false;
+  }
+  if (match.early_favorite_goal || match.alert_eligible) {
+    return false;
+  }
+  const status = (match.status || "").toLowerCase();
+  if (status.includes("finish") || status.includes("ended") || status.includes("afterpen")) {
+    return false;
+  }
+  if (match.minute != null) {
+    return match.minute <= EARLY_GOAL_MINUTE + 10;
+  }
+  if (!match.start_time) {
+    return false;
+  }
+  const start = new Date(match.start_time).getTime();
+  if (!Number.isFinite(start)) {
+    return false;
+  }
+  // Kickoff window: 20 minutes before to 50 minutes after scheduled start.
+  return start <= now + 20 * 60_000 && start >= now - 50 * 60_000;
 }
 
 function earlyGoalRank(match: FlashscoreMatch) {
