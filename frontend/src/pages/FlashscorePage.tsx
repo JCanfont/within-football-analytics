@@ -14,11 +14,13 @@ import {
   LIST_ODDS_THRESHOLD,
   SLOW_LIVE_REFRESH_MS,
   clearFlashscoreWatch,
+  displayMatchMinute,
   hasMatchStarted,
   isHalfTime,
   isMatchFinished,
   isWatchableCompetition,
   liveRefreshIntervalMs,
+  nextPollWaitMs,
   readFlashscoreWatch,
   sortFlashscoreMatches,
   withEarlyGoalFlags,
@@ -217,19 +219,19 @@ export function FlashscorePage() {
     let cancelled = false;
     let timer = 0;
     const tick = () => {
-      const wait = liveRefreshIntervalMs(matchesRef.current);
-      if (wait == null) {
-        setRefreshEveryMs(SLOW_LIVE_REFRESH_MS);
+      const activeWait = liveRefreshIntervalMs(matchesRef.current);
+      const wait = nextPollWaitMs(matchesRef.current);
+      setRefreshEveryMs(activeWait ?? wait);
+      if (activeWait == null) {
         setMessage((current) => (
-          current.includes("sin activos")
+          current.includes("esperando kickoff")
             ? current
-            : `${current} · Auto-refresh parado: no quedan partidos activos.`
+            : `${current} · Auto-refresh a la espera del siguiente kickoff.`
         ));
-        return;
       }
-      setRefreshEveryMs(wait);
       timer = window.setTimeout(() => {
         if (cancelled) return;
+        // Always poll: even pre-kickoff we re-check so started matches are not missed.
         refreshLive();
         tick();
       }, wait);
@@ -248,7 +250,11 @@ export function FlashscorePage() {
   const favoriteEarlyGoals = matches.filter((match) => match.early_favorite_goal || match.alert_eligible).length;
   const activeLive = listed.some((match) => liveRefreshIntervalMs([match]) != null);
   const refreshLabel = liveRefresh && listed.length
-    ? (!activeLive ? "Parado" : refreshEveryMs === FAST_LIVE_REFRESH_MS ? "1 min" : "5 min")
+    ? (!activeLive
+      ? "Esperando"
+      : refreshEveryMs === FAST_LIVE_REFRESH_MS
+        ? "LIVE 1 min"
+        : "LIVE 5 min")
     : "Manual";
 
   return (
@@ -387,9 +393,16 @@ export function FlashscorePage() {
                         </span>
                       </div>
                     </td>
-                    <td>{match.minute != null ? `${match.minute}'` : formatMatchClock(match)}</td>
                     <td>
-                      <span className={isHalfTime(match) ? "flashscore-score-ht" : "flashscore-score"}>
+                      <span className={hasMatchStarted(match) ? "flashscore-minute-live" : undefined}>
+                        {displayMatchMinute(match)}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={isHalfTime(match) || displayMatchMinute(match) === "Descanso"
+                        ? "flashscore-score-ht"
+                        : "flashscore-score"}
+                      >
                         {formatScore(match)}
                       </span>
                     </td>

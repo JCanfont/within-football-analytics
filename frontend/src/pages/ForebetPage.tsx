@@ -1,7 +1,7 @@
 import { Bell, BellRing, Calculator, CalendarDays, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchSofaScoreLiveEvents, loadForebetDate, sendForebetStartEmail } from "../services/api";
-import type { ForebetDateLoadResult, ForebetRangeItem, SofaScoreTeamEvent } from "../types/api";
+import { fetchFlashscoreLiveBoard, fetchSofaScoreLiveEvents, loadForebetDate, sendForebetStartEmail } from "../services/api";
+import type { FlashscoreMatch, ForebetDateLoadResult, ForebetRangeItem, SofaScoreTeamEvent } from "../types/api";
 import { saveForebetHistory } from "../utils/forebetHistory";
 import {
   evaluateForecastState,
@@ -37,7 +37,8 @@ const overUnderFilters: Array<{ label: string; value: OverUnderFilter }> = [
 ];
 
 const FOREBET_WATCH_KEY = "within_forebet_watch";
-const LIVE_REFRESH_MS = 10 * 60 * 1000;
+const LIVE_REFRESH_FAST_MS = 60 * 1000;
+const LIVE_REFRESH_SLOW_MS = 5 * 60 * 1000;
 
 type ForebetWatchState = {
   autoRefresh: boolean;
@@ -72,6 +73,7 @@ export function ForebetPage() {
   const [lastLiveRefresh, setLastLiveRefresh] = useState<string | null>(null);
   const [nextLiveRefresh, setNextLiveRefresh] = useState<string | null>(null);
   const liveRefreshInFlightRef = useRef(false);
+  const itemsRef = useRef(items);
   const mutedMatchIdsRef = useRef(mutedMatchIds);
   const notifiedStartedIdsRef = useRef(notifiedStartedIds);
   const notifiedForecastIdsRef = useRef(notifiedForecastIds);
@@ -121,6 +123,10 @@ export function ForebetPage() {
       });
   }
 
+  const refreshCadenceMs = useCallback((rows: ForebetRangeItem[]) => {
+    return rows.some((item) => isLiveMatch(item)) ? LIVE_REFRESH_FAST_MS : LIVE_REFRESH_SLOW_MS;
+  }, []);
+
   const refreshLiveResults = useCallback((manual = false) => {
     if (!targetDate || liveRefreshInFlightRef.current) {
       return;
@@ -128,23 +134,37 @@ export function ForebetPage() {
     liveRefreshInFlightRef.current = true;
     setIsLiveRefreshing(true);
     setLiveMessage(manual ? "Actualizando Forebet ahora..." : "Actualizacion automatica de Forebet en curso...");
-    Promise.allSettled([loadForebetDate(targetDate, false), fetchSofaScoreLiveEvents()])
-      .then(([forebetResult, liveResult]) => {
+    Promise.allSettled([
+      loadForebetDate(targetDate, false),
+      fetchSofaScoreLiveEvents(),
+      fetchFlashscoreLiveBoard(0),
+    ])
+      .then(([forebetResult, liveResult, flashResult]) => {
         if (forebetResult.status === "rejected") {
           throw forebetResult.reason;
         }
         const result = forebetResult.value;
         const liveEvents = liveResult.status === "fulfilled" ? liveResult.value?.events ?? [] : [];
-        const refreshedMatches = mergeLiveScores(result.matches, liveEvents);
+        const sofaFailed = liveResult.status === "rejected";
+        const flashMatches = flashResult.status === "fulfilled" ? flashResult.value?.matches ?? [] : [];
+        let refreshedMatches = mergeLiveScores(result.matches, liveEvents);
+        refreshedMatches = mergeFlashscoreScores(refreshedMatches, flashMatches);
         setItems((current) => mergeForebetItems(current, refreshedMatches));
         saveForebetHistory(refreshedMatches);
         setForebetLoad(result);
         setLastLiveRefresh(new Date().toISOString());
-        setNextLiveRefresh(new Date(Date.now() + LIVE_REFRESH_MS).toISOString());
+        const cadence = refreshCadenceMs(refreshedMatches);
+        setNextLiveRefresh(new Date(Date.now() + cadence).toISOString());
         checkStartedAlerts(refreshedMatches);
         checkForecastAlerts(refreshedMatches);
         const liveWithScore = refreshedMatches.filter((item) => isLiveMatch(item) && item.home_score != null && item.away_score != null).length;
-        setLiveMessage(`Forebet actualizado: ${refreshedMatches.length} partidos revisados · ${liveWithScore} resultados en curso.`);
+        const sourceBits = [
+          `${refreshedMatches.length} partidos`,
+          `${liveWithScore} con marcador en curso`,
+          sofaFailed ? "SofaScore no disponible" : `${liveEvents.length} live SofaScore`,
+          flashMatches.length ? `${flashMatches.length} board Flashscore` : "Flashscore sin board",
+        ];
+        setLiveMessage(`Forebet actualizado: ${sourceBits.join(" · ")}.`);
       })
       .catch(() => {
         setLiveMessage("No se pudo actualizar Forebet en este intento.");
@@ -153,16 +173,16 @@ export function ForebetPage() {
         liveRefreshInFlightRef.current = false;
         setIsLiveRefreshing(false);
       });
-  }, [targetDate]);
+  }, [refreshCadenceMs, targetDate]);
 
   function toggleAutoRefresh() {
     setAutoRefresh((current) => {
       const next = !current;
       if (next) {
-        setLiveMessage("Actualizacion cada 10 minutos activada. Haciendo una primera captura ahora...");
+        setLiveMessage("Seguimiento live activado (1 min en juego / 5 min en espera). Primera captura ahora...");
         window.setTimeout(() => refreshLiveResults(true), 0);
       } else {
-        setLiveMessage("Actualizacion cada 10 minutos desactivada.");
+        setLiveMessage("Seguimiento live desactivado.");
       }
       return next;
     });
@@ -260,23 +280,37 @@ export function ForebetPage() {
   }, [autoRefresh, forecastAlerts, items, mutedMatchIds, notifiedForecastIds, notifiedStartedIds]);
 
   useEffect(() => {
+    itemsRef.current = items;
     mutedMatchIdsRef.current = mutedMatchIds;
     notifiedStartedIdsRef.current = notifiedStartedIds;
     notifiedForecastIdsRef.current = notifiedForecastIds;
     forecastAlertsRef.current = forecastAlerts;
-  }, [forecastAlerts, mutedMatchIds, notifiedForecastIds, notifiedStartedIds]);
+  }, [forecastAlerts, items, mutedMatchIds, notifiedForecastIds, notifiedStartedIds]);
 
   useEffect(() => {
     if (!autoRefresh) {
       setNextLiveRefresh(null);
       return;
     }
-    setNextLiveRefresh(new Date(Date.now() + LIVE_REFRESH_MS).toISOString());
-    const intervalId = window.setInterval(() => {
-      refreshLiveResults(false);
-    }, LIVE_REFRESH_MS);
-    return () => window.clearInterval(intervalId);
-  }, [autoRefresh, refreshLiveResults]);
+    // Immediate tick on mount / when auto turns on, then adaptive cadence.
+    refreshLiveResults(false);
+    let cancelled = false;
+    let timer = 0;
+    const schedule = () => {
+      const wait = refreshCadenceMs(itemsRef.current);
+      setNextLiveRefresh(new Date(Date.now() + wait).toISOString());
+      timer = window.setTimeout(() => {
+        if (cancelled) return;
+        refreshLiveResults(false);
+        schedule();
+      }, wait);
+    };
+    schedule();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [autoRefresh, refreshCadenceMs, refreshLiveResults]);
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -494,14 +528,14 @@ function ForebetLiveWatchPanel({
         <strong>{watchedCount} partidos con aviso</strong>
         <small>
           {autoRefresh
-            ? `Actualizacion cada 10 minutos${nextRefresh ? `, proxima ${formatTimeOnly(nextRefresh)}` : ""}${forecastAlerts ? ". Aviso si el marcador Forebet sigue posible" : ""}`
+            ? `LIVE auto (1 min en juego / 5 min en espera)${nextRefresh ? `, proxima ${formatTimeOnly(nextRefresh)}` : ""}${forecastAlerts ? ". Aviso si el marcador Forebet sigue posible" : ""}`
             : "Activa el seguimiento para revisar la jornada automaticamente"}
         </small>
       </div>
       <div className="forebet-live-actions">
         <button className={autoRefresh ? "active" : ""} type="button" onClick={onToggleAuto}>
           <RefreshCw size={16} aria-hidden="true" />
-          Cada 10 min
+          {autoRefresh ? "LIVE on" : "LIVE off"}
         </button>
         <button className={forecastAlerts ? "active" : ""} type="button" onClick={onToggleForecastAlerts}>
           <BellRing size={16} aria-hidden="true" />
@@ -828,6 +862,29 @@ function mergeLiveScores(matches: ForebetRangeItem[], events: SofaScoreTeamEvent
       status: "live",
       home_score: event.home_score,
       away_score: event.away_score,
+    };
+  });
+}
+
+function mergeFlashscoreScores(matches: ForebetRangeItem[], board: FlashscoreMatch[]) {
+  if (!board.length) {
+    return matches;
+  }
+  return matches.map((match) => {
+    const event = board.find((candidate) =>
+      sameTeam(match.home_team, candidate.home_team) &&
+      sameTeam(match.away_team, candidate.away_team) &&
+      (candidate.home_score != null || candidate.away_score != null)
+    );
+    if (!event) {
+      return match;
+    }
+    const started = hasMatchStarted(match) || event.minute != null || (event.status || "").toLowerCase().includes("live");
+    return {
+      ...match,
+      status: started && match.status !== "finished" ? "live" : match.status,
+      home_score: event.home_score ?? match.home_score,
+      away_score: event.away_score ?? match.away_score,
     };
   });
 }

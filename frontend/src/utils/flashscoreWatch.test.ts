@@ -164,3 +164,21 @@ describe("isWatchableCompetition / isHalfTime", () => {
     expect(isHalfTime(baseMatch({ status: "2nd half" }))).toBe(false);
   });
 });
+
+describe("nextPollWaitMs / displayMatchMinute", () => {
+  it("keeps polling before kickoff and estimates minute after start", async () => {
+    const { nextPollWaitMs, displayMatchMinute } = await import("./flashscoreWatch");
+    const now = Date.parse("2026-08-08T17:50:00Z");
+    expect(nextPollWaitMs([baseMatch({
+      favorite_odds: 1.4,
+      status: "scheduled",
+      start_time: "2026-08-08T18:00:00Z",
+    })], now)).toBeLessThanOrEqual(5 * 60 * 1000);
+    expect(displayMatchMinute(baseMatch({
+      status: "scheduled",
+      start_time: "2026-08-08T17:30:00Z",
+      home_score: 1,
+      away_score: 0,
+    }), now)).toMatch(/~20'|Descanso/);
+  });
+});

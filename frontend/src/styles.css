@@ -1357,6 +1357,12 @@ td {
   color: #1d4ed8;
 }
 
+.flashscore-minute-live {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #0f766e;
+}
+
 .flashscore-odds-trio .flashscore-low-odds {
   background: #e7f7ef;
 }
