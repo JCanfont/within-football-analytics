@@ -231,6 +231,11 @@ export async function fetchFlashscoreMatches(day = 0): Promise<FlashscoreMatches
   return response.data;
 }
 
+export async function fetchFlashscoreLiveBoard(day = 0): Promise<FlashscoreMatchesResult> {
+  const response = await api.get<FlashscoreMatchesResult>(`/api/flashscore/live-board?day=${day}`);
+  return response.data;
+}
+
 export async function sendFlashscoreGoalEmail(payload: FlashscoreGoalEmailRequest): Promise<ForebetStartEmailResult> {
   const response = await api.post<ForebetStartEmailResult>("/api/flashscore/goal-alert/email", payload);
   return response.data;

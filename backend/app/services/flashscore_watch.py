@@ -16,13 +16,14 @@ from app.schemas.api import (
     SofaScoreTeamEvent,
 )
 from app.services.email_alerts import send_flashscore_goal_email
-from app.services.sofascore_crawlora_provider import fetch_live_events
+from app.services.flashscore_provider import LIST_ODDS_THRESHOLD, fetch_flashscore_live_board
 from app.utils.team_match import same_team
 
 
 FLASHSCORE_WATCH_KEY = "flashscore_watch"
 ALERT_ODDS_THRESHOLD = 1.5
 EARLY_GOAL_MINUTE = 30
+SLOW_LIVE_POLL = timedelta(minutes=5)
 
 
 def save_flashscore_watch(
@@ -31,25 +32,32 @@ def save_flashscore_watch(
     day: int,
     captured_at: datetime | None,
     matches: list[FlashscoreMatchRead],
+    last_live_poll_at: datetime | None = None,
 ) -> FlashscoreWatchState:
     stamp = captured_at or datetime.now(UTC)
+    watched = [match for match in matches if _is_watchable(match)]
+    previous = load_flashscore_watch(db)
+    poll_stamp = last_live_poll_at
+    if poll_stamp is None and previous is not None:
+        poll_stamp = previous.last_live_poll_at
     payload = {
         "day": day,
         "captured_at": stamp.isoformat(),
-        "matches": [match.model_dump(mode="json") for match in matches],
+        "matches": [match.model_dump(mode="json") for match in watched],
         "updated_at": datetime.now(UTC).isoformat(),
+        "last_live_poll_at": poll_stamp.isoformat() if poll_stamp else None,
     }
     config = db.scalar(select(StatisticalConfig).where(StatisticalConfig.key == FLASHSCORE_WATCH_KEY))
     if not config:
         config = StatisticalConfig(
             key=FLASHSCORE_WATCH_KEY,
-            description="Flashscore low-odds watchlist for SofaScore signal ticks.",
+            description="Flashscore ≤1.60 watchlist for Ultra live ticks.",
             value=payload,
         )
         db.add(config)
     else:
         config.value = payload
-        config.description = "Flashscore low-odds watchlist for SofaScore signal ticks."
+        config.description = "Flashscore ≤1.60 watchlist for Ultra live ticks."
     db.commit()
     db.refresh(config)
     return _watch_from_payload(config.value)
@@ -71,14 +79,36 @@ def clear_flashscore_watch(db: Session) -> None:
         "captured_at": None,
         "matches": [],
         "updated_at": datetime.now(UTC).isoformat(),
+        "last_live_poll_at": None,
     }
     db.commit()
+
+
+def merge_flashscore_live_board(
+    matches: list[FlashscoreMatchRead],
+    board: list[FlashscoreMatchRead],
+) -> list[FlashscoreMatchRead]:
+    """Merge live minute/score from Flashscore board into a sticky ≤1.60 watchlist."""
+    by_id = {match.event_id: match for match in board}
+    merged: list[FlashscoreMatchRead] = []
+    for match in matches:
+        live = by_id.get(match.event_id)
+        data = match.model_dump()
+        if live is not None:
+            data["status"] = live.status or match.status
+            data["minute"] = live.minute if live.minute is not None else match.minute
+            data["home_score"] = live.home_score if live.home_score is not None else match.home_score
+            data["away_score"] = live.away_score if live.away_score is not None else match.away_score
+            # Keep captured prematch odds / favorite sticky on the watchlist.
+        merged.append(with_early_goal_flags(FlashscoreMatchRead.model_validate(data)))
+    return merged
 
 
 def merge_flashscore_with_sofascore(
     matches: list[FlashscoreMatchRead],
     events: list[SofaScoreTeamEvent],
 ) -> list[FlashscoreMatchRead]:
+    """Legacy SofaScore merge kept for tests; live path uses Flashscore Ultra."""
     merged: list[FlashscoreMatchRead] = []
     for match in matches:
         event = next(
@@ -146,23 +176,38 @@ def is_alert_eligible(match: FlashscoreMatchRead) -> bool:
 
 
 def needs_live_poll(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
-    """True when a ≤1.50 favorite can still produce a timely early-goal signal."""
-    if match.favorite_odds is None or match.favorite_odds > ALERT_ODDS_THRESHOLD:
-        return False
-    if match.early_favorite_goal or match.alert_eligible:
+    """True while a ≤1.60 favorite still needs live Flashscore updates."""
+    if match.favorite_odds is None or match.favorite_odds > LIST_ODDS_THRESHOLD:
         return False
     status = (match.status or "").lower()
     if "finish" in status or "ended" in status or "afterpen" in status:
         return False
     if match.minute is not None:
-        return match.minute <= EARLY_GOAL_MINUTE + 10
+        return True
     if match.start_time is None:
         return True
     current = now or datetime.now(UTC)
     start = match.start_time
     if start.tzinfo is None:
         start = start.replace(tzinfo=UTC)
-    return start - timedelta(minutes=20) <= current <= start + timedelta(minutes=50)
+    return start - timedelta(minutes=20) <= current <= start + timedelta(hours=2, minutes=30)
+
+
+def needs_fast_live_poll(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:
+    """1-minute cadence until minute 30 (or kickoff window before first minute arrives)."""
+    if not needs_live_poll(match, now):
+        return False
+    if match.early_favorite_goal or match.alert_eligible:
+        return False
+    if match.minute is not None:
+        return match.minute <= EARLY_GOAL_MINUTE
+    if match.start_time is None:
+        return True
+    current = now or datetime.now(UTC)
+    start = match.start_time
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=UTC)
+    return start - timedelta(minutes=20) <= current <= start + timedelta(minutes=45)
 
 
 def run_flashscore_signal_tick(db: Session, settings: Settings | None = None) -> FlashscoreTickResult:
@@ -174,48 +219,68 @@ def run_flashscore_signal_tick(db: Session, settings: Settings | None = None) ->
             checked=0,
             eligible=0,
             emails_sent=0,
-            message="No hay lista vigilada. Captura cuotas ≤ 1,60 en la web para activar señales en segundo plano.",
+            message="No hay lista vigilada. Captura solo favoritos ≤ 1,60 en la web para activar el tick Ultra.",
         )
 
-    if not settings.crawlora_api_key:
+    if not settings.rapidapi_key:
         return FlashscoreTickResult(
             status="provider_not_configured",
             checked=len(watch.matches),
             eligible=0,
             emails_sent=0,
-            message="Falta CRAWLORA_API_KEY para revisar goles con SofaScore.",
+            message="Falta RAPIDAPI_KEY para revisar marcadores con Flashscore Ultra.",
         )
 
-    critical = [match for match in watch.matches if needs_live_poll(match)]
-    if not critical:
+    now = datetime.now(UTC)
+    live_candidates = [match for match in watch.matches if needs_live_poll(match, now)]
+    if not live_candidates:
         return FlashscoreTickResult(
             status="idle",
             checked=len(watch.matches),
             eligible=0,
             emails_sent=0,
             message=(
-                f"{len(watch.matches)} vigilados, ninguno en ventana critica. "
-                "Sin consulta SofaScore (ahorra creditos Crawlora)."
+                f"{len(watch.matches)} vigilados ≤ {LIST_ODDS_THRESHOLD:.2f}, ninguno activo. "
+                "Sin consulta Flashscore."
             ),
         )
 
+    fast = [match for match in live_candidates if needs_fast_live_poll(match, now)]
+    if not fast:
+        last = watch.last_live_poll_at
+        if last is not None:
+            if last.tzinfo is None:
+                last = last.replace(tzinfo=UTC)
+            if now - last < SLOW_LIVE_POLL:
+                return FlashscoreTickResult(
+                    status="idle",
+                    checked=len(watch.matches),
+                    eligible=0,
+                    emails_sent=0,
+                    message=(
+                        f"{len(live_candidates)} tras el 30' en modo lento (cada 5 min). "
+                        "Tick omitido para ahorrar cuota Ultra."
+                    ),
+                )
+
     try:
-        live = fetch_live_events("football")
+        board = fetch_flashscore_live_board(watch.day, settings, bypass_cache=True)
     except Exception as exc:  # noqa: BLE001 - surface provider failures to the tick caller
         return FlashscoreTickResult(
             status="request_failed",
             checked=len(watch.matches),
             eligible=0,
             emails_sent=0,
-            message=f"No se pudo consultar SofaScore live: {exc}",
+            message=f"No se pudo consultar Flashscore live: {exc}",
         )
 
-    merged = merge_flashscore_with_sofascore(watch.matches, live.events)
+    merged = merge_flashscore_live_board(watch.matches, board)
     save_flashscore_watch(
         db,
         day=watch.day,
         captured_at=watch.captured_at,
         matches=merged,
+        last_live_poll_at=now,
     )
 
     eligible = [match for match in merged if is_alert_eligible(match)]
@@ -247,21 +312,31 @@ def run_flashscore_signal_tick(db: Session, settings: Settings | None = None) ->
             if result.status == "sent":
                 emails_sent += 1
 
+    cadence = "1 min" if fast else "5 min"
     return FlashscoreTickResult(
         status="ok",
         checked=len(merged),
         eligible=len(eligible),
         emails_sent=emails_sent,
         message=(
-            f"SofaScore tick · {len(merged)} vigilados · {len(live.events)} live · "
-            f"{len(eligible)} señales · {emails_sent} emails nuevos."
+            f"Flashscore Ultra tick ({cadence}) · {len(merged)} vigilados ≤ {LIST_ODDS_THRESHOLD:.2f} · "
+            f"{len(live_candidates)} activos · {len(eligible)} señales · {emails_sent} emails nuevos."
         ),
     )
 
 
+def _is_watchable(match: FlashscoreMatchRead) -> bool:
+    return match.favorite_odds is not None and match.favorite_odds <= LIST_ODDS_THRESHOLD
+
+
 def _watch_from_payload(payload: dict[str, Any]) -> FlashscoreWatchState:
     matches_raw = payload.get("matches") or []
-    matches = [FlashscoreMatchRead.model_validate(item) for item in matches_raw]
+    matches = [
+        with_early_goal_flags(FlashscoreMatchRead.model_validate(item))
+        for item in matches_raw
+        if isinstance(item, dict)
+    ]
+    matches = [match for match in matches if _is_watchable(match)]
     captured_raw = payload.get("captured_at")
     captured_at = None
     if isinstance(captured_raw, str) and captured_raw:
@@ -270,9 +345,14 @@ def _watch_from_payload(payload: dict[str, Any]) -> FlashscoreWatchState:
     updated_at = None
     if isinstance(updated_raw, str) and updated_raw:
         updated_at = datetime.fromisoformat(updated_raw.replace("Z", "+00:00"))
+    poll_raw = payload.get("last_live_poll_at")
+    last_live_poll_at = None
+    if isinstance(poll_raw, str) and poll_raw:
+        last_live_poll_at = datetime.fromisoformat(poll_raw.replace("Z", "+00:00"))
     return FlashscoreWatchState(
         day=int(payload.get("day") or 0),
         captured_at=captured_at,
         updated_at=updated_at,
-        matches=[with_early_goal_flags(match) for match in matches],
+        last_live_poll_at=last_live_poll_at,
+        matches=matches,
     )

@@ -567,6 +567,7 @@ export type FlashscoreWatchState = {
   day: number;
   captured_at?: string | null;
   updated_at?: string | null;
+  last_live_poll_at?: string | null;
   matches: FlashscoreMatch[];
   message?: string;
 };

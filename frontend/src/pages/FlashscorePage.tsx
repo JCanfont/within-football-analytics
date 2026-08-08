@@ -2,8 +2,8 @@ import { BellRing, RefreshCw, Timer, TrendingDown } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  fetchFlashscoreLiveBoard,
   fetchFlashscoreMatches,
-  fetchSofaScoreLiveEvents,
   saveFlashscoreWatch,
   sendFlashscoreGoalEmail,
 } from "../services/api";
@@ -14,7 +14,7 @@ import {
   LIST_ODDS_THRESHOLD,
   clearFlashscoreWatch,
   liveRefreshIntervalMs,
-  mergeFlashscoreWithSofaScore,
+  mergeFlashscoreLiveBoard,
   readFlashscoreWatch,
   sortFlashscoreMatches,
   withEarlyGoalFlags,
@@ -32,7 +32,7 @@ export function FlashscorePage() {
   const [isRefreshingLive, setIsRefreshingLive] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [oddsStatus, setOddsStatus] = useState("idle");
-  const [message, setMessage] = useState("Captura las cuotas ≤ 1,60 y deja que SofaScore avise a tiempo.");
+  const [message, setMessage] = useState("Captura solo favoritos ≤ 1,60. Flashscore Ultra actualiza cada 1 min hasta el 30'.");
   const [lastLiveRefresh, setLastLiveRefresh] = useState<string | null>(null);
   const [refreshEveryMs, setRefreshEveryMs] = useState(FAST_LIVE_REFRESH_MS);
   const [liveRefresh, setLiveRefresh] = useState(readLiveRefresh);
@@ -62,8 +62,8 @@ export function FlashscorePage() {
     setOddsStatus("ok");
     setConfigured(true);
     setMessage(
-      `Captura guardada (${saved.matches.length} partidos ≤ ${LIST_ODDS_THRESHOLD.toFixed(2).replace(".", ",")}). ` +
-      "En ventana critica SofaScore refresca cada 1 min.",
+      `Captura guardada (${saved.matches.length} favoritos ≤ ${LIST_ODDS_THRESHOLD.toFixed(2).replace(".", ",")}). ` +
+      "Flashscore Ultra: 1 min hasta el 30', luego 5 min.",
     );
   }, []);
 
@@ -119,14 +119,18 @@ export function FlashscorePage() {
 
   const refreshLive = useCallback(() => {
     if (matchesRef.current.length === 0) {
-      setMessage("Primero captura las cuotas ≤ 1,60. Luego SofaScore actualizara marcadores y minuto.");
+      setMessage("Primero captura solo favoritos ≤ 1,60. Luego Flashscore Ultra actualiza marcador y minuto.");
       return;
     }
     setIsRefreshingLive(true);
-    setMessage("Actualizando marcadores con SofaScore...");
-    fetchSofaScoreLiveEvents()
+    setMessage("Actualizando marcadores con Flashscore Ultra...");
+    fetchFlashscoreLiveBoard(day)
       .then((result) => {
-        const merged = sortFlashscoreMatches(mergeFlashscoreWithSofaScore(matchesRef.current, result.events));
+        if (result.status !== "ok") {
+          setMessage(result.message);
+          return;
+        }
+        const merged = sortFlashscoreMatches(mergeFlashscoreLiveBoard(matchesRef.current, result.matches));
         setMatches(merged);
         writeFlashscoreWatch({
           capturedAt: capturedAt ?? new Date().toISOString(),
@@ -139,17 +143,17 @@ export function FlashscorePage() {
         const earlyGoals = merged.filter((match) => match.early_goal).length;
         const intervalLabel = liveRefreshIntervalMs(merged) === FAST_LIVE_REFRESH_MS ? "1 min" : "5 min";
         setMessage(
-          `${result.message || "SofaScore actualizado"} · ${linked}/${merged.length} enlazados · ${earlyGoals} con gol antes del 30' · proximo refresh ${intervalLabel}.`,
+          `${linked}/${merged.length} vigilados actualizados · ${earlyGoals} con gol antes del 30' · proximo refresh ${intervalLabel}.`,
         );
         sendEligibleAlerts(merged);
       })
-      .catch(() => setMessage("No se pudieron actualizar los resultados desde SofaScore."))
+      .catch(() => setMessage("No se pudieron actualizar los resultados desde Flashscore Ultra."))
       .finally(() => setIsRefreshingLive(false));
   }, [capturedAt, day, sendEligibleAlerts, syncServerWatch]);
 
   const captureOdds = useCallback(() => {
     setIsCapturingOdds(true);
-    setMessage("Capturando cuotas ≤ 1,60 desde Flashscore (RapidAPI)...");
+    setMessage("Capturando solo favoritos ≤ 1,60 desde Flashscore Ultra...");
     fetchFlashscoreMatches(day)
       .then((result) => {
         setConfigured(result.configured);
@@ -159,7 +163,11 @@ export function FlashscorePage() {
           return;
         }
         const stamp = new Date().toISOString();
-        const captured = sortFlashscoreMatches(result.matches.map(withEarlyGoalFlags));
+        const captured = sortFlashscoreMatches(
+          result.matches
+            .map(withEarlyGoalFlags)
+            .filter((match) => match.favorite_odds != null && match.favorite_odds <= LIST_ODDS_THRESHOLD),
+        );
         setCapturedAt(stamp);
         setMatches(captured);
         writeFlashscoreWatch({
@@ -169,8 +177,8 @@ export function FlashscorePage() {
         });
         syncServerWatch(captured, day, stamp);
         setMessage(
-          `${result.message} Cuotas guardadas en el navegador y en servidor. ` +
-          "En ventana critica SofaScore mira cada 1 min; el tick de fondo tambien usa SofaScore.",
+          `${result.message} Guardados ${captured.length} favoritos ≤ 1,60. ` +
+          "Live Ultra: 1 min hasta el 30', luego 5 min.",
         );
       })
       .catch(() => {
@@ -216,30 +224,30 @@ export function FlashscorePage() {
     <section className="flashscore-page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Cuotas Flashscore + senales SofaScore a tiempo</p>
+          <p className="eyebrow">Flashscore Ultra · solo favoritos ≤ 1,60</p>
           <h1>Flashscore</h1>
         </div>
       </header>
 
       <div className="metrics-grid" aria-label="Resumen Flashscore">
-        <FlashscoreMetric icon={TrendingDown} label="Cuota ≤ 1,60" value={String(listed.length)} detail="Capturados en la jornada" />
+        <FlashscoreMetric icon={TrendingDown} label="Cuota ≤ 1,60" value={String(listed.length)} detail="Unicos vigilados" />
         <FlashscoreMetric icon={Timer} label="Aviso ≤ 1,50" value={String(alertWatch)} detail="Candidatos a email" />
         <FlashscoreMetric icon={BellRing} label="Gol antes del 30'" value={String(earlyGoals)} detail={`${favoriteEarlyGoals} del equipo vigilado`} />
         <FlashscoreMetric
           icon={RefreshCw}
           label="Resultados"
           value={refreshLabel}
-          detail={lastLiveRefresh ? `SofaScore ${formatTime(lastLiveRefresh)}` : "Sin actualizacion live"}
+          detail={lastLiveRefresh ? `Ultra ${formatTime(lastLiveRefresh)}` : "Sin actualizacion live"}
         />
       </div>
 
       <section className="panel flashscore-panel">
         <div className="panel-heading">
           <div>
-            <h2>Jornada con cuota ≤ 1,60</h2>
+            <h2>Solo favoritos ≤ 1,60</h2>
             <p>
-              Se senala en cuanto SofaScore detecta un gol antes del minuto 30.
-              En ventana critica el refresh baja a 1 minuto para pillar el precio a tiempo.
+              No se cargan partidos sin favorito ≤ 1,60. Flashscore Ultra mira cada 1 min hasta el 30'
+              y cada 5 min despues.
             </p>
           </div>
           <div className="flashscore-actions">
@@ -281,7 +289,7 @@ export function FlashscorePage() {
               disabled={listed.length === 0}
             >
               <RefreshCw size={15} aria-hidden="true" />
-              {liveRefresh ? `SofaScore auto (${refreshLabel})` : "SofaScore auto off"}
+              {liveRefresh ? `Ultra auto (${refreshLabel})` : "Ultra auto off"}
             </button>
             <button className="row-action" type="button" onClick={refreshLive} disabled={isRefreshingLive || listed.length === 0}>
               <RefreshCw size={15} aria-hidden="true" />
@@ -296,8 +304,8 @@ export function FlashscorePage() {
         </p>
         {!configured || oddsStatus === "request_failed" || oddsStatus === "not_configured" ? (
           <p className="flashscore-setup-detail">
-            La captura de cuotas usa RapidAPI FlashScore4 (`RAPIDAPI_KEY`). Las senales en vivo usan SofaScore/Crawlora
-            (`CRAWLORA_API_KEY`) cada 1 min en ventana critica, sin gastar RapidAPI.
+            Cuotas y live usan RapidAPI FlashScore4 Ultra (`RAPIDAPI_KEY`). Solo se vigilan favoritos ≤ 1,60:
+            1 min hasta el minuto 30, luego 5 min. El email de senal sigue en cuota ≤ 1,50.
           </p>
         ) : null}
 
@@ -358,7 +366,7 @@ export function FlashscorePage() {
         </div>
         {!isCapturingOdds && listed.length === 0 ? (
           <div className="detail-state">
-            Pulsa &quot;Capturar cuotas ≤ 1,60&quot; para guardar la jornada. Luego SofaScore vigila goles &lt;30&apos; cada minuto.
+            Pulsa &quot;Capturar cuotas ≤ 1,60&quot; para guardar solo esos favoritos. Flashscore Ultra vigila goles &lt;30&apos; cada minuto.
           </div>
         ) : null}
       </section>
@@ -416,7 +424,7 @@ function alertLabel(match: FlashscoreMatch, alerted: boolean) {
   if (match.early_goal) return "Gol rival/otro <30'";
   if (!match.favorite_team) return "Sin cuota ≤ 1,60";
   if (match.favorite_odds != null && match.favorite_odds > ALERT_ODDS_THRESHOLD) return "Listado (aviso ≤ 1,50)";
-  if (match.minute == null) return "Esperando SofaScore";
+  if (match.minute == null) return "Esperando Flashscore";
   if (match.minute <= 30) return "Esperando gol <30'";
   return "Ventana cerrada";
 }

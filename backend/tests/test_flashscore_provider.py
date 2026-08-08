@@ -9,6 +9,7 @@ from app.services import flashscore_provider
 @pytest.fixture(autouse=True)
 def clear_flashscore_cache() -> None:
     flashscore_provider._RESULT_CACHE.clear()
+    flashscore_provider._BOARD_CACHE.clear()
 
 
 def settings(api_key: str | None = "rapid-key"):
@@ -139,9 +140,10 @@ def test_flashscore_provider_serves_stale_cache_when_rapidapi_fails(monkeypatch)
     assert first.status == "ok"
     assert len(first.matches) == 1
 
-    # Expire fresh TTL but keep stale window.
+    # Expire filtered-result and board caches but keep the stale RESULT window.
     cached_at, payload = flashscore_provider._RESULT_CACHE[0]
     flashscore_provider._RESULT_CACHE[0] = (cached_at - flashscore_provider.CACHE_TTL - timedelta(seconds=1), payload)
+    flashscore_provider._BOARD_CACHE.clear()
 
     second = flashscore_provider.fetch_flashscore_matches(settings=settings())
     assert second.status == "ok"
@@ -168,6 +170,49 @@ def test_flashscore_provider_explains_missing_subscription(monkeypatch) -> None:
     assert "cuotas" in result.message.lower()
     assert "suscripcion" in result.message.lower()
     assert result.matches == []
+
+
+def test_flashscore_provider_ignores_scalar_average_as_home_odd() -> None:
+    home, draw, away = flashscore_provider._extract_one_x_two({
+        "odds": {"avg": "1.45", "1": "2.10", "X": "3.20", "2": "3.40"},
+    })
+    assert home == 2.10
+    assert draw == 3.20
+    assert away == 3.40
+
+
+def test_flashscore_provider_excludes_friendly_and_youth(monkeypatch) -> None:
+    schedule = [
+        {
+            "name": "WORLD: Club Friendly",
+            "matches": [{
+                "match_id": "friendly-1",
+                "home_team": {"name": "A"},
+                "away_team": {"name": "B"},
+                "odds": {"1": "1.20", "X": "5.00", "2": "10.00"},
+            }],
+        },
+        {
+            "name": "LaLiga",
+            "matches": [{
+                "match_id": "league-1",
+                "home_team": {"name": "Getafe"},
+                "away_team": {"name": "Celta"},
+                "odds": {"1": "1.40", "X": "4.50", "2": "8.00"},
+            }],
+        },
+    ]
+    monkeypatch.setattr(
+        flashscore_provider,
+        "_get_json",
+        lambda url, headers, params: schedule if "matches/list" in url else (_ for _ in ()).throw(
+            flashscore_provider.requests.RequestException("skip")
+        ),
+    )
+
+    result = flashscore_provider.fetch_flashscore_matches(settings=settings())
+    assert [match.event_id for match in result.matches] == ["league-1"]
+    assert "vigilables" in result.message
 
 
 def test_flashscore_provider_reads_tournament_grouped_list(monkeypatch) -> None:

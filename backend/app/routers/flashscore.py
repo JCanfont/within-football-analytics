@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from secrets import compare_digest
 
 from fastapi import APIRouter, Depends, Header, HTTPException
@@ -14,10 +15,11 @@ from app.schemas.api import (
     ForebetStartEmailResult,
 )
 from app.services.email_alerts import send_flashscore_goal_email
-from app.services.flashscore_provider import fetch_flashscore_matches
+from app.services.flashscore_provider import fetch_flashscore_live_board, fetch_flashscore_matches
 from app.services.flashscore_watch import (
     clear_flashscore_watch,
     load_flashscore_watch,
+    merge_flashscore_live_board,
     run_flashscore_signal_tick,
     save_flashscore_watch,
 )
@@ -30,6 +32,59 @@ router = APIRouter(prefix="/api/flashscore", tags=["flashscore"])
 def get_flashscore_matches(day: int = 0) -> FlashscoreMatchesResult:
     safe_day = max(-7, min(7, day))
     return fetch_flashscore_matches(safe_day)
+
+
+@router.get("/live-board", response_model=FlashscoreMatchesResult)
+def get_flashscore_live_board(day: int = 0) -> FlashscoreMatchesResult:
+    """Full Flashscore Ultra board for live minute/score merge into a ≤1.60 watchlist."""
+    safe_day = max(-7, min(7, day))
+    try:
+        board = fetch_flashscore_live_board(safe_day, bypass_cache=True)
+    except RuntimeError as exc:
+        return FlashscoreMatchesResult(
+            status="not_configured",
+            message=str(exc),
+            configured=False,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return FlashscoreMatchesResult(
+            status="request_failed",
+            message=f"No se pudo cargar el live board Flashscore: {exc}",
+            configured=True,
+        )
+    return FlashscoreMatchesResult(
+        status="ok",
+        message=f"Live board Flashscore Ultra: {len(board)} partidos (para fusionar con la lista ≤ 1,60).",
+        configured=True,
+        matches=board,
+    )
+
+
+@router.post("/watch/refresh", response_model=FlashscoreWatchState)
+def refresh_flashscore_watch_live(db: Session = Depends(get_db)) -> FlashscoreWatchState:
+    watch = load_flashscore_watch(db)
+    if watch is None or not watch.matches:
+        return FlashscoreWatchState(message="No hay lista vigilada en servidor para refrescar.")
+    try:
+        board = fetch_flashscore_live_board(watch.day, bypass_cache=True)
+    except Exception as exc:  # noqa: BLE001
+        return watch.model_copy(update={"message": f"No se pudo refrescar con Flashscore Ultra: {exc}"})
+    merged = merge_flashscore_live_board(watch.matches, board)
+    saved = save_flashscore_watch(
+        db,
+        day=watch.day,
+        captured_at=watch.captured_at,
+        matches=merged,
+        last_live_poll_at=datetime.now(UTC),
+    )
+    return saved.model_copy(
+        update={
+            "message": (
+                f"Flashscore Ultra refresco · {len(saved.matches)} vigilados ≤ 1,60 · "
+                f"{sum(1 for match in saved.matches if match.minute is not None)} con minuto."
+            )
+        }
+    )
 
 
 @router.get("/watch", response_model=FlashscoreWatchState)
@@ -56,8 +111,8 @@ def put_flashscore_watch(
     return watch.model_copy(
         update={
             "message": (
-                f"{len(watch.matches)} partidos guardados en servidor. "
-                "El tick usara SofaScore (sin RapidAPI) para avisar a tiempo."
+                f"{len(watch.matches)} favoritos ≤ 1,60 guardados en servidor. "
+                "El tick usa Flashscore Ultra: cada 1 min hasta el 30', luego cada 5 min."
             )
         }
     )

@@ -1,12 +1,12 @@
-import type { FlashscoreMatch, SofaScoreTeamEvent } from "../types/api";
-import { sameTeam } from "./teamMatch";
+import type { FlashscoreMatch } from "../types/api";
 
 export const FLASHSCORE_WATCH_KEY = "within_flashscore_watch_v1";
 export const ALERT_ODDS_THRESHOLD = 1.5;
 export const LIST_ODDS_THRESHOLD = 1.6;
 export const EARLY_GOAL_MINUTE = 30;
-/** Poll SofaScore every minute while alert candidates are in the early window. */
+/** Poll Flashscore Ultra every minute while a ≤1.60 favorite is before minute 30. */
 export const FAST_LIVE_REFRESH_MS = 60 * 1000;
+/** After minute 30, slow to one Flashscore board pull every 5 minutes. */
 export const SLOW_LIVE_REFRESH_MS = 5 * 60 * 1000;
 
 export type FlashscoreWatchState = {
@@ -24,7 +24,10 @@ export function readFlashscoreWatch(): FlashscoreWatchState | null {
     return {
       capturedAt: typeof raw.capturedAt === "string" ? raw.capturedAt : new Date().toISOString(),
       day: typeof raw.day === "number" ? raw.day : 0,
-      matches: raw.matches.filter(isFlashscoreMatch).map(withEarlyGoalFlags),
+      matches: raw.matches
+        .filter(isFlashscoreMatch)
+        .map(withEarlyGoalFlags)
+        .filter((match) => match.favorite_odds != null && match.favorite_odds <= LIST_ODDS_THRESHOLD),
     };
   } catch {
     return null;
@@ -32,29 +35,32 @@ export function readFlashscoreWatch(): FlashscoreWatchState | null {
 }
 
 export function writeFlashscoreWatch(state: FlashscoreWatchState) {
-  localStorage.setItem(FLASHSCORE_WATCH_KEY, JSON.stringify(state));
+  localStorage.setItem(FLASHSCORE_WATCH_KEY, JSON.stringify({
+    ...state,
+    matches: state.matches.filter(
+      (match) => match.favorite_odds != null && match.favorite_odds <= LIST_ODDS_THRESHOLD,
+    ),
+  }));
 }
 
 export function clearFlashscoreWatch() {
   localStorage.removeItem(FLASHSCORE_WATCH_KEY);
 }
 
-export function mergeFlashscoreWithSofaScore(
+export function mergeFlashscoreLiveBoard(
   matches: FlashscoreMatch[],
-  events: SofaScoreTeamEvent[],
+  board: FlashscoreMatch[],
 ): FlashscoreMatch[] {
+  const byId = new Map(board.map((match) => [match.event_id, match]));
   return matches.map((match) => {
-    const event = events.find((candidate) =>
-      sameTeam(match.home_team, candidate.home_team) &&
-      sameTeam(match.away_team, candidate.away_team)
-    );
-    const base = event
+    const live = byId.get(match.event_id);
+    const base = live
       ? {
           ...match,
-          status: event.status || match.status,
-          minute: event.minute ?? match.minute,
-          home_score: event.home_score ?? match.home_score,
-          away_score: event.away_score ?? match.away_score,
+          status: live.status || match.status,
+          minute: live.minute ?? match.minute,
+          home_score: live.home_score ?? match.home_score,
+          away_score: live.away_score ?? match.away_score,
         }
       : { ...match };
     return withEarlyGoalFlags(base);
@@ -121,7 +127,7 @@ export function sortFlashscoreMatches(matches: FlashscoreMatch[]) {
   });
 }
 
-/** Faster refresh while a ≤1.50 favorite can still trigger the early-goal signal. */
+/** 1 min before/at minute 30 for ≤1.60 favorites; 5 min afterwards while still live. */
 export function liveRefreshIntervalMs(matches: FlashscoreMatch[], now = Date.now()): number {
   return matches.some((match) => isCriticalSignalWatch(match, now))
     ? FAST_LIVE_REFRESH_MS
@@ -129,7 +135,7 @@ export function liveRefreshIntervalMs(matches: FlashscoreMatch[], now = Date.now
 }
 
 export function isCriticalSignalWatch(match: FlashscoreMatch, now = Date.now()): boolean {
-  if (match.favorite_odds == null || match.favorite_odds > ALERT_ODDS_THRESHOLD) {
+  if (match.favorite_odds == null || match.favorite_odds > LIST_ODDS_THRESHOLD) {
     return false;
   }
   if (match.early_favorite_goal || match.alert_eligible) {
@@ -140,7 +146,7 @@ export function isCriticalSignalWatch(match: FlashscoreMatch, now = Date.now()):
     return false;
   }
   if (match.minute != null) {
-    return match.minute <= EARLY_GOAL_MINUTE + 10;
+    return match.minute <= EARLY_GOAL_MINUTE;
   }
   if (!match.start_time) {
     return false;
@@ -149,8 +155,8 @@ export function isCriticalSignalWatch(match: FlashscoreMatch, now = Date.now()):
   if (!Number.isFinite(start)) {
     return false;
   }
-  // Kickoff window: 20 minutes before to 50 minutes after scheduled start.
-  return start <= now + 20 * 60_000 && start >= now - 50 * 60_000;
+  // Kickoff window: 20 minutes before to 45 minutes after scheduled start.
+  return start <= now + 20 * 60_000 && start >= now - 45 * 60_000;
 }
 
 function earlyGoalRank(match: FlashscoreMatch) {

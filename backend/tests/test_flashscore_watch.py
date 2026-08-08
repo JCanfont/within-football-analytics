@@ -1,11 +1,10 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
-from app.database import SessionLocal, engine
+from app.database import Base, SessionLocal, engine
 from app.models import StatisticalConfig
-from app.schemas.api import FlashscoreMatchRead, SofaScoreTeamEvent
+from app.schemas.api import FlashscoreMatchRead
 from app.services import flashscore_watch
-from app.database import Base
 
 
 def setup_module() -> None:
@@ -31,33 +30,70 @@ def test_merge_marks_early_favorite_goal() -> None:
         favorite_team="Getafe",
         favorite_odds=1.4,
     )
-    events = [
-        SofaScoreTeamEvent(
-            event_id=99,
-            start_time=datetime(2026, 8, 8, 18, 0, tzinfo=UTC),
+    board = [
+        FlashscoreMatchRead(
+            event_id="fs-1",
+            competition="LaLiga",
+            home_team="Getafe",
+            away_team="Celta",
             status="inprogress",
             minute=17,
-            competition="LaLiga",
-            home_team="Getafe CF",
-            away_team="RC Celta",
             home_score=1,
             away_score=0,
+            home_odds=1.2,
+            favorite_odds=1.2,
         )
     ]
 
-    merged = flashscore_watch.merge_flashscore_with_sofascore([match], events)
+    merged = flashscore_watch.merge_flashscore_live_board([match], board)
 
     assert merged[0].minute == 17
+    assert merged[0].home_odds == 1.4
+    assert merged[0].favorite_odds == 1.4
     assert merged[0].early_favorite_goal is True
     assert merged[0].alert_eligible is True
 
 
-def test_signal_tick_skips_sofascore_when_outside_critical_window(monkeypatch) -> None:
+def test_save_watch_keeps_only_favorites_at_or_below_1_60() -> None:
+    with SessionLocal() as db:
+        watch = flashscore_watch.save_flashscore_watch(
+            db,
+            day=0,
+            captured_at=datetime.now(UTC),
+            matches=[
+                FlashscoreMatchRead(
+                    event_id="keep",
+                    competition="LaLiga",
+                    home_team="A",
+                    away_team="B",
+                    status="scheduled",
+                    favorite_odds=1.55,
+                    favorite_team="A",
+                    favorite_side="home",
+                ),
+                FlashscoreMatchRead(
+                    event_id="drop",
+                    competition="LaLiga",
+                    home_team="C",
+                    away_team="D",
+                    status="scheduled",
+                    home_odds=1.8,
+                    away_odds=4.0,
+                ),
+            ],
+        )
+
+    assert [match.event_id for match in watch.matches] == ["keep"]
+
+
+def test_signal_tick_skips_flashscore_when_slow_window_was_just_polled(monkeypatch) -> None:
+    now = datetime.now(UTC)
     with SessionLocal() as db:
         flashscore_watch.save_flashscore_watch(
             db,
             day=0,
-            captured_at=datetime.now(UTC),
+            captured_at=now,
+            last_live_poll_at=now - timedelta(minutes=1),
             matches=[
                 FlashscoreMatchRead(
                     event_id="fs-1",
@@ -80,21 +116,22 @@ def test_signal_tick_skips_sofascore_when_outside_critical_window(monkeypatch) -
     called = {"live": False}
     monkeypatch.setattr(
         flashscore_watch,
-        "fetch_live_events",
-        lambda sport="football": called.__setitem__("live", True),
+        "fetch_flashscore_live_board",
+        lambda *args, **kwargs: called.__setitem__("live", True) or [],
     )
 
     with SessionLocal() as db:
         result = flashscore_watch.run_flashscore_signal_tick(
             db,
-            settings=SimpleNamespace(crawlora_api_key="test-key"),
+            settings=SimpleNamespace(rapidapi_key="test-key"),
         )
 
     assert result.status == "idle"
     assert called["live"] is False
+    assert "5 min" in result.message
 
 
-def test_signal_tick_uses_sofascore_watchlist(monkeypatch) -> None:
+def test_signal_tick_uses_flashscore_ultra_watchlist(monkeypatch) -> None:
     with SessionLocal() as db:
         flashscore_watch.save_flashscore_watch(
             db,
@@ -118,22 +155,19 @@ def test_signal_tick_uses_sofascore_watchlist(monkeypatch) -> None:
 
     monkeypatch.setattr(
         flashscore_watch,
-        "fetch_live_events",
-        lambda sport="football": SimpleNamespace(
-            events=[
-                SofaScoreTeamEvent(
-                    event_id=99,
-                    start_time=datetime(2026, 8, 8, 18, 0, tzinfo=UTC),
-                    status="inprogress",
-                    minute=12,
-                    competition="LaLiga",
-                    home_team="Getafe CF",
-                    away_team="RC Celta",
-                    home_score=1,
-                    away_score=0,
-                )
-            ]
-        ),
+        "fetch_flashscore_live_board",
+        lambda *args, **kwargs: [
+            FlashscoreMatchRead(
+                event_id="fs-1",
+                competition="LaLiga",
+                home_team="Getafe",
+                away_team="Celta",
+                status="inprogress",
+                minute=12,
+                home_score=1,
+                away_score=0,
+            )
+        ],
     )
     sent = []
     monkeypatch.setattr(
@@ -145,10 +179,11 @@ def test_signal_tick_uses_sofascore_watchlist(monkeypatch) -> None:
     with SessionLocal() as db:
         result = flashscore_watch.run_flashscore_signal_tick(
             db,
-            settings=SimpleNamespace(crawlora_api_key="test-key"),
+            settings=SimpleNamespace(rapidapi_key="test-key"),
         )
 
     assert result.status == "ok"
     assert result.eligible == 1
     assert result.emails_sent == 1
     assert sent[0].event_id == "fs-1"
+    assert "Ultra" in result.message
