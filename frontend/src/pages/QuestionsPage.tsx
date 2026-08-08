@@ -56,7 +56,8 @@ export function QuestionsPage() {
           <div>
             <h2>Pregunta</h2>
             <p>
-              10 plantillas clave + rachas under/over 2,5. Si faltan datos, la respuesta indica que importar.
+              10 plantillas clave + rachas under/over 2,5. Usa stats de partido (tiros, tarjetas, HT, cuotas)
+              cuando estan importadas desde Football-Data / incidentes.
             </p>
           </div>
         </div>
