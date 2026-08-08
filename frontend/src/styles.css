@@ -3863,3 +3863,213 @@ button.analysis-card:disabled {
   font-size: 4.5px;
   font-weight: 700;
 }
+
+/* Platform / Urbanism consumer */
+.platform-study-page {
+  display: grid;
+  gap: 18px;
+}
+
+.platform-analyze-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+}
+
+.platform-analyze-form label {
+  display: grid;
+  gap: 8px;
+  min-width: min(100%, 360px);
+  font-weight: 700;
+}
+
+.platform-analyze-form input {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #cfd8e3;
+  border-radius: 8px;
+}
+
+.platform-error {
+  margin: 12px 0 0;
+  color: #991b1b;
+  font-weight: 700;
+}
+
+.platform-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.platform-actions .secondary-action {
+  text-decoration: none;
+}
+
+.platform-boundary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  color: #5b677a;
+  font-size: 13px;
+}
+
+.urbanism-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #d5dde7;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.urbanism-panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.urbanism-panel-header h2 {
+  margin: 0;
+}
+
+.urbanism-panel-header p {
+  margin: 6px 0 0;
+  color: #5b677a;
+}
+
+.urbanism-confidence {
+  display: grid;
+  justify-items: center;
+  min-width: 96px;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.urbanism-confidence strong {
+  font-size: 22px;
+}
+
+.urbanism-confidence.verde {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.urbanism-confidence.amarillo {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.urbanism-confidence.rojo {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.urbanism-cache-notice,
+.urbanism-review-flag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.urbanism-cache-notice {
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.urbanism-review-flag {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.urbanism-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.urbanism-meta div {
+  padding: 10px;
+  border: 1px solid #e5eaf0;
+  border-radius: 8px;
+}
+
+.urbanism-meta dt {
+  color: #5b677a;
+  font-size: 12px;
+}
+
+.urbanism-meta dd {
+  margin: 4px 0 0;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.urbanism-params {
+  overflow: auto;
+}
+
+.urbanism-params table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.urbanism-params th,
+.urbanism-params td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5eaf0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.urbanism-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.urbanism-status.ok {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.urbanism-status.warn {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.urbanism-status.bad {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.urbanism-status.muted {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.urbanism-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.urbanism-conflicts ul,
+.urbanism-sources ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}

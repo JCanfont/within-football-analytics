@@ -1,4 +1,4 @@
-import { BarChart3, Bell, Building2, CalendarDays, DatabaseZap, Gauge, Goal, HelpCircle, ListChecks, Radio, SearchCheck, Settings, Shield, Scale, Trophy, UsersRound } from "lucide-react";
+import { BarChart3, Bell, Building2, CalendarDays, DatabaseZap, Gauge, Goal, HelpCircle, ListChecks, MapPinned, Radio, SearchCheck, Settings, Shield, Scale, Trophy, UsersRound } from "lucide-react";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { AlertsPage } from "./pages/AlertsPage";
 import { CompetitionsPage, TeamsPage } from "./pages/CatalogPages";
@@ -11,11 +11,14 @@ import { FlashscorePage } from "./pages/FlashscorePage";
 import { ImportsPage } from "./pages/ImportsPage";
 import { LiveMatchesPage } from "./pages/LiveMatchesPage";
 import { PlayersPage } from "./pages/PlayersPage";
+import { PlatformStudyPage } from "./platform/pages/PlatformStudyPage";
 import { QuestionsPage } from "./pages/QuestionsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
 const navigation = [
   { label: "Dashboard", icon: Gauge, path: "/" },
+  { label: "Estudio finca", icon: MapPinned, path: "/platform/study" },
+  { label: "AutoCAD plano", icon: Building2, path: "/floor-plan" },
   { label: "Partidos en directo", icon: CalendarDays, path: "/live-matches" },
   { label: "Competiciones", icon: Trophy, path: "/competitions" },
   { label: "Equipos", icon: Shield, path: "/teams" },
@@ -25,7 +28,6 @@ const navigation = [
   { label: "Flashscore", icon: Radio, path: "/flashscore" },
   { label: "A la contra", icon: Scale, path: "/contra" },
   { label: "Preguntas", icon: HelpCircle, path: "/questions" },
-  { label: "AutoCAD plano", icon: Building2, path: "/floor-plan" },
   { label: "Importaciones", icon: DatabaseZap, path: "/imports" },
   { label: "Alertas", icon: Bell, path: "/alerts" },
   { label: "Configuracion", icon: Settings, path: "/settings" },
@@ -81,6 +83,7 @@ export default function App() {
           <Route path="/flashscore" element={<FlashscorePage />} />
           <Route path="/contra" element={<ContraPage />} />
           <Route path="/questions" element={<QuestionsPage />} />
+          <Route path="/platform/study" element={<PlatformStudyPage />} />
           <Route path="/floor-plan" element={<FloorPlanPage />} />
           <Route path="/imports" element={<ImportsPage />} />
           <Route path="/alerts" element={<AlertsPage />} />
