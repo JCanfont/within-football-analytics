@@ -8,8 +8,10 @@ export const EARLY_GOAL_MINUTE = 30;
 export const FAST_LIVE_REFRESH_MS = 60 * 1000;
 /** After minute 30, poll every 5 minutes. */
 export const SLOW_LIVE_REFRESH_MS = 5 * 60 * 1000;
-/** Without a live minute, stop asking for signals this long after kickoff. */
+/** Without a live minute/score, treat the match as finished this long after kickoff. */
 export const FINISHED_WITHOUT_CLOCK_MS = 105 * 60 * 1000;
+/** Hard stop after kickoff even with a sticky score or stuck live minute. */
+export const FINISHED_MAX_DURATION_MS = 120 * 60 * 1000;
 
 export type FlashscoreWatchState = {
   capturedAt: string;
@@ -170,20 +172,31 @@ export function isMatchFinished(match: FlashscoreMatch, now = Date.now()): boole
   ) {
     return true;
   }
+  if (match.start_time) {
+    const start = new Date(match.start_time).getTime();
+    if (Number.isFinite(start)) {
+      const elapsedMs = now - start;
+      // Wall-clock hard stop: Flashscore often leaves "live"/score with no minute after FT.
+      if (elapsedMs >= FINISHED_MAX_DURATION_MS) {
+        return true;
+      }
+      if (match.minute != null) {
+        // Stuck late-clock rows without a finished status.
+        if (match.minute >= 90 && elapsedMs >= FINISHED_WITHOUT_CLOCK_MS) {
+          return true;
+        }
+        return false;
+      }
+      const graceMs = (match.home_score != null || match.away_score != null)
+        ? FINISHED_MAX_DURATION_MS
+        : FINISHED_WITHOUT_CLOCK_MS;
+      return elapsedMs >= graceMs;
+    }
+  }
   if (match.minute != null) {
-    return false;
+    return match.minute >= 120;
   }
-  if (!match.start_time) {
-    return false;
-  }
-  const start = new Date(match.start_time).getTime();
-  if (!Number.isFinite(start)) {
-    return false;
-  }
-  const graceMs = (match.home_score != null || match.away_score != null)
-    ? 150 * 60 * 1000
-    : FINISHED_WITHOUT_CLOCK_MS;
-  return now >= start + graceMs;
+  return false;
 }
 
 export function hasMatchStarted(match: FlashscoreMatch, now = Date.now()): boolean {
@@ -318,6 +331,9 @@ export function nextPollWaitMs(matches: FlashscoreMatch[], now = Date.now()): nu
 
 /** Display clock when Flashscore omits live_time (common on the day list). */
 export function displayMatchMinute(match: FlashscoreMatch, now = Date.now()): string {
+  if (isMatchFinished(match, now)) {
+    return "Finalizado";
+  }
   if (isHalfTime(match)) {
     return "Descanso";
   }
@@ -344,7 +360,7 @@ export function displayMatchMinute(match: FlashscoreMatch, now = Date.now()): st
   if (elapsed < 120) {
     return `~${Math.min(90, 45 + (elapsed - 60))}'`;
   }
-  return "FT?";
+  return "Finalizado";
 }
 
 export function isCriticalSignalWatch(match: FlashscoreMatch, now = Date.now()): boolean {

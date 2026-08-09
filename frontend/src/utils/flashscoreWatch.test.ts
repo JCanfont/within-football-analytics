@@ -3,6 +3,7 @@ import {
   FAST_LIVE_REFRESH_MS,
   SLOW_LIVE_REFRESH_MS,
   isAlertEligible,
+  isMatchFinished,
   liveRefreshIntervalMs,
   mergeFlashscoreLiveBoard,
   withEarlyGoalFlags,
@@ -125,6 +126,35 @@ describe("flashscoreWatch", () => {
     })], now)).toBeNull();
   });
 
+  it("closes score-without-minute rows after two hours from kickoff", () => {
+    const now = Date.parse("2026-08-08T20:00:00Z");
+    expect(isMatchFinished(baseMatch({
+      status: "live",
+      minute: null,
+      home_score: 1,
+      away_score: 0,
+      start_time: "2026-08-08T17:55:00Z",
+    }), now)).toBe(true);
+    expect(isMatchFinished(baseMatch({
+      status: "live",
+      minute: null,
+      home_score: 1,
+      away_score: 0,
+      start_time: "2026-08-08T18:30:00Z",
+    }), now)).toBe(false);
+  });
+
+  it("closes stuck 90' rows when wall-clock is past full time", () => {
+    const now = Date.parse("2026-08-08T20:00:00Z");
+    expect(isMatchFinished(baseMatch({
+      status: "live",
+      minute: 90,
+      home_score: 2,
+      away_score: 0,
+      start_time: "2026-08-08T18:05:00Z",
+    }), now)).toBe(true);
+  });
+
   it("uses fast signals once kickoff time has passed even without live status", () => {
     const now = Date.parse("2026-08-08T18:05:00Z");
     expect(liveRefreshIntervalMs([baseMatch({
@@ -180,5 +210,12 @@ describe("nextPollWaitMs / displayMatchMinute", () => {
       home_score: 1,
       away_score: 0,
     }), now)).toMatch(/~20'|Descanso/);
+    expect(displayMatchMinute(baseMatch({
+      status: "live",
+      minute: null,
+      home_score: 1,
+      away_score: 0,
+      start_time: "2026-08-08T15:30:00Z",
+    }), now)).toBe("Finalizado");
   });
 });

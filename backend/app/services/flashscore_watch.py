@@ -30,8 +30,10 @@ FLASHSCORE_WATCH_KEY = "flashscore_watch"
 ALERT_ODDS_THRESHOLD = 1.5
 EARLY_GOAL_MINUTE = 30
 SLOW_LIVE_POLL = timedelta(minutes=5)
-# If Flashscore leaves status as "scheduled" with scores but no minute, stop after this.
+# If Flashscore leaves status as "scheduled" without minute/score, stop after this.
 FINISHED_WITHOUT_CLOCK = timedelta(minutes=105)
+# Hard stop after kickoff even with a sticky score or stuck live minute.
+FINISHED_MAX_DURATION = timedelta(minutes=120)
 
 
 def save_flashscore_watch(
@@ -213,19 +215,28 @@ def is_match_finished(match: FlashscoreMatchRead, now: datetime | None = None) -
         )
     ):
         return True
-    if match.minute is not None:
-        return False
-    if match.start_time is None:
-        return False
     current = now or datetime.now(UTC)
-    start = match.start_time
-    if start.tzinfo is None:
-        start = start.replace(tzinfo=UTC)
-    # With a scoreline but no clock, wait longer before assuming FT (list feed is sticky).
-    grace = FINISHED_WITHOUT_CLOCK
-    if match.home_score is not None or match.away_score is not None:
-        grace = timedelta(minutes=150)
-    return current >= start + grace
+    if match.start_time is not None:
+        start = match.start_time
+        if start.tzinfo is None:
+            start = start.replace(tzinfo=UTC)
+        elapsed = current - start
+        # Wall-clock hard stop: Flashscore often leaves live/score with no minute after FT.
+        if elapsed >= FINISHED_MAX_DURATION:
+            return True
+        if match.minute is not None:
+            if match.minute >= 90 and elapsed >= FINISHED_WITHOUT_CLOCK:
+                return True
+            return False
+        grace = (
+            FINISHED_MAX_DURATION
+            if match.home_score is not None or match.away_score is not None
+            else FINISHED_WITHOUT_CLOCK
+        )
+        return elapsed >= grace
+    if match.minute is not None:
+        return match.minute >= 120
+    return False
 
 
 def has_match_started(match: FlashscoreMatchRead, now: datetime | None = None) -> bool:

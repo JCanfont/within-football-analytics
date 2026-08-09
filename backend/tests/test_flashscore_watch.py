@@ -192,6 +192,47 @@ def test_finished_and_stale_scheduled_matches_do_not_need_live_poll() -> None:
     assert flashscore_watch.needs_live_poll(stale, now) is False
 
 
+def test_score_without_minute_closes_after_two_hours() -> None:
+    now = datetime(2026, 8, 8, 20, 0, tzinfo=UTC)
+    lingering = FlashscoreMatchRead(
+        event_id="linger",
+        competition="LaLiga",
+        home_team="Getafe",
+        away_team="Celta",
+        status="live",
+        minute=None,
+        home_score=1,
+        away_score=0,
+        favorite_odds=1.4,
+        favorite_team="Getafe",
+        favorite_side="home",
+        start_time=now - timedelta(minutes=125),
+    )
+    still_live = lingering.model_copy(update={"start_time": now - timedelta(minutes=100)})
+
+    assert flashscore_watch.is_match_finished(lingering, now) is True
+    assert flashscore_watch.is_match_finished(still_live, now) is False
+
+
+def test_stuck_late_minute_closes_by_wall_clock() -> None:
+    now = datetime(2026, 8, 8, 20, 0, tzinfo=UTC)
+    stuck = FlashscoreMatchRead(
+        event_id="stuck-90",
+        competition="LaLiga",
+        home_team="Getafe",
+        away_team="Celta",
+        status="live",
+        minute=90,
+        home_score=2,
+        away_score=1,
+        favorite_odds=1.4,
+        favorite_team="Getafe",
+        favorite_side="home",
+        start_time=now - timedelta(minutes=110),
+    )
+    assert flashscore_watch.is_match_finished(stuck, now) is True
+
+
 def test_signal_tick_skips_finished_watchlist(monkeypatch) -> None:
     now = datetime.now(UTC)
     with SessionLocal() as db:
