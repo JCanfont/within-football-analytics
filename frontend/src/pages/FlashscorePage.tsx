@@ -244,7 +244,7 @@ export function FlashscorePage() {
     };
   }, [liveRefresh, matches.length, refreshLive]);
 
-  const listed = matches.filter((match) => match.favorite_odds != null);
+  const listed = matches.filter((match) => match.favorite_odds != null && !isMatchFinished(match));
   const alertWatch = listed.filter((match) => match.favorite_odds != null && match.favorite_odds <= ALERT_ODDS_THRESHOLD).length;
   const earlyGoals = matches.filter((match) => match.early_goal).length;
   const favoriteEarlyGoals = matches.filter((match) => match.early_favorite_goal || match.alert_eligible).length;
