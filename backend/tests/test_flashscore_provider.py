@@ -18,11 +18,12 @@ def settings(api_key: str | None = "rapid-key"):
 
 
 def test_flashscore_provider_marks_low_odds_goal_before_minute_30(monkeypatch) -> None:
+    now = datetime.now(UTC)
     schedule = [{
         "name": "LaLiga",
         "matches": [{
             "match_id": "match-1",
-            "timestamp": "2026-08-07T20:00:00Z",
+            "timestamp": (now - timedelta(minutes=24)).isoformat().replace("+00:00", "Z"),
             "home_team": {"name": "Getafe"},
             "away_team": {"name": "Celta"},
             "match_status": "1st Half",
@@ -405,13 +406,14 @@ def test_flashscore_provider_excludes_friendly_and_youth(monkeypatch) -> None:
 
 
 def test_flashscore_provider_reads_tournament_grouped_list(monkeypatch) -> None:
+    now = datetime.now(UTC)
     schedule = [{
         "name": "Premier League",
         "country_name": "England",
         "tournament_id": "t1",
         "matches": [{
             "match_id": "m-10",
-            "timestamp": "2026-08-08T14:00:00Z",
+            "timestamp": (now + timedelta(hours=2)).isoformat().replace("+00:00", "Z"),
             "home_team": {"name": "Arsenal"},
             "away_team": {"name": "Chelsea"},
             "match_status": "scheduled",
