@@ -1,7 +1,9 @@
-import { Save, SlidersHorizontal } from "lucide-react";
+import { Mail, Save, SlidersHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
 import { EmptyState } from "../components/EmptyState";
 import { useStatisticalConfig } from "../hooks/useStatisticalConfig";
-import type { ClosedMidtableWeights, StatisticalSettings } from "../types/api";
+import { fetchAlertEmailStatus } from "../services/api";
+import type { ClosedMidtableWeights, ForebetStartEmailResult, StatisticalSettings } from "../types/api";
 
 const weightLabels: Record<keyof ClosedMidtableWeights, string> = {
   centrality: "Centralidad",
@@ -15,6 +17,18 @@ const weightLabels: Record<keyof ClosedMidtableWeights, string> = {
 
 export function SettingsPage() {
   const { settings, isLoading, isSaving, message, error, setSettings, save } = useStatisticalConfig();
+  const [emailStatus, setEmailStatus] = useState<ForebetStartEmailResult | null>(null);
+
+  useEffect(() => {
+    fetchAlertEmailStatus()
+      .then(setEmailStatus)
+      .catch(() => setEmailStatus({
+        configured: false,
+        sent: false,
+        status: "not_configured",
+        message: "No se pudo comprobar el estado del email.",
+      }));
+  }, []);
 
   function updateField(field: keyof StatisticalSettings, value: number) {
     if (!settings) {
@@ -130,6 +144,25 @@ export function SettingsPage() {
                 <span key={interval.label}>{interval.label}</span>
               ))}
             </div>
+          </section>
+
+          <section className="panel settings-panel">
+            <div className="panel-heading">
+              <div>
+                <h2>Alertas por email</h2>
+                <p>Forebet (inicio) y Flashscore (gol &lt;30&apos; del favorito ≤ 1,50).</p>
+              </div>
+              <Mail size={19} aria-hidden="true" />
+            </div>
+            {emailStatus == null ? (
+              <div className="detail-state">Comprobando Resend...</div>
+            ) : (
+              <div className={emailStatus.configured ? "save-message" : "flashscore-setup-message"}>
+                {emailStatus.configured
+                  ? "Email configurado (`RESEND_API_KEY` + `FOREBET_ALERT_EMAIL`)."
+                  : "Faltan `RESEND_API_KEY` o `FOREBET_ALERT_EMAIL` en Vercel. Sin eso no se envian alertas."}
+              </div>
+            )}
           </section>
         </div>
       )}

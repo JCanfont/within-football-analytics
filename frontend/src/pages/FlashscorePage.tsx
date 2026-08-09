@@ -2,12 +2,13 @@ import { BellRing, RefreshCw, Timer, TrendingDown } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  fetchAlertEmailStatus,
   fetchFlashscoreMatches,
   refreshFlashscoreWatch,
   saveFlashscoreWatch,
   sendFlashscoreGoalEmail,
 } from "../services/api";
-import type { FlashscoreMatch } from "../types/api";
+import type { FlashscoreMatch, ForebetStartEmailResult } from "../types/api";
 import {
   ALERT_ODDS_THRESHOLD,
   FAST_LIVE_REFRESH_MS,
@@ -38,6 +39,7 @@ export function FlashscorePage() {
   const [isRefreshingLive, setIsRefreshingLive] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [oddsStatus, setOddsStatus] = useState("idle");
+  const [emailStatus, setEmailStatus] = useState<ForebetStartEmailResult | null>(null);
   const [message, setMessage] = useState("Captura solo favoritos ≤ 1,60. Flashscore Ultra actualiza cada 1 min hasta el 30'.");
   const [lastLiveRefresh, setLastLiveRefresh] = useState<string | null>(null);
   const [refreshEveryMs, setRefreshEveryMs] = useState(FAST_LIVE_REFRESH_MS);
@@ -56,6 +58,17 @@ export function FlashscorePage() {
     matchesRef.current = matches;
     setRefreshEveryMs(liveRefreshIntervalMs(matches) ?? SLOW_LIVE_REFRESH_MS);
   }, [matches]);
+
+  useEffect(() => {
+    fetchAlertEmailStatus()
+      .then(setEmailStatus)
+      .catch(() => setEmailStatus({
+        configured: false,
+        sent: false,
+        status: "not_configured",
+        message: "No se pudo comprobar el estado del email de alertas.",
+      }));
+  }, []);
 
   useEffect(() => {
     const saved = readFlashscoreWatch();
@@ -111,6 +124,11 @@ export function FlashscorePage() {
         away_score: match.away_score,
       })
         .then((result) => {
+          setEmailStatus(result);
+          if (!result.configured) {
+            setMessage("Alerta detectada, pero faltan RESEND_API_KEY o FOREBET_ALERT_EMAIL en Vercel.");
+            return;
+          }
           if (!result.sent) {
             setMessage(result.message);
             return;
@@ -340,6 +358,18 @@ export function FlashscorePage() {
           {message}
           {capturedAt ? <span className="table-subtext"> · Cuotas capturadas {formatTime(capturedAt)}</span> : null}
         </p>
+        {emailStatus && !emailStatus.configured ? (
+          <p className="flashscore-setup-message">
+            Email de alertas no configurado: añade `RESEND_API_KEY` y `FOREBET_ALERT_EMAIL` en Vercel
+            (y `CRON_SECRET` en GitHub/Vercel para el tick en segundo plano).
+          </p>
+        ) : null}
+        {emailStatus?.configured ? (
+          <p className="flashscore-setup-detail">
+            Email de alertas listo. Se envia si el favorito ≤ 1,50 marca antes del 30'
+            {liveRefresh ? " (con Ultra auto o tick CRON)." : " (activa Ultra auto o el tick CRON)."}
+          </p>
+        ) : null}
         {!configured || oddsStatus === "request_failed" || oddsStatus === "not_configured" ? (
           <p className="flashscore-setup-detail">
             Cuotas y live usan RapidAPI FlashScore4 Ultra (`RAPIDAPI_KEY`). Solo se vigilan favoritos ≤ 1,60:
