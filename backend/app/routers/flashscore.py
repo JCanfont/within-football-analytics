@@ -27,6 +27,7 @@ from app.services.flashscore_watch import (
     merge_flashscore_live_board,
     run_flashscore_signal_tick,
     save_flashscore_watch,
+    with_early_goal_flags,
 )
 
 
@@ -88,7 +89,10 @@ def refresh_flashscore_watch_live(
         return watch.model_copy(update={"message": f"No se pudo refrescar con Flashscore Ultra: {exc}"})
     merged = merge_flashscore_live_board(watch.matches, board)
     merged = enrich_matches_with_details(merged)
-    merged = enrich_matches_with_goal_minutes(merged)
+    merged = [
+        with_early_goal_flags(match)
+        for match in enrich_matches_with_goal_minutes(merged)
+    ]
     saved = save_flashscore_watch(
         db,
         day=watch.day,
@@ -100,11 +104,13 @@ def refresh_flashscore_watch_live(
         1 for match in saved.matches if match.home_score is not None or match.away_score is not None
     )
     with_minute = sum(1 for match in saved.matches if match.minute is not None)
+    with_goal_minute = sum(1 for match in saved.matches if match.early_goal_minute is not None)
     return saved.model_copy(
         update={
             "message": (
                 f"Flashscore Ultra refresco · {len(saved.matches)} vigilados ≤ 1,60 · "
-                f"{with_score} con marcador · {with_minute} con minuto."
+                f"{with_score} con marcador · {with_minute} con minuto · "
+                f"{with_goal_minute} con minuto de gol."
             )
         }
     )

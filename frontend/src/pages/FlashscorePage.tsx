@@ -85,11 +85,12 @@ export function FlashscorePage() {
 
   const sendEligibleAlerts = useCallback((items: FlashscoreMatch[]) => {
     for (const match of items) {
+      const goalMinute = match.early_goal_minute ?? match.minute;
       if (
         !match.alert_eligible ||
         !match.favorite_team ||
         match.favorite_odds == null ||
-        match.minute == null ||
+        goalMinute == null ||
         match.home_score == null ||
         match.away_score == null ||
         alertedRef.current.includes(match.event_id) ||
@@ -105,7 +106,7 @@ export function FlashscorePage() {
         away_team: match.away_team,
         favorite_team: match.favorite_team,
         favorite_odds: match.favorite_odds,
-        minute: match.minute,
+        minute: goalMinute,
         home_score: match.home_score,
         away_score: match.away_score,
       })
@@ -451,14 +452,13 @@ function earlyGoalLabel(match: FlashscoreMatch) {
   const goalMinute = match.early_goal_minute;
   const totalGoals = (match.home_score ?? 0) + (match.away_score ?? 0);
   if (match.early_favorite_goal || match.alert_eligible) {
-    const minute = goalMinute ?? match.minute;
-    return minute != null ? `Favorito marco (${minute}')` : "Favorito marco <30'";
+    return goalMinute != null ? `Favorito marco (${goalMinute}')` : "Favorito marco <30'";
   }
-  if (match.early_goal || (totalGoals > 0 && goalMinute != null)) {
+  if (match.early_goal) {
     return goalMinute != null ? `Gol al ${goalMinute}'` : "Gol antes del 30'";
   }
-  if (totalGoals > 0 && goalMinute == null) {
-    return "Gol (minuto ?)";
+  if (totalGoals > 0) {
+    return goalMinute != null ? `Gol al ${goalMinute}'` : "Gol (minuto ?)";
   }
   if (match.minute != null && match.minute <= 30) {
     return "Ventana abierta";

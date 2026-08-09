@@ -194,14 +194,40 @@ def test_extract_goal_minutes_from_summary_payload() -> None:
     assert flashscore_provider._extract_goal_minutes(payload) == [12, 41]
 
 
+def test_extract_goal_minutes_from_type_label_and_score_after() -> None:
+    payload = {
+        "events": [
+            {
+                "type": "1",
+                "type_label": "Goal",
+                "minute": "8'",
+                "home_score_after": 1,
+                "away_score_after": 0,
+            },
+            {
+                "type": "yellow_card",
+                "type_label": "Yellow card",
+                "minute": "22'",
+            },
+            {
+                "type": "goal",
+                "minute": "51'",
+                "home_score_after": 2,
+                "away_score_after": 0,
+            },
+        ]
+    }
+    assert flashscore_provider._extract_goal_minutes(payload) == [8, 51]
+
+
 def test_enrich_matches_with_goal_minutes(monkeypatch) -> None:
     base = FlashscoreMatchRead(
         event_id="goal-1",
         competition="Japan: J1 League",
         home_team="Sanfrecce Hiroshima",
         away_team="Chiba",
-        status="live",
-        minute=55,
+        status="halftime",
+        minute=None,
         home_score=1,
         away_score=0,
         favorite_odds=1.4,
@@ -211,8 +237,10 @@ def test_enrich_matches_with_goal_minutes(monkeypatch) -> None:
     )
 
     def fake_get_json(url, headers, params):
-        assert "summary" in url or "commentary" in url
-        return {"events": [{"type": "goal", "time": "17'"}]}
+        assert "summary" in url or "commentary" in url or url.endswith("/matches/details")
+        if "summary" in url:
+            return {"events": [{"type_label": "Goal", "minute": "17'", "home_score_after": 1, "away_score_after": 0}]}
+        raise flashscore_provider.requests.RequestException("skip")
 
     monkeypatch.setattr(flashscore_provider, "_get_json", fake_get_json)
     enriched = flashscore_provider.enrich_matches_with_goal_minutes([base], settings=settings())
