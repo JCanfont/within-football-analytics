@@ -7,6 +7,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { ForebetPage } from "./pages/ForebetPage";
 import { ForebetStatsPage } from "./pages/ForebetStatsPage";
 import { FlashscorePage } from "./pages/FlashscorePage";
+import { FlashscoreStatsPage } from "./pages/FlashscoreStatsPage";
 import { ImportsPage } from "./pages/ImportsPage";
 import { LiveMatchesPage } from "./pages/LiveMatchesPage";
 import { PlayersPage } from "./pages/PlayersPage";
@@ -22,6 +23,7 @@ const navigation = [
   { label: "Forebet", icon: SearchCheck, path: "/forebet" },
   { label: "Estadisticas Forebet", icon: BarChart3, path: "/forebet-stats" },
   { label: "Flashscore", icon: Radio, path: "/flashscore" },
+  { label: "Estadisticas Flashscore", icon: BarChart3, path: "/flashscore-stats" },
   { label: "A la contra", icon: Scale, path: "/contra" },
   { label: "Preguntas", icon: HelpCircle, path: "/questions" },
   { label: "Importaciones", icon: DatabaseZap, path: "/imports" },
@@ -77,6 +79,7 @@ export default function App() {
           <Route path="/forebet" element={<ForebetPage />} />
           <Route path="/forebet-stats" element={<ForebetStatsPage />} />
           <Route path="/flashscore" element={<FlashscorePage />} />
+          <Route path="/flashscore-stats" element={<FlashscoreStatsPage />} />
           <Route path="/contra" element={<ContraPage />} />
           <Route path="/questions" element={<QuestionsPage />} />
           <Route path="/imports" element={<ImportsPage />} />

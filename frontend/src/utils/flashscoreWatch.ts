@@ -1,4 +1,7 @@
 import type { FlashscoreMatch } from "../types/api";
+import { archiveFlashscoreMatches, madridDateKey } from "./flashscoreHistory";
+
+export { madridDateKey } from "./flashscoreHistory";
 
 export const FLASHSCORE_WATCH_KEY = "within_flashscore_watch_v1";
 export const ALERT_ODDS_THRESHOLD = 1.5;
@@ -19,44 +22,78 @@ export type FlashscoreWatchState = {
   matches: FlashscoreMatch[];
 };
 
-export function readFlashscoreWatch(): FlashscoreWatchState | null {
+export function readFlashscoreWatch(now = Date.now()): FlashscoreWatchState | null {
   try {
     const raw = JSON.parse(localStorage.getItem(FLASHSCORE_WATCH_KEY) ?? "null");
     if (!raw || typeof raw !== "object" || !Array.isArray(raw.matches)) {
       return null;
     }
-    return {
-      capturedAt: typeof raw.capturedAt === "string" ? raw.capturedAt : new Date().toISOString(),
+    const state: FlashscoreWatchState = {
+      capturedAt: typeof raw.capturedAt === "string" ? raw.capturedAt : new Date(now).toISOString(),
       day: typeof raw.day === "number" ? raw.day : 0,
       matches: (raw.matches as unknown[])
         .filter(isFlashscoreMatch)
         .map(withEarlyGoalFlags)
         .filter((match: FlashscoreMatch) => match.favorite_odds != null && match.favorite_odds <= LIST_ODDS_THRESHOLD)
         .filter((match) => isWatchableCompetition(match))
-        .filter((match) => !isMatchFinished(match))
-        .map((match) => (isMatchFinished(match) && match.status !== "finished"
-          ? { ...match, status: "finished" }
-          : match)),
+        .map((match) => stampFinishedStatus(match, now)),
     };
+    return rolloverFlashscoreWatchIfNeeded(state, now);
   } catch {
     return null;
   }
 }
 
-export function writeFlashscoreWatch(state: FlashscoreWatchState) {
+export function writeFlashscoreWatch(state: FlashscoreWatchState, now = Date.now()) {
+  const rolled = rolloverFlashscoreWatchIfNeeded(state, now);
+  if (!rolled) {
+    clearFlashscoreWatch();
+    return;
+  }
   localStorage.setItem(FLASHSCORE_WATCH_KEY, JSON.stringify({
-    ...state,
-    matches: state.matches.filter(
+    ...rolled,
+    matches: rolled.matches.filter(
       (match) => match.favorite_odds != null
         && match.favorite_odds <= LIST_ODDS_THRESHOLD
-        && isWatchableCompetition(match)
-        && !isMatchFinished(match),
+        && isWatchableCompetition(match),
     ),
   }));
 }
 
 export function clearFlashscoreWatch() {
   localStorage.removeItem(FLASHSCORE_WATCH_KEY);
+}
+
+/** Keep finished matches visible during the capture day; archive them when the Madrid day rolls over. */
+export function rolloverFlashscoreWatchIfNeeded(
+  state: FlashscoreWatchState,
+  now = Date.now(),
+): FlashscoreWatchState | null {
+  const stamped = {
+    ...state,
+    matches: state.matches.map((match) => stampFinishedStatus(match, now)),
+  };
+  const watchDay = madridDateKey(stamped.capturedAt);
+  const today = madridDateKey(now);
+  if (watchDay === today) {
+    return stamped;
+  }
+  const finished = stamped.matches.filter((match) => isMatchFinished(match, now));
+  if (finished.length) {
+    archiveFlashscoreMatches(finished, {
+      archivedAt: new Date(now).toISOString(),
+      watchDay,
+    });
+  }
+  clearFlashscoreWatch();
+  return null;
+}
+
+export function stampFinishedStatus(match: FlashscoreMatch, now = Date.now()): FlashscoreMatch {
+  if (!isMatchFinished(match, now)) {
+    return match;
+  }
+  return match.status === "finished" ? match : { ...match, status: "finished" };
 }
 
 export function mergeFlashscoreLiveBoard(
@@ -90,12 +127,8 @@ export function mergeFlashscoreLiveBoard(
       )
         ? { ...base, early_goal_minute: base.minute }
         : base;
-      const stamped = isMatchFinished(stampedScore) && stampedScore.status !== "finished"
-        ? { ...stampedScore, status: "finished" }
-        : stampedScore;
-      return withEarlyGoalFlags(stamped);
-    })
-    .filter((match) => !isMatchFinished(match));
+      return withEarlyGoalFlags(stampFinishedStatus(stampedScore));
+    });
 }
 
 export function withEarlyGoalFlags(match: FlashscoreMatch): FlashscoreMatch {
@@ -408,11 +441,12 @@ export function isCriticalSignalWatch(match: FlashscoreMatch, now = Date.now()):
 }
 
 function earlyGoalRank(match: FlashscoreMatch) {
+  if (isMatchFinished(match)) return 5;
   if (match.early_favorite_goal || match.alert_eligible) return 0;
   if (match.early_goal) return 1;
   if (match.minute != null && match.minute <= EARLY_GOAL_MINUTE) return 2;
-  if (isMatchFinished(match)) return 4;
-  return 3;
+  if (hasMatchStarted(match)) return 3;
+  return 4;
 }
 
 function isFlashscoreMatch(value: unknown): value is FlashscoreMatch {

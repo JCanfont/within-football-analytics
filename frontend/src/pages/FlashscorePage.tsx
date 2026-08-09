@@ -24,9 +24,11 @@ import {
   nextPollWaitMs,
   readFlashscoreWatch,
   sortFlashscoreMatches,
+  stampFinishedStatus,
   withEarlyGoalFlags,
   writeFlashscoreWatch,
 } from "../utils/flashscoreWatch";
+import { archiveFlashscoreMatches } from "../utils/flashscoreHistory";
 
 const ALERTED_EVENTS_KEY = "within_flashscore_alerted_events";
 const LIVE_REFRESH_KEY = "within_flashscore_live_refresh";
@@ -159,7 +161,7 @@ export function FlashscorePage() {
         const merged = sortFlashscoreMatches(
           (result.matches || [])
             .map(withEarlyGoalFlags)
-            .filter((match) => !isMatchFinished(match)),
+            .map((match) => stampFinishedStatus(match)),
         );
         setMatches(merged);
         writeFlashscoreWatch({
@@ -168,20 +170,21 @@ export function FlashscorePage() {
           matches: merged,
         });
         setLastLiveRefresh(new Date().toISOString());
-        const linked = merged.filter((match) => match.minute != null || match.home_score != null).length;
+        const active = merged.filter((match) => !isMatchFinished(match));
+        const finished = merged.filter((match) => isMatchFinished(match));
+        const linked = active.filter((match) => match.minute != null || match.home_score != null).length;
         const earlyGoals = merged.filter((match) => match.early_goal).length;
-        const nextWait = liveRefreshIntervalMs(merged);
-        const finished = (result.matches || []).length - merged.length;
+        const nextWait = liveRefreshIntervalMs(active);
         const intervalLabel = nextWait == null
-          ? "parado (sin activos)"
+          ? (finished.length && !active.length ? "solo acabados" : "parado (sin activos)")
           : nextWait === FAST_LIVE_REFRESH_MS
             ? "1 min"
             : "5 min";
         setMessage(
-          `${result.message || "Marcadores actualizados"} · ${linked}/${merged.length} con dato live · ` +
-          `${finished} acabados · ${earlyGoals} gol <30' · proximo refresh ${intervalLabel}.`,
+          `${result.message || "Marcadores actualizados"} · ${linked}/${active.length} live · ` +
+          `${finished.length} acabados visibles · ${earlyGoals} gol <30' · proximo refresh ${intervalLabel}.`,
         );
-        sendEligibleAlerts(merged);
+        sendEligibleAlerts(active);
       })
       .catch(() => setMessage("No se pudieron actualizar los resultados desde Flashscore Ultra."))
       .finally(() => setIsRefreshingLive(false));
@@ -199,6 +202,7 @@ export function FlashscorePage() {
           return;
         }
         const stamp = new Date().toISOString();
+        const previousFinished = matchesRef.current.filter((match) => isMatchFinished(match));
         const captured = sortFlashscoreMatches(
           result.matches
             .map(withEarlyGoalFlags)
@@ -206,20 +210,29 @@ export function FlashscorePage() {
             .filter((match) => isWatchableCompetition(match))
             .filter((match) => !isMatchFinished(match)),
         );
+        const byId = new Map(captured.map((match) => [match.event_id, match]));
+        for (const finished of previousFinished) {
+          if (!byId.has(finished.event_id)) {
+            byId.set(finished.event_id, stampFinishedStatus(finished));
+          }
+        }
+        const nextMatches = sortFlashscoreMatches(Array.from(byId.values()));
         setCapturedAt(stamp);
-        setMatches(captured);
+        setMatches(nextMatches);
         writeFlashscoreWatch({
           capturedAt: stamp,
           day,
-          matches: captured,
+          matches: nextMatches,
         });
-        syncServerWatch(captured, day, stamp);
+        syncServerWatch(nextMatches, day, stamp);
         setMessage(
-          `${result.message} Guardados ${captured.length} favoritos ≤ 1,60. Actualizando marcadores…`,
+          `${result.message} Guardados ${captured.length} activos ≤ 1,60`
+          + (previousFinished.length ? ` · ${previousFinished.length} acabados del dia se mantienen` : "")
+          + ". Actualizando marcadores…",
         );
         // Pull /matches/live (+ details) right after capture so scores are not stuck on —.
-        if (captured.length > 0) {
-          matchesRef.current = captured;
+        if (nextMatches.length > 0) {
+          matchesRef.current = nextMatches;
           refreshLive();
         }
       })
@@ -263,14 +276,16 @@ export function FlashscorePage() {
     };
   }, [liveRefresh, matches.length, refreshLive]);
 
-  const listed = matches.filter((match) => match.favorite_odds != null && !isMatchFinished(match));
-  const alertWatch = listed.filter((match) => match.favorite_odds != null && match.favorite_odds <= ALERT_ODDS_THRESHOLD).length;
+  const listed = matches.filter((match) => match.favorite_odds != null);
+  const activeListed = listed.filter((match) => !isMatchFinished(match));
+  const finishedListed = listed.filter((match) => isMatchFinished(match));
+  const alertWatch = activeListed.filter((match) => match.favorite_odds != null && match.favorite_odds <= ALERT_ODDS_THRESHOLD).length;
   const earlyGoals = matches.filter((match) => match.early_goal).length;
   const favoriteEarlyGoals = matches.filter((match) => match.early_favorite_goal || match.alert_eligible).length;
-  const activeLive = listed.some((match) => liveRefreshIntervalMs([match]) != null);
+  const activeLive = activeListed.some((match) => liveRefreshIntervalMs([match]) != null);
   const refreshLabel = liveRefresh && listed.length
     ? (!activeLive
-      ? "Esperando"
+      ? (finishedListed.length ? "Acabados" : "Esperando")
       : refreshEveryMs === FAST_LIVE_REFRESH_MS
         ? "LIVE 1 min"
         : "LIVE 5 min")
@@ -286,7 +301,7 @@ export function FlashscorePage() {
       </header>
 
       <div className="metrics-grid" aria-label="Resumen Flashscore">
-        <FlashscoreMetric icon={TrendingDown} label="Cuota ≤ 1,60" value={String(listed.length)} detail="Unicos vigilados" />
+        <FlashscoreMetric icon={TrendingDown} label="Cuota ≤ 1,60" value={String(listed.length)} detail={`${activeListed.length} activos · ${finishedListed.length} acabados`} />
         <FlashscoreMetric icon={Timer} label="Aviso ≤ 1,50" value={String(alertWatch)} detail="Candidatos a email" />
         <FlashscoreMetric icon={BellRing} label="Gol antes del 30'" value={String(earlyGoals)} detail={`${favoriteEarlyGoals} del equipo vigilado`} />
         <FlashscoreMetric
@@ -351,6 +366,25 @@ export function FlashscorePage() {
               <RefreshCw size={15} aria-hidden="true" />
               {isRefreshingLive ? "Actualizando" : "Actualizar resultados"}
             </button>
+            <button
+              className="row-action"
+              type="button"
+              disabled={finishedListed.length === 0}
+              onClick={() => {
+                archiveFlashscoreMatches(finishedListed);
+                const remaining = sortFlashscoreMatches(matches.filter((match) => !isMatchFinished(match)));
+                setMatches(remaining);
+                writeFlashscoreWatch({
+                  capturedAt: capturedAt ?? new Date().toISOString(),
+                  day,
+                  matches: remaining,
+                });
+                syncServerWatch(remaining, day, capturedAt);
+                setMessage(`${finishedListed.length} acabados archivados en Estadisticas Flashscore.`);
+              }}
+            >
+              Archivar acabados
+            </button>
           </div>
         </div>
 
@@ -393,11 +427,14 @@ export function FlashscorePage() {
             <tbody>
               {listed.map((match) => {
                 const alerted = alertedEventIds.includes(match.event_id);
-                const rowClass = match.early_favorite_goal || match.alert_eligible
-                  ? "flashscore-alert-row flashscore-early-favorite-row"
-                  : match.early_goal
-                    ? "flashscore-early-goal-row"
-                    : undefined;
+                const finished = isMatchFinished(match);
+                const rowClass = finished
+                  ? "flashscore-finished-row"
+                  : match.early_favorite_goal || match.alert_eligible
+                    ? "flashscore-alert-row flashscore-early-favorite-row"
+                    : match.early_goal
+                      ? "flashscore-early-goal-row"
+                      : undefined;
                 return (
                   <tr className={rowClass} key={match.event_id}>
                     <td>{formatStartTime(match.start_time)}</td>

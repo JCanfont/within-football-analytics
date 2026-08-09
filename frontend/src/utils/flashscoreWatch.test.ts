@@ -6,8 +6,10 @@ import {
   isMatchFinished,
   liveRefreshIntervalMs,
   mergeFlashscoreLiveBoard,
+  rolloverFlashscoreWatchIfNeeded,
   withEarlyGoalFlags,
 } from "./flashscoreWatch";
+import { clearFlashscoreHistory, readFlashscoreHistory } from "./flashscoreHistory";
 import type { FlashscoreMatch } from "../types/api";
 
 function baseMatch(overrides: Partial<FlashscoreMatch> = {}): FlashscoreMatch {
@@ -180,6 +182,46 @@ describe("flashscoreWatch", () => {
       away_score: 0,
       start_time: "2026-08-08T18:05:00Z",
     }), now)).toBe(true);
+  });
+
+  it("keeps finished matches in the live board merge during the day", () => {
+    const merged = mergeFlashscoreLiveBoard(
+      [baseMatch({
+        event_id: "done-1",
+        status: "finished",
+        home_score: 2,
+        away_score: 1,
+        start_time: "2026-08-08T16:00:00Z",
+      })],
+      [],
+    );
+    expect(merged).toHaveLength(1);
+    expect(merged[0].status).toBe("finished");
+    expect(merged[0].home_score).toBe(2);
+  });
+
+  it("archives finished matches when the Madrid day rolls over", () => {
+    clearFlashscoreHistory();
+    const now = Date.parse("2026-08-09T10:00:00Z");
+    const rolled = rolloverFlashscoreWatchIfNeeded({
+      capturedAt: "2026-08-08T12:00:00Z",
+      day: 0,
+      matches: [baseMatch({
+        event_id: "archive-1",
+        status: "finished",
+        home_score: 1,
+        away_score: 0,
+        early_goal: true,
+        early_goal_minute: 11,
+        start_time: "2026-08-08T18:00:00Z",
+      })],
+    }, now);
+
+    expect(rolled).toBeNull();
+    const history = readFlashscoreHistory();
+    expect(history).toHaveLength(1);
+    expect(history[0].event_id).toBe("archive-1");
+    expect(history[0].watch_day).toBe("2026-08-08");
   });
 
   it("uses fast signals once kickoff time has passed even without live status", () => {

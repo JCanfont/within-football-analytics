@@ -1223,6 +1223,25 @@ td {
   background: #fff6df;
 }
 
+.flashscore-finished-row {
+  background: #f3f5f7;
+  color: #536174;
+}
+
+.flashscore-finished-row strong {
+  color: #314155;
+}
+
+.flashscore-finished-row .flashscore-score,
+.flashscore-finished-row .flashscore-alert-status {
+  font-weight: 800;
+}
+
+.flashscore-stats-page {
+  display: grid;
+  gap: 22px;
+}
+
 .flashscore-page,
 .flashscore-panel,
 .flashscore-panel .table-wrap {
