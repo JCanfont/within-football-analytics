@@ -525,6 +525,12 @@ describe("App", () => {
         },
       ],
     });
+    mockedApi.fetchAlertEmailStatus.mockResolvedValue({
+      configured: true,
+      sent: false,
+      status: "configured",
+      message: "Avisos por email configurados.",
+    });
     mockedApi.fetchFlashscoreMatches.mockResolvedValue({
       provider: "flashscore",
       status: "ok",

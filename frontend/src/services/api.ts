@@ -226,6 +226,11 @@ export async function sendForebetStartEmail(payload: ForebetStartEmailRequest): 
   return response.data;
 }
 
+export async function fetchAlertEmailStatus(): Promise<ForebetStartEmailResult> {
+  const response = await api.get<ForebetStartEmailResult>("/api/alerts/forebet-start/email/status");
+  return response.data;
+}
+
 export async function fetchFlashscoreMatches(day = 0): Promise<FlashscoreMatchesResult> {
   const response = await api.get<FlashscoreMatchesResult>(`/api/flashscore/matches?day=${day}`);
   return response.data;

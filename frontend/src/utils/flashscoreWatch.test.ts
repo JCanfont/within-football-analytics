@@ -3,10 +3,13 @@ import {
   FAST_LIVE_REFRESH_MS,
   SLOW_LIVE_REFRESH_MS,
   isAlertEligible,
+  isMatchFinished,
   liveRefreshIntervalMs,
   mergeFlashscoreLiveBoard,
+  rolloverFlashscoreWatchIfNeeded,
   withEarlyGoalFlags,
 } from "./flashscoreWatch";
+import { clearFlashscoreHistory, readFlashscoreHistory } from "./flashscoreHistory";
 import type { FlashscoreMatch } from "../types/api";
 
 function baseMatch(overrides: Partial<FlashscoreMatch> = {}): FlashscoreMatch {
@@ -70,6 +73,33 @@ describe("flashscoreWatch", () => {
     expect(later.early_goal_minute).toBe(18);
   });
 
+  it("keeps the scored minute through half-time when the live clock disappears", () => {
+    const later = withEarlyGoalFlags(baseMatch({
+      status: "halftime",
+      minute: null,
+      home_score: 1,
+      away_score: 0,
+      early_goal_minute: 14,
+      early_goal: true,
+      early_favorite_goal: true,
+    }));
+
+    expect(later.early_goal).toBe(true);
+    expect(later.early_favorite_goal).toBe(true);
+    expect(later.early_goal_minute).toBe(14);
+    expect(later.alert_eligible).toBe(true);
+  });
+
+  it("stamps the live minute when the first goal arrives before 30'", () => {
+    const merged = mergeFlashscoreLiveBoard(
+      [baseMatch({ status: "inprogress", minute: 9, home_score: 0, away_score: 0 })],
+      [baseMatch({ status: "inprogress", minute: 14, home_score: 1, away_score: 0 })],
+    );
+
+    expect(merged[0].early_goal_minute).toBe(14);
+    expect(merged[0].early_goal).toBe(true);
+  });
+
   it("flags any early goal even when the favorite has not scored", () => {
     const match = withEarlyGoalFlags(baseMatch({
       minute: 12,
@@ -123,6 +153,75 @@ describe("flashscoreWatch", () => {
       away_score: 1,
       start_time: "2026-08-08T17:00:00Z",
     })], now)).toBeNull();
+  });
+
+  it("closes score-without-minute rows after two hours from kickoff", () => {
+    const now = Date.parse("2026-08-08T20:00:00Z");
+    expect(isMatchFinished(baseMatch({
+      status: "live",
+      minute: null,
+      home_score: 1,
+      away_score: 0,
+      start_time: "2026-08-08T17:55:00Z",
+    }), now)).toBe(true);
+    expect(isMatchFinished(baseMatch({
+      status: "live",
+      minute: null,
+      home_score: 1,
+      away_score: 0,
+      start_time: "2026-08-08T18:30:00Z",
+    }), now)).toBe(false);
+  });
+
+  it("closes stuck 90' rows when wall-clock is past full time", () => {
+    const now = Date.parse("2026-08-08T20:00:00Z");
+    expect(isMatchFinished(baseMatch({
+      status: "live",
+      minute: 90,
+      home_score: 2,
+      away_score: 0,
+      start_time: "2026-08-08T18:05:00Z",
+    }), now)).toBe(true);
+  });
+
+  it("keeps finished matches in the live board merge during the day", () => {
+    const merged = mergeFlashscoreLiveBoard(
+      [baseMatch({
+        event_id: "done-1",
+        status: "finished",
+        home_score: 2,
+        away_score: 1,
+        start_time: "2026-08-08T16:00:00Z",
+      })],
+      [],
+    );
+    expect(merged).toHaveLength(1);
+    expect(merged[0].status).toBe("finished");
+    expect(merged[0].home_score).toBe(2);
+  });
+
+  it("archives finished matches when the Madrid day rolls over", () => {
+    clearFlashscoreHistory();
+    const now = Date.parse("2026-08-09T10:00:00Z");
+    const rolled = rolloverFlashscoreWatchIfNeeded({
+      capturedAt: "2026-08-08T12:00:00Z",
+      day: 0,
+      matches: [baseMatch({
+        event_id: "archive-1",
+        status: "finished",
+        home_score: 1,
+        away_score: 0,
+        early_goal: true,
+        early_goal_minute: 11,
+        start_time: "2026-08-08T18:00:00Z",
+      })],
+    }, now);
+
+    expect(rolled).toBeNull();
+    const history = readFlashscoreHistory();
+    expect(history).toHaveLength(1);
+    expect(history[0].event_id).toBe("archive-1");
+    expect(history[0].watch_day).toBe("2026-08-08");
   });
 
   it("uses fast signals once kickoff time has passed even without live status", () => {
@@ -180,5 +279,12 @@ describe("nextPollWaitMs / displayMatchMinute", () => {
       home_score: 1,
       away_score: 0,
     }), now)).toMatch(/~20'|Descanso/);
+    expect(displayMatchMinute(baseMatch({
+      status: "live",
+      minute: null,
+      home_score: 1,
+      away_score: 0,
+      start_time: "2026-08-08T15:30:00Z",
+    }), now)).toBe("Finalizado");
   });
 });

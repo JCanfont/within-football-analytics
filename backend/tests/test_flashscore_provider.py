@@ -18,11 +18,12 @@ def settings(api_key: str | None = "rapid-key"):
 
 
 def test_flashscore_provider_marks_low_odds_goal_before_minute_30(monkeypatch) -> None:
+    now = datetime.now(UTC)
     schedule = [{
         "name": "LaLiga",
         "matches": [{
             "match_id": "match-1",
-            "timestamp": "2026-08-07T20:00:00Z",
+            "timestamp": (now - timedelta(minutes=24)).isoformat().replace("+00:00", "Z"),
             "home_team": {"name": "Getafe"},
             "away_team": {"name": "Celta"},
             "match_status": "1st Half",
@@ -194,14 +195,40 @@ def test_extract_goal_minutes_from_summary_payload() -> None:
     assert flashscore_provider._extract_goal_minutes(payload) == [12, 41]
 
 
+def test_extract_goal_minutes_from_type_label_and_score_after() -> None:
+    payload = {
+        "events": [
+            {
+                "type": "1",
+                "type_label": "Goal",
+                "minute": "8'",
+                "home_score_after": 1,
+                "away_score_after": 0,
+            },
+            {
+                "type": "yellow_card",
+                "type_label": "Yellow card",
+                "minute": "22'",
+            },
+            {
+                "type": "goal",
+                "minute": "51'",
+                "home_score_after": 2,
+                "away_score_after": 0,
+            },
+        ]
+    }
+    assert flashscore_provider._extract_goal_minutes(payload) == [8, 51]
+
+
 def test_enrich_matches_with_goal_minutes(monkeypatch) -> None:
     base = FlashscoreMatchRead(
         event_id="goal-1",
         competition="Japan: J1 League",
         home_team="Sanfrecce Hiroshima",
         away_team="Chiba",
-        status="live",
-        minute=55,
+        status="halftime",
+        minute=None,
         home_score=1,
         away_score=0,
         favorite_odds=1.4,
@@ -211,8 +238,10 @@ def test_enrich_matches_with_goal_minutes(monkeypatch) -> None:
     )
 
     def fake_get_json(url, headers, params):
-        assert "summary" in url or "commentary" in url
-        return {"events": [{"type": "goal", "time": "17'"}]}
+        assert "summary" in url or "commentary" in url or url.endswith("/matches/details")
+        if "summary" in url:
+            return {"events": [{"type_label": "Goal", "minute": "17'", "home_score_after": 1, "away_score_after": 0}]}
+        raise flashscore_provider.requests.RequestException("skip")
 
     monkeypatch.setattr(flashscore_provider, "_get_json", fake_get_json)
     enriched = flashscore_provider.enrich_matches_with_goal_minutes([base], settings=settings())
@@ -377,13 +406,14 @@ def test_flashscore_provider_excludes_friendly_and_youth(monkeypatch) -> None:
 
 
 def test_flashscore_provider_reads_tournament_grouped_list(monkeypatch) -> None:
+    now = datetime.now(UTC)
     schedule = [{
         "name": "Premier League",
         "country_name": "England",
         "tournament_id": "t1",
         "matches": [{
             "match_id": "m-10",
-            "timestamp": "2026-08-08T14:00:00Z",
+            "timestamp": (now + timedelta(hours=2)).isoformat().replace("+00:00", "Z"),
             "home_team": {"name": "Arsenal"},
             "away_team": {"name": "Chelsea"},
             "match_status": "scheduled",

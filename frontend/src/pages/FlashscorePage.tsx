@@ -2,12 +2,13 @@ import { BellRing, RefreshCw, Timer, TrendingDown } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  fetchAlertEmailStatus,
   fetchFlashscoreMatches,
   refreshFlashscoreWatch,
   saveFlashscoreWatch,
   sendFlashscoreGoalEmail,
 } from "../services/api";
-import type { FlashscoreMatch } from "../types/api";
+import type { FlashscoreMatch, ForebetStartEmailResult } from "../types/api";
 import {
   ALERT_ODDS_THRESHOLD,
   FAST_LIVE_REFRESH_MS,
@@ -23,9 +24,11 @@ import {
   nextPollWaitMs,
   readFlashscoreWatch,
   sortFlashscoreMatches,
+  stampFinishedStatus,
   withEarlyGoalFlags,
   writeFlashscoreWatch,
 } from "../utils/flashscoreWatch";
+import { archiveFlashscoreMatches } from "../utils/flashscoreHistory";
 
 const ALERTED_EVENTS_KEY = "within_flashscore_alerted_events";
 const LIVE_REFRESH_KEY = "within_flashscore_live_refresh";
@@ -38,6 +41,7 @@ export function FlashscorePage() {
   const [isRefreshingLive, setIsRefreshingLive] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [oddsStatus, setOddsStatus] = useState("idle");
+  const [emailStatus, setEmailStatus] = useState<ForebetStartEmailResult | null>(null);
   const [message, setMessage] = useState("Captura solo favoritos ≤ 1,60. Flashscore Ultra actualiza cada 1 min hasta el 30'.");
   const [lastLiveRefresh, setLastLiveRefresh] = useState<string | null>(null);
   const [refreshEveryMs, setRefreshEveryMs] = useState(FAST_LIVE_REFRESH_MS);
@@ -56,6 +60,17 @@ export function FlashscorePage() {
     matchesRef.current = matches;
     setRefreshEveryMs(liveRefreshIntervalMs(matches) ?? SLOW_LIVE_REFRESH_MS);
   }, [matches]);
+
+  useEffect(() => {
+    fetchAlertEmailStatus()
+      .then(setEmailStatus)
+      .catch(() => setEmailStatus({
+        configured: false,
+        sent: false,
+        status: "not_configured",
+        message: "No se pudo comprobar el estado del email de alertas.",
+      }));
+  }, []);
 
   useEffect(() => {
     const saved = readFlashscoreWatch();
@@ -85,11 +100,12 @@ export function FlashscorePage() {
 
   const sendEligibleAlerts = useCallback((items: FlashscoreMatch[]) => {
     for (const match of items) {
+      const goalMinute = match.early_goal_minute ?? match.minute;
       if (
         !match.alert_eligible ||
         !match.favorite_team ||
         match.favorite_odds == null ||
-        match.minute == null ||
+        goalMinute == null ||
         match.home_score == null ||
         match.away_score == null ||
         alertedRef.current.includes(match.event_id) ||
@@ -105,11 +121,16 @@ export function FlashscorePage() {
         away_team: match.away_team,
         favorite_team: match.favorite_team,
         favorite_odds: match.favorite_odds,
-        minute: match.minute,
+        minute: goalMinute,
         home_score: match.home_score,
         away_score: match.away_score,
       })
         .then((result) => {
+          setEmailStatus(result);
+          if (!result.configured) {
+            setMessage("Alerta detectada, pero faltan RESEND_API_KEY o FOREBET_ALERT_EMAIL en Vercel.");
+            return;
+          }
           if (!result.sent) {
             setMessage(result.message);
             return;
@@ -140,7 +161,7 @@ export function FlashscorePage() {
         const merged = sortFlashscoreMatches(
           (result.matches || [])
             .map(withEarlyGoalFlags)
-            .filter((match) => !isMatchFinished(match)),
+            .map((match) => stampFinishedStatus(match)),
         );
         setMatches(merged);
         writeFlashscoreWatch({
@@ -149,20 +170,21 @@ export function FlashscorePage() {
           matches: merged,
         });
         setLastLiveRefresh(new Date().toISOString());
-        const linked = merged.filter((match) => match.minute != null || match.home_score != null).length;
+        const active = merged.filter((match) => !isMatchFinished(match));
+        const finished = merged.filter((match) => isMatchFinished(match));
+        const linked = active.filter((match) => match.minute != null || match.home_score != null).length;
         const earlyGoals = merged.filter((match) => match.early_goal).length;
-        const nextWait = liveRefreshIntervalMs(merged);
-        const finished = (result.matches || []).length - merged.length;
+        const nextWait = liveRefreshIntervalMs(active);
         const intervalLabel = nextWait == null
-          ? "parado (sin activos)"
+          ? (finished.length && !active.length ? "solo acabados" : "parado (sin activos)")
           : nextWait === FAST_LIVE_REFRESH_MS
             ? "1 min"
             : "5 min";
         setMessage(
-          `${result.message || "Marcadores actualizados"} · ${linked}/${merged.length} con dato live · ` +
-          `${finished} acabados · ${earlyGoals} gol <30' · proximo refresh ${intervalLabel}.`,
+          `${result.message || "Marcadores actualizados"} · ${linked}/${active.length} live · ` +
+          `${finished.length} acabados visibles · ${earlyGoals} gol <30' · proximo refresh ${intervalLabel}.`,
         );
-        sendEligibleAlerts(merged);
+        sendEligibleAlerts(active);
       })
       .catch(() => setMessage("No se pudieron actualizar los resultados desde Flashscore Ultra."))
       .finally(() => setIsRefreshingLive(false));
@@ -180,6 +202,7 @@ export function FlashscorePage() {
           return;
         }
         const stamp = new Date().toISOString();
+        const previousFinished = matchesRef.current.filter((match) => isMatchFinished(match));
         const captured = sortFlashscoreMatches(
           result.matches
             .map(withEarlyGoalFlags)
@@ -187,20 +210,29 @@ export function FlashscorePage() {
             .filter((match) => isWatchableCompetition(match))
             .filter((match) => !isMatchFinished(match)),
         );
+        const byId = new Map(captured.map((match) => [match.event_id, match]));
+        for (const finished of previousFinished) {
+          if (!byId.has(finished.event_id)) {
+            byId.set(finished.event_id, stampFinishedStatus(finished));
+          }
+        }
+        const nextMatches = sortFlashscoreMatches(Array.from(byId.values()));
         setCapturedAt(stamp);
-        setMatches(captured);
+        setMatches(nextMatches);
         writeFlashscoreWatch({
           capturedAt: stamp,
           day,
-          matches: captured,
+          matches: nextMatches,
         });
-        syncServerWatch(captured, day, stamp);
+        syncServerWatch(nextMatches, day, stamp);
         setMessage(
-          `${result.message} Guardados ${captured.length} favoritos ≤ 1,60. Actualizando marcadores…`,
+          `${result.message} Guardados ${captured.length} activos ≤ 1,60`
+          + (previousFinished.length ? ` · ${previousFinished.length} acabados del dia se mantienen` : "")
+          + ". Actualizando marcadores…",
         );
         // Pull /matches/live (+ details) right after capture so scores are not stuck on —.
-        if (captured.length > 0) {
-          matchesRef.current = captured;
+        if (nextMatches.length > 0) {
+          matchesRef.current = nextMatches;
           refreshLive();
         }
       })
@@ -245,13 +277,15 @@ export function FlashscorePage() {
   }, [liveRefresh, matches.length, refreshLive]);
 
   const listed = matches.filter((match) => match.favorite_odds != null);
-  const alertWatch = listed.filter((match) => match.favorite_odds != null && match.favorite_odds <= ALERT_ODDS_THRESHOLD).length;
+  const activeListed = listed.filter((match) => !isMatchFinished(match));
+  const finishedListed = listed.filter((match) => isMatchFinished(match));
+  const alertWatch = activeListed.filter((match) => match.favorite_odds != null && match.favorite_odds <= ALERT_ODDS_THRESHOLD).length;
   const earlyGoals = matches.filter((match) => match.early_goal).length;
   const favoriteEarlyGoals = matches.filter((match) => match.early_favorite_goal || match.alert_eligible).length;
-  const activeLive = listed.some((match) => liveRefreshIntervalMs([match]) != null);
+  const activeLive = activeListed.some((match) => liveRefreshIntervalMs([match]) != null);
   const refreshLabel = liveRefresh && listed.length
     ? (!activeLive
-      ? "Esperando"
+      ? (finishedListed.length ? "Acabados" : "Esperando")
       : refreshEveryMs === FAST_LIVE_REFRESH_MS
         ? "LIVE 1 min"
         : "LIVE 5 min")
@@ -267,7 +301,7 @@ export function FlashscorePage() {
       </header>
 
       <div className="metrics-grid" aria-label="Resumen Flashscore">
-        <FlashscoreMetric icon={TrendingDown} label="Cuota ≤ 1,60" value={String(listed.length)} detail="Unicos vigilados" />
+        <FlashscoreMetric icon={TrendingDown} label="Cuota ≤ 1,60" value={String(listed.length)} detail={`${activeListed.length} activos · ${finishedListed.length} acabados`} />
         <FlashscoreMetric icon={Timer} label="Aviso ≤ 1,50" value={String(alertWatch)} detail="Candidatos a email" />
         <FlashscoreMetric icon={BellRing} label="Gol antes del 30'" value={String(earlyGoals)} detail={`${favoriteEarlyGoals} del equipo vigilado`} />
         <FlashscoreMetric
@@ -332,6 +366,25 @@ export function FlashscorePage() {
               <RefreshCw size={15} aria-hidden="true" />
               {isRefreshingLive ? "Actualizando" : "Actualizar resultados"}
             </button>
+            <button
+              className="row-action"
+              type="button"
+              disabled={finishedListed.length === 0}
+              onClick={() => {
+                archiveFlashscoreMatches(finishedListed);
+                const remaining = sortFlashscoreMatches(matches.filter((match) => !isMatchFinished(match)));
+                setMatches(remaining);
+                writeFlashscoreWatch({
+                  capturedAt: capturedAt ?? new Date().toISOString(),
+                  day,
+                  matches: remaining,
+                });
+                syncServerWatch(remaining, day, capturedAt);
+                setMessage(`${finishedListed.length} acabados archivados en Estadisticas Flashscore.`);
+              }}
+            >
+              Archivar acabados
+            </button>
           </div>
         </div>
 
@@ -339,6 +392,18 @@ export function FlashscorePage() {
           {message}
           {capturedAt ? <span className="table-subtext"> · Cuotas capturadas {formatTime(capturedAt)}</span> : null}
         </p>
+        {emailStatus && !emailStatus.configured ? (
+          <p className="flashscore-setup-message">
+            Email de alertas no configurado: añade `RESEND_API_KEY` y `FOREBET_ALERT_EMAIL` en Vercel
+            (y `CRON_SECRET` en GitHub/Vercel para el tick en segundo plano).
+          </p>
+        ) : null}
+        {emailStatus?.configured ? (
+          <p className="flashscore-setup-detail">
+            Email de alertas listo. Se envia si el favorito ≤ 1,50 marca antes del 30'
+            {liveRefresh ? " (con Ultra auto o tick CRON)." : " (activa Ultra auto o el tick CRON)."}
+          </p>
+        ) : null}
         {!configured || oddsStatus === "request_failed" || oddsStatus === "not_configured" ? (
           <p className="flashscore-setup-detail">
             Cuotas y live usan RapidAPI FlashScore4 Ultra (`RAPIDAPI_KEY`). Solo se vigilan favoritos ≤ 1,60:
@@ -362,11 +427,14 @@ export function FlashscorePage() {
             <tbody>
               {listed.map((match) => {
                 const alerted = alertedEventIds.includes(match.event_id);
-                const rowClass = match.early_favorite_goal || match.alert_eligible
-                  ? "flashscore-alert-row flashscore-early-favorite-row"
-                  : match.early_goal
-                    ? "flashscore-early-goal-row"
-                    : undefined;
+                const finished = isMatchFinished(match);
+                const rowClass = finished
+                  ? "flashscore-finished-row"
+                  : match.early_favorite_goal || match.alert_eligible
+                    ? "flashscore-alert-row flashscore-early-favorite-row"
+                    : match.early_goal
+                      ? "flashscore-early-goal-row"
+                      : undefined;
                 return (
                   <tr className={rowClass} key={match.event_id}>
                     <td>{formatStartTime(match.start_time)}</td>
@@ -451,14 +519,13 @@ function earlyGoalLabel(match: FlashscoreMatch) {
   const goalMinute = match.early_goal_minute;
   const totalGoals = (match.home_score ?? 0) + (match.away_score ?? 0);
   if (match.early_favorite_goal || match.alert_eligible) {
-    const minute = goalMinute ?? match.minute;
-    return minute != null ? `Favorito marco (${minute}')` : "Favorito marco <30'";
+    return goalMinute != null ? `Favorito marco (${goalMinute}')` : "Favorito marco <30'";
   }
-  if (match.early_goal || (totalGoals > 0 && goalMinute != null)) {
+  if (match.early_goal) {
     return goalMinute != null ? `Gol al ${goalMinute}'` : "Gol antes del 30'";
   }
-  if (totalGoals > 0 && goalMinute == null) {
-    return "Gol (minuto ?)";
+  if (totalGoals > 0) {
+    return goalMinute != null ? `Gol al ${goalMinute}'` : "Gol (minuto ?)";
   }
   if (match.minute != null && match.minute <= 30) {
     return "Ventana abierta";
@@ -481,9 +548,9 @@ function earlyGoalTone(match: FlashscoreMatch) {
 
 function alertLabel(match: FlashscoreMatch, alerted: boolean) {
   if (alerted) return "Email enviado";
+  if (isMatchFinished(match)) return "Acabado";
   if (match.early_favorite_goal || match.alert_eligible) return "Gol favorito <30'";
   if (match.early_goal) return "Gol rival/otro <30'";
-  if (isMatchFinished(match)) return "Acabado";
   if (!hasMatchStarted(match)) return "Pendiente de inicio";
   if (!match.favorite_team) return "Sin cuota ≤ 1,60";
   if (match.favorite_odds != null && match.favorite_odds > ALERT_ODDS_THRESHOLD) return "Listado (aviso ≤ 1,50)";
