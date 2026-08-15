@@ -185,6 +185,8 @@ class FlashscoreMatchRead(BaseModel):
     away_team: str
     status: str
     minute: int | None = None
+    # Added/stoppage time on top of the base minute (e.g. 2 for "45+2"). Preserved from the provider.
+    minute_extra: int | None = None
     home_score: int | None = None
     away_score: int | None = None
     home_odds: float | None = None
@@ -197,6 +199,15 @@ class FlashscoreMatchRead(BaseModel):
     early_goal: bool = False
     early_favorite_goal: bool = False
     early_goal_minute: int | None = None
+    # Minute of the FIRST goal of the match (any team), from the timeline. Sticky once detected.
+    first_goal_minute: int | None = None
+    # Classification derived from first_goal_minute; not a data source on its own.
+    goal_under_30: bool = False
+    # SofaScore event id resolved by team-name match; needed to fetch the goal timeline.
+    sofascore_event_id: int | None = None
+    # Real goal minutes from the SofaScore incident timeline (not the poll minute).
+    home_goal_minutes: list[int] = Field(default_factory=list)
+    away_goal_minutes: list[int] = Field(default_factory=list)
 
 
 class FlashscoreMatchesResult(BaseModel):
@@ -512,6 +523,7 @@ class LiveMatchSnapshot(BaseModel):
     status: str
     message: str
     minute: int | None = None
+    minute_extra: int | None = None
     home_score: int | None = None
     away_score: int | None = None
     home_shots_on_target: int | None = None
@@ -529,6 +541,7 @@ class SofaScoreTeamEvent(BaseModel):
     start_time: datetime
     status: str
     minute: int | None = None
+    minute_extra: int | None = None
     competition: str
     country: str | None = None
     home_team: str
@@ -540,6 +553,23 @@ class SofaScoreTeamEvent(BaseModel):
     is_interest: bool = False
     interest_label: str | None = None
     interest_match_id: int | None = None
+
+
+class SofaScoreGoalIncident(BaseModel):
+    minute: int
+    added_time: int | None = None
+    is_home: bool
+    home_score: int | None = None
+    away_score: int | None = None
+    player: str | None = None
+
+
+class SofaScoreEventIncidentsResult(BaseModel):
+    provider: str
+    event_id: int
+    source_url: str | None = None
+    message: str
+    goals: list[SofaScoreGoalIncident] = Field(default_factory=list)
 
 
 class SofaScoreTeamEventsResult(BaseModel):

@@ -392,6 +392,7 @@ export type LiveMatchSnapshot = {
   status: string;
   message: string;
   minute?: number | null;
+  minute_extra?: number | null;
   home_score?: number | null;
   away_score?: number | null;
   home_shots_on_target?: number | null;
@@ -409,6 +410,7 @@ export type SofaScoreTeamEvent = {
   start_time: string;
   status: string;
   minute?: number | null;
+  minute_extra?: number | null;
   competition: string;
   country?: string | null;
   home_team: string;
@@ -437,6 +439,23 @@ export type SofaScoreLiveEventsResult = {
   sport: string;
   message: string;
   events: SofaScoreTeamEvent[];
+};
+
+export type SofaScoreGoalIncident = {
+  minute: number;
+  added_time?: number | null;
+  is_home: boolean;
+  home_score?: number | null;
+  away_score?: number | null;
+  player?: string | null;
+};
+
+export type SofaScoreEventIncidentsResult = {
+  provider: string;
+  event_id: number;
+  source_url?: string | null;
+  message: string;
+  goals: SofaScoreGoalIncident[];
 };
 
 export type SofaScoreStoredEventsResult = {
@@ -525,6 +544,8 @@ export type FlashscoreMatch = {
   away_team: string;
   status: string;
   minute?: number | null;
+  /** Added/stoppage time on top of the base minute (e.g. 2 for "45+2"). */
+  minute_extra?: number | null;
   home_score?: number | null;
   away_score?: number | null;
   home_odds?: number | null;
@@ -539,6 +560,15 @@ export type FlashscoreMatch = {
   /** Sticky: the watched favorite team scored while minute ≤ 30. */
   early_favorite_goal?: boolean;
   early_goal_minute?: number | null;
+  /** Minute of the FIRST goal of the match (any team), from the timeline. Sticky once detected. */
+  first_goal_minute?: number | null;
+  /** Classification derived from first_goal_minute; not a data source on its own. */
+  goal_under_30?: boolean;
+  /** SofaScore event id resolved by team-name match; used to fetch the goal timeline. */
+  sofascore_event_id?: number | null;
+  /** Real goal minutes from the SofaScore incident timeline (not the poll minute). */
+  home_goal_minutes?: number[];
+  away_goal_minutes?: number[];
 };
 
 export type FlashscoreMatchesResult = {

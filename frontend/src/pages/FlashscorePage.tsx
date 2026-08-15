@@ -3,17 +3,23 @@ import type { LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchFlashscoreMatches,
+  fetchSofaScoreEventIncidents,
   fetchSofaScoreLiveEvents,
   saveFlashscoreWatch,
   sendFlashscoreGoalEmail,
 } from "../services/api";
-import type { FlashscoreMatch } from "../types/api";
+import type { FlashscoreMatch, SofaScoreGoalIncident } from "../types/api";
 import {
   ALERT_ODDS_THRESHOLD,
+  EARLY_GOAL_MINUTE,
   FAST_LIVE_REFRESH_MS,
   LIST_ODDS_THRESHOLD,
+  applyGoalIncidents,
   clearFlashscoreWatch,
+  favoriteEarlyGoalMinute,
+  formatMinuteDisplay,
   liveRefreshIntervalMs,
+  shouldFetchIncidents,
   mergeFlashscoreWithSofaScore,
   readFlashscoreWatch,
   sortFlashscoreMatches,
@@ -40,6 +46,8 @@ export function FlashscorePage() {
   const alertedRef = useRef(alertedEventIds);
   const pendingAlertsRef = useRef(new Set<string>());
   const matchesRef = useRef<FlashscoreMatch[]>([]);
+  // Per-event total goals already covered by a captured timeline, to avoid needless refetches.
+  const incidentCoveredTotalsRef = useRef(new Map<string, number>());
 
   useEffect(() => {
     alertedRef.current = alertedEventIds;
@@ -92,6 +100,7 @@ export function FlashscorePage() {
         continue;
       }
       pendingAlertsRef.current.add(match.event_id);
+      const goalMinute = favoriteEarlyGoalMinute(match) ?? match.minute;
       sendFlashscoreGoalEmail({
         event_id: match.event_id,
         competition: match.competition,
@@ -99,7 +108,7 @@ export function FlashscorePage() {
         away_team: match.away_team,
         favorite_team: match.favorite_team,
         favorite_odds: match.favorite_odds,
-        minute: match.minute,
+        minute: goalMinute,
         home_score: match.home_score,
         away_score: match.away_score,
       })
@@ -109,13 +118,53 @@ export function FlashscorePage() {
             return;
           }
           setAlertedEventIds((current) => [...new Set([...current, match.event_id])]);
-          setMessage(`Email enviado: ${match.favorite_team} marco antes del minuto 30 con cuota ${match.favorite_odds?.toFixed(2)}.`);
+          setMessage(`Email enviado: ${match.favorite_team} marco en el minuto ${goalMinute} (cuota ${match.favorite_odds?.toFixed(2)}).`);
           notifyBrowser(match);
         })
         .catch(() => setMessage("Se detecto una alerta Flashscore, pero no se pudo enviar el email."))
         .finally(() => pendingAlertsRef.current.delete(match.event_id));
     }
   }, []);
+
+  const enrichWithIncidents = useCallback(async (list: FlashscoreMatch[]) => {
+    const targets = list.filter((match) =>
+      shouldFetchIncidents(match, incidentCoveredTotalsRef.current.get(match.event_id) ?? 0),
+    );
+    if (targets.length === 0) {
+      return;
+    }
+    const results = await Promise.allSettled(
+      targets.map((match) => fetchSofaScoreEventIncidents(match.sofascore_event_id as number)),
+    );
+    // Only accept a non-empty timeline; an empty response is retried on the next poll so a
+    // goal whose timeline has not been published yet is not stuck on "Pendiente".
+    const goalsByEvent = new Map<string, SofaScoreGoalIncident[]>();
+    results.forEach((result, index) => {
+      if (result.status === "fulfilled" && result.value && Array.isArray(result.value.goals) && result.value.goals.length > 0) {
+        goalsByEvent.set(targets[index].event_id, result.value.goals);
+      }
+    });
+    if (goalsByEvent.size === 0) {
+      return;
+    }
+    setMatches((current) => {
+      const enriched = sortFlashscoreMatches(
+        current.map((match) => {
+          if (!goalsByEvent.has(match.event_id)) {
+            return match;
+          }
+          const applied = applyGoalIncidents(match, goalsByEvent.get(match.event_id) ?? []);
+          incidentCoveredTotalsRef.current.set(match.event_id, (applied.home_score ?? 0) + (applied.away_score ?? 0));
+          return applied;
+        }),
+      );
+      writeFlashscoreWatch({ capturedAt: capturedAt ?? new Date().toISOString(), day, matches: enriched });
+      syncServerWatch(enriched, day, capturedAt);
+      sendEligibleAlerts(enriched);
+      return enriched;
+    });
+    setMessage((current) => `${current} · Minutos reales de gol actualizados desde SofaScore.`);
+  }, [capturedAt, day, sendEligibleAlerts, syncServerWatch]);
 
   const refreshLive = useCallback(() => {
     if (matchesRef.current.length === 0) {
@@ -142,10 +191,11 @@ export function FlashscorePage() {
           `${result.message || "SofaScore actualizado"} · ${linked}/${merged.length} enlazados · ${earlyGoals} con gol antes del 30' · proximo refresh ${intervalLabel}.`,
         );
         sendEligibleAlerts(merged);
+        void enrichWithIncidents(merged);
       })
       .catch(() => setMessage("No se pudieron actualizar los resultados desde SofaScore."))
       .finally(() => setIsRefreshingLive(false));
-  }, [capturedAt, day, sendEligibleAlerts, syncServerWatch]);
+  }, [capturedAt, day, enrichWithIncidents, sendEligibleAlerts, syncServerWatch]);
 
   const captureOdds = useCallback(() => {
     setIsCapturingOdds(true);
@@ -310,7 +360,7 @@ export function FlashscorePage() {
                 <th>Partido</th>
                 <th>Minuto</th>
                 <th>Marcador</th>
-                <th>Gol &lt;30&apos;</th>
+                <th>Primer gol</th>
                 <th>Cuota local</th>
                 <th>Empate</th>
                 <th>Cuota visitante</th>
@@ -331,12 +381,16 @@ export function FlashscorePage() {
                     <td>{formatStartTime(match.start_time)}</td>
                     <td>{match.competition}</td>
                     <td><strong>{match.home_team}</strong> vs <strong>{match.away_team}</strong></td>
-                    <td>{match.minute != null ? `${match.minute}'` : formatStatus(match.status)}</td>
+                    <td>{formatMinuteDisplay(match.minute, match.minute_extra) != null ? `${formatMinuteDisplay(match.minute, match.minute_extra)}'` : formatStatus(match.status)}</td>
                     <td>{formatScore(match)}</td>
                     <td>
-                      <span className={`flashscore-early-goal-status ${earlyGoalTone(match)}`}>
-                        {earlyGoalLabel(match)}
-                      </span>
+                      {(() => {
+                        const cell = firstGoalCell(match);
+                        return <span className={`flashscore-first-goal ${cell.tone}`}>{cell.text}</span>;
+                      })()}
+                      {favoriteGoalSubtext(match) ? (
+                        <span className="table-subtext">{favoriteGoalSubtext(match)}</span>
+                      ) : null}
                     </td>
                     <td className={isLowOdds(match.home_odds) ? "flashscore-low-odds" : undefined}>{formatOdds(match.home_odds)}</td>
                     <td>{formatOdds(match.draw_odds)}</td>
@@ -385,29 +439,33 @@ function FlashscoreMetric({
   );
 }
 
-function earlyGoalLabel(match: FlashscoreMatch) {
-  if (match.early_favorite_goal || match.alert_eligible) {
-    const minute = match.early_goal_minute ?? match.minute;
-    return minute != null ? `Favorito marco (${minute}')` : "Favorito marco <30'";
+/**
+ * First-goal cell: always shows the minute of the first goal of the match.
+ * Green when ≤30, red when >30, "Sin gol" for a known 0-0, "Pendiente" when a goal
+ * exists but its minute is not available yet, and "—" when the score is unknown.
+ */
+function firstGoalCell(match: FlashscoreMatch): { text: string; tone: string } {
+  if (match.first_goal_minute != null) {
+    const goalUnder30 = match.goal_under_30 ?? match.first_goal_minute <= EARLY_GOAL_MINUTE;
+    return { text: `${match.first_goal_minute}'`, tone: goalUnder30 ? "under" : "over" };
   }
-  if (match.early_goal) {
-    const minute = match.early_goal_minute ?? match.minute;
-    return minute != null ? `Gol al ${minute}'` : "Gol antes del 30'";
+  const total = (match.home_score ?? 0) + (match.away_score ?? 0);
+  if (total > 0) {
+    return { text: "Pendiente", tone: "pending" };
   }
-  if (match.minute != null && match.minute <= 30) {
-    return "Ventana abierta";
+  if (match.home_score != null && match.away_score != null) {
+    return { text: "Sin gol", tone: "muted" };
   }
-  if (match.minute != null && match.minute > 30) {
-    return "Sin gol <30'";
-  }
-  return "—";
+  return { text: "—", tone: "muted" };
 }
 
-function earlyGoalTone(match: FlashscoreMatch) {
-  if (match.early_favorite_goal || match.alert_eligible) return "favorite";
-  if (match.early_goal) return "any";
-  if (match.minute != null && match.minute <= 30) return "open";
-  return "idle";
+/** Keeps the watched-favorite early-goal detail visible under the first-goal cell. */
+function favoriteGoalSubtext(match: FlashscoreMatch) {
+  if (match.early_favorite_goal || match.alert_eligible) {
+    const minute = favoriteEarlyGoalMinute(match) ?? match.early_goal_minute ?? match.minute;
+    return minute != null ? `Favorito marco (${minute}')` : "Favorito marco <30'";
+  }
+  return "";
 }
 
 function alertLabel(match: FlashscoreMatch, alerted: boolean) {
@@ -487,7 +545,8 @@ function requestBrowserNotifications() {
 
 function notifyBrowser(match: FlashscoreMatch) {
   if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const minute = favoriteEarlyGoalMinute(match) ?? match.early_goal_minute ?? match.minute;
   new Notification("Gol temprano con cuota baja", {
-    body: `${match.favorite_team} (${match.favorite_odds?.toFixed(2)}) marco en el minuto ${match.minute}. ${formatScore(match)}.`,
+    body: `${match.favorite_team} (${match.favorite_odds?.toFixed(2)}) marco en el minuto ${minute}. ${formatScore(match)}.`,
   });
 }

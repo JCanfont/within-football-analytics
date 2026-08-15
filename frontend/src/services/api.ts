@@ -27,6 +27,7 @@ import type {
   Player,
   PlayerStadiumAnalytics,
   SofaScoreEventComparison,
+  SofaScoreEventIncidentsResult,
   SofaScoreLiveEventsResult,
   SofaScoreStoredEventsResult,
   SofaScoreTeamEventsResult,
@@ -278,6 +279,11 @@ export async function fetchSofaScoreTeamEvents(teamId: number, direction: "next"
 
 export async function fetchSofaScoreLiveEvents(sport = "football"): Promise<SofaScoreLiveEventsResult> {
   const response = await api.get<SofaScoreLiveEventsResult>(`/api/live/sofascore/live-events?sport=${encodeURIComponent(sport)}`);
+  return response.data;
+}
+
+export async function fetchSofaScoreEventIncidents(eventId: number): Promise<SofaScoreEventIncidentsResult> {
+  const response = await api.get<SofaScoreEventIncidentsResult>(`/api/live/sofascore/events/${eventId}/incidents`);
   return response.data;
 }
 

@@ -2,9 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   FAST_LIVE_REFRESH_MS,
   SLOW_LIVE_REFRESH_MS,
+  applyGoalIncidents,
+  favoriteEarlyGoalMinute,
+  formatMinuteDisplay,
   isAlertEligible,
   liveRefreshIntervalMs,
   mergeFlashscoreWithSofaScore,
+  shouldFetchIncidents,
   withEarlyGoalFlags,
 } from "./flashscoreWatch";
 import type { FlashscoreMatch } from "../types/api";
@@ -50,6 +54,106 @@ describe("flashscoreWatch", () => {
     expect(merged[0].early_favorite_goal).toBe(true);
     expect(merged[0].early_goal_minute).toBe(18);
     expect(merged[0].alert_eligible).toBe(true);
+    expect(merged[0].sofascore_event_id).toBe(99);
+  });
+
+  it("replaces the poll-minute guess with the real goal minute from the timeline", () => {
+    const polled = withEarlyGoalFlags(baseMatch({ minute: 27, home_score: 1, away_score: 0 }));
+    expect(polled.early_goal_minute).toBe(27); // approximation before the timeline is known
+
+    const enriched = applyGoalIncidents(polled, [
+      { minute: 8, is_home: true, home_score: 1, away_score: 0 },
+    ]);
+
+    expect(enriched.home_goal_minutes).toEqual([8]);
+    expect(enriched.early_goal_minute).toBe(8);
+    expect(enriched.early_favorite_goal).toBe(true);
+    expect(favoriteEarlyGoalMinute(enriched)).toBe(8);
+  });
+
+  it("refreshes the live minute and preserves added time instead of keeping a stale value", () => {
+    const merged = mergeFlashscoreWithSofaScore(
+      [baseMatch({ minute: 12, home_score: 0, away_score: 0, status: "inprogress" })],
+      [{
+        event_id: 99,
+        start_time: "2026-08-08T18:00:00Z",
+        status: "inprogress",
+        minute: 45,
+        minute_extra: 2,
+        competition: "LaLiga",
+        home_team: "Getafe CF",
+        away_team: "RC Celta",
+        home_score: 0,
+        away_score: 0,
+      }],
+    );
+
+    expect(merged[0].minute).toBe(45);
+    expect(merged[0].minute_extra).toBe(2);
+    expect(formatMinuteDisplay(merged[0].minute, merged[0].minute_extra)).toBe("45+2");
+  });
+
+  it.each([
+    [5, true],
+    [30, true],
+    [31, false],
+    [67, false],
+  ])("shows the first goal at %i' and classifies goalUnder30=%s", (goalMinute, expectedUnder30) => {
+    const enriched = applyGoalIncidents(
+      baseMatch({ minute: Math.max(goalMinute, 31), home_score: 1, away_score: 0 }),
+      [{ minute: goalMinute, is_home: true, home_score: 1, away_score: 0 }],
+    );
+
+    expect(enriched.first_goal_minute).toBe(goalMinute);
+    expect(enriched.goal_under_30).toBe(expectedUnder30);
+  });
+
+  it("retries the goal timeline until the first goal minute is captured", () => {
+    const linkedWithGoal = baseMatch({ sofascore_event_id: 99, home_score: 1, away_score: 0, minute: 40 });
+
+    // No event id or 0-0 → never fetch.
+    expect(shouldFetchIncidents(baseMatch({ home_score: 1, away_score: 0 }))).toBe(false);
+    expect(shouldFetchIncidents(baseMatch({ sofascore_event_id: 99, home_score: 0, away_score: 0 }))).toBe(false);
+
+    // Goal exists but the first-goal minute is still unknown → keep fetching (fixes stuck "Pendiente").
+    expect(shouldFetchIncidents(linkedWithGoal, 0)).toBe(true);
+    expect(shouldFetchIncidents(linkedWithGoal, 1)).toBe(true);
+
+    // Once captured and no new goals → stop.
+    const captured = { ...linkedWithGoal, first_goal_minute: 12 };
+    expect(shouldFetchIncidents(captured, 1)).toBe(false);
+    // A new goal arrived → refetch to extend the timeline.
+    expect(shouldFetchIncidents({ ...captured, home_score: 2 }, 1)).toBe(true);
+  });
+
+  it("has no first goal minute for a 0-0 match", () => {
+    const match = withEarlyGoalFlags(baseMatch({ minute: 55, home_score: 0, away_score: 0 }));
+    expect(match.first_goal_minute).toBeNull();
+    expect(match.goal_under_30).toBe(false);
+  });
+
+  it("keeps the first goal minute sticky across later updates", () => {
+    const detected = applyGoalIncidents(
+      baseMatch({ minute: 31, home_score: 1, away_score: 0 }),
+      [{ minute: 31, is_home: true, home_score: 1, away_score: 0 }],
+    );
+    expect(detected.first_goal_minute).toBe(31);
+
+    const later = withEarlyGoalFlags({ ...detected, minute: 80 });
+    expect(later.first_goal_minute).toBe(31);
+    expect(later.goal_under_30).toBe(false);
+  });
+
+  it("does not treat a late goal in the timeline as an early goal", () => {
+    const polled = withEarlyGoalFlags(baseMatch({ minute: 52, home_score: 1, away_score: 0 }));
+    const enriched = applyGoalIncidents(polled, [
+      { minute: 41, is_home: true, home_score: 1, away_score: 0 },
+    ]);
+
+    expect(enriched.home_goal_minutes).toEqual([41]);
+    expect(enriched.early_goal).toBe(false);
+    expect(enriched.early_favorite_goal).toBe(false);
+    expect(enriched.early_goal_minute).toBeNull();
   });
 
   it("keeps the early-goal signal after the match leaves the first 30 minutes", () => {

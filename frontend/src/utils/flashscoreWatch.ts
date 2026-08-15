@@ -1,4 +1,4 @@
-import type { FlashscoreMatch, SofaScoreTeamEvent } from "../types/api";
+import type { FlashscoreMatch, SofaScoreGoalIncident, SofaScoreTeamEvent } from "../types/api";
 import { sameTeam } from "./teamMatch";
 
 export const FLASHSCORE_WATCH_KEY = "within_flashscore_watch_v1";
@@ -52,13 +52,75 @@ export function mergeFlashscoreWithSofaScore(
       ? {
           ...match,
           status: event.status || match.status,
-          minute: event.minute ?? match.minute,
+          // Always take the freshly computed live minute; never keep a stale captured value
+          // when the provider has live timing for the event.
+          minute: event.minute != null ? event.minute : match.minute,
+          minute_extra: event.minute != null ? event.minute_extra ?? null : match.minute_extra,
           home_score: event.home_score ?? match.home_score,
           away_score: event.away_score ?? match.away_score,
+          sofascore_event_id: event.event_id,
         }
       : { ...match };
     return withEarlyGoalFlags(base);
   });
+}
+
+/**
+ * Attach the real goal minutes from the SofaScore timeline and re-evaluate flags.
+ * An empty timeline never wipes a minute already detected.
+ */
+export function applyGoalIncidents(match: FlashscoreMatch, goals: SofaScoreGoalIncident[]): FlashscoreMatch {
+  if (goals.length === 0) {
+    return withEarlyGoalFlags(match);
+  }
+  const homeMinutes = uniqueSortedMinutes(goals.filter((goal) => goal.is_home).map((goal) => goal.minute));
+  const awayMinutes = uniqueSortedMinutes(goals.filter((goal) => !goal.is_home).map((goal) => goal.minute));
+  return withEarlyGoalFlags({
+    ...match,
+    home_goal_minutes: homeMinutes,
+    away_goal_minutes: awayMinutes,
+  });
+}
+
+/**
+ * Whether the SofaScore goal timeline should be (re)fetched for this match.
+ * Keeps retrying while the first goal minute has not been captured yet (the timeline
+ * often lags a few seconds behind the score), and refetches when a new goal arrives.
+ */
+export function shouldFetchIncidents(match: FlashscoreMatch, coveredTotal = 0): boolean {
+  if (match.sofascore_event_id == null) {
+    return false;
+  }
+  const total = (match.home_score ?? 0) + (match.away_score ?? 0);
+  if (total <= 0) {
+    return false;
+  }
+  if (match.first_goal_minute == null) {
+    return true;
+  }
+  return total > coveredTotal;
+}
+
+/** Display string for a live minute including added time, e.g. "45+2" or "67". */
+export function formatMinuteDisplay(minute?: number | null, extra?: number | null): string | null {
+  if (minute == null) {
+    return null;
+  }
+  return extra && extra > 0 ? `${minute}+${extra}` : `${minute}`;
+}
+
+/** First real minute (≤30) the favorite scored, when the timeline is known. */
+export function favoriteEarlyGoalMinute(match: FlashscoreMatch): number | null {
+  if (match.favorite_side !== "home" && match.favorite_side !== "away") {
+    return null;
+  }
+  const minutes = match.favorite_side === "away" ? match.away_goal_minutes : match.home_goal_minutes;
+  const early = (minutes ?? []).filter((minute) => minute <= EARLY_GOAL_MINUTE);
+  return early.length ? Math.min(...early) : null;
+}
+
+function uniqueSortedMinutes(minutes: number[]): number[] {
+  return [...new Set(minutes)].sort((left, right) => left - right);
 }
 
 export function withEarlyGoalFlags(match: FlashscoreMatch): FlashscoreMatch {
@@ -68,23 +130,53 @@ export function withEarlyGoalFlags(match: FlashscoreMatch): FlashscoreMatch {
   const totalGoals = homeScore + awayScore;
   const favoriteScore = match.favorite_side === "away" ? awayScore : homeScore;
   const inEarlyWindow = minute != null && minute <= EARLY_GOAL_MINUTE;
-  const sawEarlyGoal = Boolean(match.early_goal) || (inEarlyWindow && totalGoals > 0);
-  const sawEarlyFavoriteGoal = Boolean(match.early_favorite_goal) || (
-    inEarlyWindow &&
+
+  // Real goal minutes from the SofaScore timeline take priority over the poll-minute guess.
+  const homeMinutes = uniqueSortedMinutes(match.home_goal_minutes ?? []);
+  const awayMinutes = uniqueSortedMinutes(match.away_goal_minutes ?? []);
+  const favoriteMinutes = match.favorite_side === "away" ? awayMinutes : homeMinutes;
+  const earlyIncidentMinutes = [...homeMinutes, ...awayMinutes].filter((value) => value <= EARLY_GOAL_MINUTE);
+  const favoriteEarlyIncident = favoriteMinutes.filter((value) => value <= EARLY_GOAL_MINUTE);
+  const hasIncidents = homeMinutes.length > 0 || awayMinutes.length > 0;
+
+  const favoriteWatched =
     match.favorite_team != null &&
     match.favorite_odds != null &&
-    match.favorite_odds <= ALERT_ODDS_THRESHOLD &&
-    favoriteScore > 0
-  );
-  const earlyGoalMinute = match.early_goal_minute ?? (
-    sawEarlyGoal && inEarlyWindow ? minute : null
-  );
+    match.favorite_odds <= ALERT_ODDS_THRESHOLD;
+
+  const sawEarlyGoal = hasIncidents
+    ? Boolean(match.early_goal) || earlyIncidentMinutes.length > 0
+    : Boolean(match.early_goal) || (inEarlyWindow && totalGoals > 0);
+  const sawEarlyFavoriteGoal = hasIncidents
+    ? Boolean(match.early_favorite_goal) || (favoriteWatched && favoriteEarlyIncident.length > 0)
+    : Boolean(match.early_favorite_goal) || (inEarlyWindow && favoriteWatched && favoriteScore > 0);
+
+  let earlyGoalMinute: number | null;
+  if (earlyIncidentMinutes.length > 0) {
+    earlyGoalMinute = Math.min(...earlyIncidentMinutes);
+  } else if (match.early_goal_minute != null) {
+    earlyGoalMinute = match.early_goal_minute;
+  } else if (sawEarlyGoal && inEarlyWindow) {
+    earlyGoalMinute = minute ?? null;
+  } else {
+    earlyGoalMinute = null;
+  }
+
+  // First goal of the match (any team), taken only from the timeline and kept sticky
+  // once detected. Never inferred from the current scoreline.
+  const allIncidentMinutes = [...homeMinutes, ...awayMinutes].sort((left, right) => left - right);
+  const firstGoalMinute = allIncidentMinutes.length > 0 ? allIncidentMinutes[0] : match.first_goal_minute ?? null;
+  const goalUnder30 = firstGoalMinute != null && firstGoalMinute <= EARLY_GOAL_MINUTE;
 
   return {
     ...match,
+    home_goal_minutes: homeMinutes,
+    away_goal_minutes: awayMinutes,
     early_goal: sawEarlyGoal,
     early_favorite_goal: sawEarlyFavoriteGoal,
     early_goal_minute: earlyGoalMinute,
+    first_goal_minute: firstGoalMinute,
+    goal_under_30: goalUnder30,
     alert_eligible: sawEarlyFavoriteGoal || isAlertEligible(match),
   };
 }

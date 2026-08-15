@@ -9,6 +9,8 @@ from app.config import get_settings
 from app.schemas.api import (
     LiveMatchSnapshot,
     LiveProviderStatus,
+    SofaScoreEventIncidentsResult,
+    SofaScoreGoalIncident,
     SofaScoreLiveEventsResult,
     SofaScoreTeamEvent,
     SofaScoreTeamEventsResult,
@@ -17,6 +19,8 @@ from app.schemas.api import (
 
 PROVIDER_NAME = "sofascore-crawlora"
 CRAWLORA_BASE_URL = "https://api.crawlora.net/api/v1"
+# Assumed break between halves when estimating the live minute from the kickoff timestamp.
+HALFTIME_BREAK_MINUTES = 15
 
 
 def provider_status() -> LiveProviderStatus:
@@ -66,6 +70,38 @@ def fetch_live_events(sport: str = "football") -> SofaScoreLiveEventsResult:
     )
 
 
+def fetch_event_incidents(event_id: int) -> SofaScoreEventIncidentsResult:
+    """Return the goal timeline (with real minutes) for a SofaScore event."""
+    payload = _crawlora_get("sofascore/event-incidents", id=event_id)
+    data = payload.get("data") or {}
+    goals: list[SofaScoreGoalIncident] = []
+    for item in data.get("incidents") or []:
+        if str(item.get("type") or "").lower() != "goal":
+            continue
+        minute = _to_int(item.get("time"))
+        if minute is None:
+            continue
+        player = item.get("player")
+        goals.append(
+            SofaScoreGoalIncident(
+                minute=minute,
+                added_time=_to_int(item.get("added_time")),
+                is_home=bool(item.get("is_home")),
+                home_score=_to_int(item.get("home_score")),
+                away_score=_to_int(item.get("away_score")),
+                player=str(player) if player else None,
+            )
+        )
+    goals.sort(key=lambda goal: (goal.minute, goal.added_time or 0))
+    return SofaScoreEventIncidentsResult(
+        provider=PROVIDER_NAME,
+        event_id=int(event_id),
+        source_url=data.get("source_url"),
+        message=f"{len(goals)} goles en la cronologia SofaScore.",
+        goals=goals,
+    )
+
+
 def fetch_event_snapshot(event_id: int) -> LiveMatchSnapshot:
     event_payload = _crawlora_get("sofascore/event", id=event_id)
     event = (event_payload.get("data") or {}).get("event") or {}
@@ -73,12 +109,14 @@ def fetch_event_snapshot(event_id: int) -> LiveMatchSnapshot:
     stats_data = (statistics.get("data") or {}) if statistics else {}
     home_score = event.get("home_score") or {}
     away_score = event.get("away_score") or {}
+    minute, minute_extra = _event_minute(event)
     return LiveMatchSnapshot(
         match_id=event_id,
         provider=PROVIDER_NAME,
         status=_status_type(event),
         message="Datos SofaScore capturados para el evento seleccionado.",
-        minute=_event_minute(event),
+        minute=minute,
+        minute_extra=minute_extra,
         home_score=_to_int(home_score.get("current")),
         away_score=_to_int(away_score.get("current")),
         home_shots_on_target=_pick_stat(stats_data, "shotsOnTarget", "Shots on target", "Tiros a puerta"),
@@ -122,11 +160,13 @@ def _team_event_from_payload(event: dict[str, Any]) -> SofaScoreTeamEvent:
     home = event.get("home_team") or {}
     away = event.get("away_team") or {}
     tournament = event.get("tournament") or {}
+    minute, minute_extra = _event_minute(event)
     return SofaScoreTeamEvent(
         event_id=int(event.get("id")),
         start_time=_event_start_time(event),
         status=_status_type(event),
-        minute=_event_minute(event),
+        minute=minute,
+        minute_extra=minute_extra,
         competition=str(tournament.get("unique_tournament_name") or tournament.get("name") or ""),
         country=str(tournament.get("category") or ""),
         home_team=str(home.get("name") or ""),
@@ -152,13 +192,65 @@ def _status_type(event: dict[str, Any]) -> str:
     return str((event.get("status") or {}).get("type") or "scheduled")
 
 
-def _event_minute(event: dict[str, Any]) -> int | None:
+def _event_minute(event: dict[str, Any], now: datetime | None = None) -> tuple[int | None, int | None]:
+    """Return (minute, extra) for a live event.
+
+    Prefers an explicit provider minute; otherwise estimates it fresh from the phase and
+    kickoff timestamp so it advances on every poll instead of freezing a stale value.
+    """
     status = event.get("status") or {}
-    for key in ("minute", "currentPeriodStartTimestamp"):
-        value = _to_int(status.get(key) or event.get(key))
-        if value is not None and key == "minute":
-            return value
-    return None
+    for value in (status.get("minute"), event.get("minute"), event.get("live_minute")):
+        parsed = _to_int(value)
+        if parsed is not None:
+            return parsed, _to_int(status.get("injuryTime") or event.get("added_time"))
+    start_timestamp = _to_int(event.get("start_timestamp"))
+    if start_timestamp is None and event.get("start_time"):
+        start_timestamp = int(_event_start_time(event).timestamp())
+    return compute_live_minute(
+        status.get("type"),
+        status.get("description"),
+        start_timestamp,
+        now or datetime.now(UTC),
+    )
+
+
+def compute_live_minute(
+    status_type: Any,
+    status_description: Any,
+    start_timestamp: int | None,
+    now: datetime,
+) -> tuple[int | None, int | None]:
+    """Estimate (base_minute, added_time) from the match phase and kickoff timestamp.
+
+    First half beyond 45 becomes 45+extra; second half beyond 90 becomes 90+extra.
+    Returns (None, None) when the match is not running or timing is unavailable.
+    """
+    phase = str(status_description or "").lower()
+    kind = str(status_type or "").lower()
+
+    if kind in {"notstarted", "postponed", "canceled", "cancelled", "delayed"}:
+        return None, None
+    if "halftime" in phase or "half time" in phase or "half-time" in phase or "pause" in phase:
+        return 45, None
+    if kind in {"finished", "afteret", "penalties"} or "ended" in phase or "final" in phase or "after pen" in phase:
+        return None, None
+    if start_timestamp is None:
+        return None, None
+
+    elapsed = int((now.timestamp() - start_timestamp) // 60)
+    if elapsed < 0:
+        return None, None
+
+    if "2nd" in phase or "second" in phase:
+        minute = max(46, elapsed - HALFTIME_BREAK_MINUTES)
+        return (minute, None) if minute <= 90 else (90, minute - 90)
+    if "extra" in phase:
+        minute = max(91, elapsed - HALFTIME_BREAK_MINUTES)
+        return (minute, None) if minute <= 120 else (120, minute - 120)
+    # Default to first half (also covers a generic "inprogress" without a phase label).
+    if elapsed <= 45:
+        return max(1, elapsed), None
+    return 45, elapsed - 45
 
 
 def _pick_stat(payload: dict[str, Any], key: str, *labels: str, side: str = "home") -> int | None:

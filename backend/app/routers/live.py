@@ -10,6 +10,7 @@ from app.schemas.api import (
     LiveMatchSnapshot,
     LiveProviderStatus,
     SofaScoreEventComparison,
+    SofaScoreEventIncidentsResult,
     SofaScoreLiveEventsResult,
     SofaScoreStoredEventsResult,
     SofaScoreTeamEventsResult,
@@ -24,6 +25,7 @@ from app.services.live_tracking_service import (
 )
 from app.services.sofascore_live_provider import fetch_match_snapshot, provider_status
 from app.services.sofascore_crawlora_provider import (
+    fetch_event_incidents as fetch_crawlora_event_incidents,
     fetch_event_snapshot as fetch_crawlora_event_snapshot,
     fetch_live_events as fetch_crawlora_live_events,
     fetch_team_events as fetch_crawlora_team_events,
@@ -176,6 +178,16 @@ def get_sofascore_event_snapshot(event_id: int) -> LiveMatchSnapshot:
         return fetch_crawlora_event_snapshot(event_id)
     except requests.RequestException as exc:
         raise HTTPException(status_code=503, detail="El proveedor SofaScore no pudo devolver el evento seleccionado.") from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.get("/sofascore/events/{event_id}/incidents", response_model=SofaScoreEventIncidentsResult)
+def get_sofascore_event_incidents(event_id: int) -> SofaScoreEventIncidentsResult:
+    try:
+        return fetch_crawlora_event_incidents(event_id)
+    except requests.RequestException as exc:
+        raise HTTPException(status_code=503, detail="El proveedor SofaScore no pudo devolver la cronologia del evento.") from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
