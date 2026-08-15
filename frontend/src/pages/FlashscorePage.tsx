@@ -19,6 +19,7 @@ import {
   favoriteEarlyGoalMinute,
   formatMinuteDisplay,
   liveRefreshIntervalMs,
+  shouldFetchIncidents,
   mergeFlashscoreWithSofaScore,
   readFlashscoreWatch,
   sortFlashscoreMatches,
@@ -45,7 +46,8 @@ export function FlashscorePage() {
   const alertedRef = useRef(alertedEventIds);
   const pendingAlertsRef = useRef(new Set<string>());
   const matchesRef = useRef<FlashscoreMatch[]>([]);
-  const incidentAttemptsRef = useRef(new Set<string>());
+  // Per-event total goals already covered by a captured timeline, to avoid needless refetches.
+  const incidentCoveredTotalsRef = useRef(new Map<string, number>());
 
   useEffect(() => {
     alertedRef.current = alertedEventIds;
@@ -125,33 +127,20 @@ export function FlashscorePage() {
   }, []);
 
   const enrichWithIncidents = useCallback(async (list: FlashscoreMatch[]) => {
-    const targets = list.filter((match) => {
-      if (match.sofascore_event_id == null) {
-        return false;
-      }
-      const total = (match.home_score ?? 0) + (match.away_score ?? 0);
-      if (total <= 0) {
-        return false;
-      }
-      const known = (match.home_goal_minutes?.length ?? 0) + (match.away_goal_minutes?.length ?? 0);
-      if (known >= total) {
-        return false;
-      }
-      return !incidentAttemptsRef.current.has(`${match.event_id}:${total}`);
-    });
+    const targets = list.filter((match) =>
+      shouldFetchIncidents(match, incidentCoveredTotalsRef.current.get(match.event_id) ?? 0),
+    );
     if (targets.length === 0) {
       return;
-    }
-    for (const match of targets) {
-      const total = (match.home_score ?? 0) + (match.away_score ?? 0);
-      incidentAttemptsRef.current.add(`${match.event_id}:${total}`);
     }
     const results = await Promise.allSettled(
       targets.map((match) => fetchSofaScoreEventIncidents(match.sofascore_event_id as number)),
     );
+    // Only accept a non-empty timeline; an empty response is retried on the next poll so a
+    // goal whose timeline has not been published yet is not stuck on "Pendiente".
     const goalsByEvent = new Map<string, SofaScoreGoalIncident[]>();
     results.forEach((result, index) => {
-      if (result.status === "fulfilled" && result.value && Array.isArray(result.value.goals)) {
+      if (result.status === "fulfilled" && result.value && Array.isArray(result.value.goals) && result.value.goals.length > 0) {
         goalsByEvent.set(targets[index].event_id, result.value.goals);
       }
     });
@@ -160,9 +149,14 @@ export function FlashscorePage() {
     }
     setMatches((current) => {
       const enriched = sortFlashscoreMatches(
-        current.map((match) =>
-          goalsByEvent.has(match.event_id) ? applyGoalIncidents(match, goalsByEvent.get(match.event_id) ?? []) : match,
-        ),
+        current.map((match) => {
+          if (!goalsByEvent.has(match.event_id)) {
+            return match;
+          }
+          const applied = applyGoalIncidents(match, goalsByEvent.get(match.event_id) ?? []);
+          incidentCoveredTotalsRef.current.set(match.event_id, (applied.home_score ?? 0) + (applied.away_score ?? 0));
+          return applied;
+        }),
       );
       writeFlashscoreWatch({ capturedAt: capturedAt ?? new Date().toISOString(), day, matches: enriched });
       syncServerWatch(enriched, day, capturedAt);

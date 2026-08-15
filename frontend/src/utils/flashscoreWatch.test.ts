@@ -8,6 +8,7 @@ import {
   isAlertEligible,
   liveRefreshIntervalMs,
   mergeFlashscoreWithSofaScore,
+  shouldFetchIncidents,
   withEarlyGoalFlags,
 } from "./flashscoreWatch";
 import type { FlashscoreMatch } from "../types/api";
@@ -105,6 +106,24 @@ describe("flashscoreWatch", () => {
 
     expect(enriched.first_goal_minute).toBe(goalMinute);
     expect(enriched.goal_under_30).toBe(expectedUnder30);
+  });
+
+  it("retries the goal timeline until the first goal minute is captured", () => {
+    const linkedWithGoal = baseMatch({ sofascore_event_id: 99, home_score: 1, away_score: 0, minute: 40 });
+
+    // No event id or 0-0 → never fetch.
+    expect(shouldFetchIncidents(baseMatch({ home_score: 1, away_score: 0 }))).toBe(false);
+    expect(shouldFetchIncidents(baseMatch({ sofascore_event_id: 99, home_score: 0, away_score: 0 }))).toBe(false);
+
+    // Goal exists but the first-goal minute is still unknown → keep fetching (fixes stuck "Pendiente").
+    expect(shouldFetchIncidents(linkedWithGoal, 0)).toBe(true);
+    expect(shouldFetchIncidents(linkedWithGoal, 1)).toBe(true);
+
+    // Once captured and no new goals → stop.
+    const captured = { ...linkedWithGoal, first_goal_minute: 12 };
+    expect(shouldFetchIncidents(captured, 1)).toBe(false);
+    // A new goal arrived → refetch to extend the timeline.
+    expect(shouldFetchIncidents({ ...captured, home_score: 2 }, 1)).toBe(true);
   });
 
   it("has no first goal minute for a 0-0 match", () => {

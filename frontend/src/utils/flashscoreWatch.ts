@@ -82,6 +82,25 @@ export function applyGoalIncidents(match: FlashscoreMatch, goals: SofaScoreGoalI
   });
 }
 
+/**
+ * Whether the SofaScore goal timeline should be (re)fetched for this match.
+ * Keeps retrying while the first goal minute has not been captured yet (the timeline
+ * often lags a few seconds behind the score), and refetches when a new goal arrives.
+ */
+export function shouldFetchIncidents(match: FlashscoreMatch, coveredTotal = 0): boolean {
+  if (match.sofascore_event_id == null) {
+    return false;
+  }
+  const total = (match.home_score ?? 0) + (match.away_score ?? 0);
+  if (total <= 0) {
+    return false;
+  }
+  if (match.first_goal_minute == null) {
+    return true;
+  }
+  return total > coveredTotal;
+}
+
 /** Display string for a live minute including added time, e.g. "45+2" or "67". */
 export function formatMinuteDisplay(minute?: number | null, extra?: number | null): string | null {
   if (minute == null) {
