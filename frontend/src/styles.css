@@ -1398,6 +1398,39 @@ td {
   color: #637080;
 }
 
+.flashscore-first-goal {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* First goal on or before minute 30. */
+.flashscore-first-goal.under {
+  background: #d9f4e8;
+  color: #0f6b40;
+}
+
+/* First goal after minute 30. */
+.flashscore-first-goal.over {
+  background: #fbe0e0;
+  color: #b02020;
+}
+
+.flashscore-first-goal.pending {
+  background: #fff1c9;
+  color: #8a5a08;
+}
+
+.flashscore-first-goal.muted {
+  background: #edf1f5;
+  color: #637080;
+}
+
 .flashscore-alert-status {
   display: inline-flex;
   min-height: 28px;

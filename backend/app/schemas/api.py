@@ -185,6 +185,8 @@ class FlashscoreMatchRead(BaseModel):
     away_team: str
     status: str
     minute: int | None = None
+    # Added/stoppage time on top of the base minute (e.g. 2 for "45+2"). Preserved from Flashscore.
+    minute_extra: int | None = None
     home_score: int | None = None
     away_score: int | None = None
     home_odds: float | None = None
@@ -197,6 +199,11 @@ class FlashscoreMatchRead(BaseModel):
     early_goal: bool = False
     early_favorite_goal: bool = False
     early_goal_minute: int | None = None
+    # Minute of the FIRST goal of the match (any team), taken only from the Flashscore
+    # summary/commentary timeline. Sticky once detected; never inferred from the scoreline.
+    first_goal_minute: int | None = None
+    # Classification derived from first_goal_minute (<=30). Not a data source on its own.
+    goal_under_30: bool = False
 
 
 class FlashscoreMatchesResult(BaseModel):

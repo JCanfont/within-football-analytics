@@ -355,7 +355,7 @@ export function FlashscorePage() {
                 <th>1X2</th>
                 <th>Minuto</th>
                 <th>Marcador</th>
-                <th>Gol &lt;30&apos;</th>
+                <th>Primer gol</th>
                 <th>Alerta</th>
               </tr>
             </thead>
@@ -407,9 +407,10 @@ export function FlashscorePage() {
                       </span>
                     </td>
                     <td>
-                      <span className={`flashscore-early-goal-status ${earlyGoalTone(match)}`}>
-                        {earlyGoalLabel(match)}
-                      </span>
+                      {(() => {
+                        const cell = firstGoalCell(match);
+                        return <span className={`flashscore-first-goal ${cell.tone}`}>{cell.text}</span>;
+                      })()}
                     </td>
                     <td><span className={`flashscore-alert-status ${alertTone(match, alerted)}`}>{alertLabel(match, alerted)}</span></td>
                   </tr>
@@ -447,36 +448,24 @@ function FlashscoreMetric({
   );
 }
 
-function earlyGoalLabel(match: FlashscoreMatch) {
-  const goalMinute = match.early_goal_minute;
+/**
+ * First-goal cell: always shows the minute of the first goal of the match.
+ * ≤30 → green, >30 → red, known 0-0 → "Sin gol", goal without a minute yet → "Pendiente",
+ * otherwise "—". The minute comes only from the real timeline and is kept sticky.
+ */
+function firstGoalCell(match: FlashscoreMatch): { text: string; tone: string } {
+  if (match.first_goal_minute != null) {
+    const under30 = match.goal_under_30 ?? match.first_goal_minute <= 30;
+    return { text: `${match.first_goal_minute}'`, tone: under30 ? "under" : "over" };
+  }
   const totalGoals = (match.home_score ?? 0) + (match.away_score ?? 0);
-  if (match.early_favorite_goal || match.alert_eligible) {
-    const minute = goalMinute ?? match.minute;
-    return minute != null ? `Favorito marco (${minute}')` : "Favorito marco <30'";
+  if (totalGoals > 0) {
+    return { text: "Pendiente", tone: "pending" };
   }
-  if (match.early_goal || (totalGoals > 0 && goalMinute != null)) {
-    return goalMinute != null ? `Gol al ${goalMinute}'` : "Gol antes del 30'";
+  if (match.home_score != null && match.away_score != null) {
+    return { text: "Sin gol", tone: "muted" };
   }
-  if (totalGoals > 0 && goalMinute == null) {
-    return "Gol (minuto ?)";
-  }
-  if (match.minute != null && match.minute <= 30) {
-    return "Ventana abierta";
-  }
-  if (match.minute != null && match.minute > 30) {
-    return "Sin gol <30'";
-  }
-  if (isHalfTime(match)) {
-    return "Descanso";
-  }
-  return "—";
-}
-
-function earlyGoalTone(match: FlashscoreMatch) {
-  if (match.early_favorite_goal || match.alert_eligible) return "favorite";
-  if (match.early_goal) return "any";
-  if (match.minute != null && match.minute <= 30) return "open";
-  return "idle";
+  return { text: "—", tone: "muted" };
 }
 
 function alertLabel(match: FlashscoreMatch, alerted: boolean) {

@@ -69,7 +69,8 @@ export function mergeFlashscoreLiveBoard(
         ? {
             ...match,
             status: live.status || match.status,
-            minute: live.minute ?? match.minute,
+            minute: live.minute != null ? live.minute : match.minute,
+            minute_extra: live.minute != null ? live.minute_extra ?? null : match.minute_extra,
             home_score: live.home_score ?? match.home_score,
             away_score: live.away_score ?? match.away_score,
           }
@@ -100,12 +101,18 @@ export function withEarlyGoalFlags(match: FlashscoreMatch): FlashscoreMatch {
   const earlyGoalMinute = match.early_goal_minute ?? (
     sawEarlyGoal && inEarlyWindow ? minute : null
   );
+  // first_goal_minute comes only from the real timeline (server enrichment); keep it sticky
+  // and never infer it from the scoreline.
+  const firstGoalMinute = match.first_goal_minute ?? null;
+  const goalUnder30 = firstGoalMinute != null && firstGoalMinute <= EARLY_GOAL_MINUTE;
 
   return {
     ...match,
     early_goal: sawEarlyGoal,
     early_favorite_goal: sawEarlyFavoriteGoal,
     early_goal_minute: earlyGoalMinute,
+    first_goal_minute: firstGoalMinute,
+    goal_under_30: goalUnder30,
     alert_eligible: sawEarlyFavoriteGoal || isAlertEligible(match),
   };
 }
@@ -322,7 +329,9 @@ export function displayMatchMinute(match: FlashscoreMatch, now = Date.now()): st
     return "Descanso";
   }
   if (match.minute != null) {
-    return `${match.minute}'`;
+    return match.minute_extra && match.minute_extra > 0
+      ? `${match.minute}+${match.minute_extra}'`
+      : `${match.minute}'`;
   }
   if (!hasMatchStarted(match, now) || !match.start_time) {
     return "Pendiente";

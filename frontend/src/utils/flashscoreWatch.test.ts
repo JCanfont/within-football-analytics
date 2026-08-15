@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   FAST_LIVE_REFRESH_MS,
   SLOW_LIVE_REFRESH_MS,
+  displayMatchMinute,
   isAlertEligible,
   liveRefreshIntervalMs,
   mergeFlashscoreLiveBoard,
@@ -180,5 +181,54 @@ describe("nextPollWaitMs / displayMatchMinute", () => {
       home_score: 1,
       away_score: 0,
     }), now)).toMatch(/~20'|Descanso/);
+  });
+
+  it("preserves added time (45+X / 90+X) in the live minute", () => {
+    expect(displayMatchMinute(baseMatch({ status: "1st half", minute: 45, minute_extra: 2 }))).toBe("45+2'");
+    expect(displayMatchMinute(baseMatch({ status: "2nd half", minute: 90, minute_extra: 4 }))).toBe("90+4'");
+    expect(displayMatchMinute(baseMatch({ status: "2nd half", minute: 67 }))).toBe("67'");
+  });
+});
+
+describe("first goal minute", () => {
+  it.each([
+    [5, true],
+    [30, true],
+    [31, false],
+    [67, false],
+  ])("keeps first goal %i' and classifies goal_under_30=%s", (goalMinute, expected) => {
+    const flagged = withEarlyGoalFlags(baseMatch({
+      status: "inprogress",
+      minute: Math.max(goalMinute, 31),
+      home_score: 1,
+      away_score: 0,
+      first_goal_minute: goalMinute,
+    }));
+    expect(flagged.first_goal_minute).toBe(goalMinute);
+    expect(flagged.goal_under_30).toBe(expected);
+  });
+
+  it("does not invent the first goal minute from the scoreline", () => {
+    const flagged = withEarlyGoalFlags(baseMatch({
+      status: "inprogress",
+      minute: 20,
+      home_score: 1,
+      away_score: 0,
+    }));
+    expect(flagged.first_goal_minute ?? null).toBeNull();
+    expect(flagged.goal_under_30).toBe(false);
+  });
+
+  it("keeps the first goal minute sticky across later refreshes", () => {
+    const detected = withEarlyGoalFlags(baseMatch({
+      status: "inprogress",
+      minute: 31,
+      home_score: 1,
+      away_score: 0,
+      first_goal_minute: 31,
+    }));
+    const later = withEarlyGoalFlags({ ...detected, minute: 80 });
+    expect(later.first_goal_minute).toBe(31);
+    expect(later.goal_under_30).toBe(false);
   });
 });

@@ -812,7 +812,7 @@ describe("App", () => {
     expect(await screen.findByText("1X2")).toBeInTheDocument();
     expect(screen.getAllByText("1,45").length).toBeGreaterThan(0);
     expect(screen.getByText(/Pendiente de inicio|En juego/)).toBeInTheDocument();
-    expect(screen.getByText("Gol <30'")).toBeInTheDocument();
+    expect(screen.getByText("Primer gol")).toBeInTheDocument();
   }, 30000);
 
   it("emails once when Flashscore Ultra shows the low-odds team scored before minute 30", async () => {
@@ -867,6 +867,8 @@ describe("App", () => {
         early_goal: true,
         early_favorite_goal: true,
         early_goal_minute: 24,
+        first_goal_minute: 24,
+        goal_under_30: true,
       }],
     });
 
@@ -884,8 +886,8 @@ describe("App", () => {
       }));
     });
     expect(await screen.findByText("Email enviado")).toBeInTheDocument();
-    expect(screen.getByText(/Favorito marco/)).toBeInTheDocument();
-    expect(screen.getByText("24'")).toBeInTheDocument();
+    // "24'" appears in both the live minute and the "Primer gol" columns (first goal at 24').
+    expect(screen.getAllByText("24'").length).toBeGreaterThan(0);
     expect(screen.getByText("1-0")).toBeInTheDocument();
   }, 30000);
 

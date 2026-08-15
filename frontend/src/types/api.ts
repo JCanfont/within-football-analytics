@@ -525,6 +525,8 @@ export type FlashscoreMatch = {
   away_team: string;
   status: string;
   minute?: number | null;
+  /** Added/stoppage time on top of the base minute (e.g. 2 for "45+2"). */
+  minute_extra?: number | null;
   home_score?: number | null;
   away_score?: number | null;
   home_odds?: number | null;
@@ -539,6 +541,10 @@ export type FlashscoreMatch = {
   /** Sticky: the watched favorite team scored while minute ≤ 30. */
   early_favorite_goal?: boolean;
   early_goal_minute?: number | null;
+  /** Minute of the FIRST goal of the match (any team), from the timeline. Sticky once detected. */
+  first_goal_minute?: number | null;
+  /** Classification derived from first_goal_minute (<=30). Not a data source on its own. */
+  goal_under_30?: boolean;
 };
 
 export type FlashscoreMatchesResult = {

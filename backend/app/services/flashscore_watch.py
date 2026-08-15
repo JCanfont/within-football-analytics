@@ -105,7 +105,9 @@ def merge_flashscore_live_board(
         data = match.model_dump()
         if live is not None:
             data["status"] = live.status or match.status
-            data["minute"] = live.minute if live.minute is not None else match.minute
+            if live.minute is not None:
+                data["minute"] = live.minute
+                data["minute_extra"] = live.minute_extra
             data["home_score"] = live.home_score if live.home_score is not None else match.home_score
             data["away_score"] = live.away_score if live.away_score is not None else match.away_score
             # Keep captured prematch odds / favorite sticky on the watchlist.
@@ -160,11 +162,17 @@ def with_early_goal_flags(match: FlashscoreMatchRead) -> FlashscoreMatchRead:
     early_goal_minute = match.early_goal_minute
     if early_goal_minute is None and saw_early_goal and in_early_window:
         early_goal_minute = minute
+    # first_goal_minute is set only from the real timeline (enrich_matches_with_goal_minutes)
+    # and is kept sticky here; it is never inferred from the scoreline or the poll minute.
+    first_goal_minute = match.first_goal_minute
+    goal_under_30 = first_goal_minute is not None and first_goal_minute <= EARLY_GOAL_MINUTE
     return match.model_copy(
         update={
             "early_goal": saw_early_goal,
             "early_favorite_goal": saw_early_favorite_goal,
             "early_goal_minute": early_goal_minute,
+            "first_goal_minute": first_goal_minute,
+            "goal_under_30": goal_under_30,
             "alert_eligible": saw_early_favorite_goal or is_alert_eligible(match),
         }
     )

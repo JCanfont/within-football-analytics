@@ -1,5 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime, timedelta
+import logging
+import os
 import re
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -9,6 +11,32 @@ import requests
 from app.config import Settings, get_settings
 from app.schemas.api import FlashscoreMatchRead, FlashscoreMatchesResult
 from app.services.flashscore_competition_filter import is_watchable_competition
+
+
+logger = logging.getLogger(__name__)
+
+
+def _debug_enabled() -> bool:
+    """Opt-in, secret-free diagnostics for the Flashscore summary/commentary shape.
+
+    Enable by setting FLASHSCORE_DEBUG=1 in the environment. Only structural hints
+    (top-level keys, list lengths, incident keys) are logged — never headers or API keys.
+    """
+    return os.getenv("FLASHSCORE_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _log_payload_shape(label: str, payload: Any, *, depth: int = 0, max_depth: int = 3) -> None:
+    if not _debug_enabled() or depth > max_depth:
+        return
+    if isinstance(payload, dict):
+        logger.info("flashscore-shape %s dict keys=%s", label, sorted(payload.keys())[:40])
+        for key, value in list(payload.items())[:12]:
+            if isinstance(value, (dict, list)):
+                _log_payload_shape(f"{label}.{key}", value, depth=depth + 1, max_depth=max_depth)
+    elif isinstance(payload, list):
+        logger.info("flashscore-shape %s list len=%d", label, len(payload))
+        if payload:
+            _log_payload_shape(f"{label}[0]", payload[0], depth=depth + 1, max_depth=max_depth)
 
 
 LIST_ODDS_THRESHOLD = 1.6
@@ -214,7 +242,9 @@ def enrich_matches_with_goal_minutes(
     def needs_goals(match: FlashscoreMatchRead) -> bool:
         if match.favorite_odds is None:
             return False
-        if match.early_goal_minute is not None:
+        # Keep retrying until the real first-goal minute is captured; the summary timeline
+        # can lag a few seconds behind the scoreline right after a goal.
+        if match.first_goal_minute is not None:
             return False
         home = match.home_score
         away = match.away_score
@@ -269,7 +299,10 @@ def enrich_matches_with_goal_minutes(
         updated.append(
             match.model_copy(
                 update={
-                    "early_goal_minute": first_goal,
+                    "first_goal_minute": first_goal,
+                    "goal_under_30": first_goal <= 30,
+                    # Keep the alert minute in sync when it has no earlier value.
+                    "early_goal_minute": match.early_goal_minute if match.early_goal_minute is not None else first_goal,
                     "early_goal": bool(match.early_goal) or first_goal <= 30,
                 }
             )
@@ -277,20 +310,66 @@ def enrich_matches_with_goal_minutes(
     return updated
 
 
+# Incident labels that contain "goal"/"score" but are NOT an actual scored goal.
+_NON_GOAL_TOKENS = (
+    "period score",
+    "no goal",
+    "disallow",
+    "cancel",
+    "missed",
+    "shootout",
+    "var ",
+    "var:",
+    "var check",
+)
+_GOAL_LABEL_KEYS = (
+    "type",
+    "incident_type",
+    "incidentType",
+    "event_type",
+    "name",
+    "class",
+    "incident",
+    "action",
+    "title",
+    "label",
+    "text",
+    "raw",
+    "subtitle",
+    "description",
+)
+
+
+def _is_goal_incident(record: dict[str, Any]) -> bool:
+    label = " ".join(str(record.get(key) or "") for key in _GOAL_LABEL_KEYS).lower()
+    if any(token in label for token in _NON_GOAL_TOKENS):
+        return False
+    if record.get("is_goal") is True or record.get("goal") is True:
+        return True
+    if "goal" in label:
+        return True
+    # "score" only counts as a goal event when it is not a period/summary score line.
+    return "score" in label and "period" not in label
+
+
+def _goal_minute_from_record(record: dict[str, Any]) -> int | None:
+    base, _ = _minute_and_extra(record)
+    if base is not None:
+        return base
+    for key in ("time", "value", "min", "minute_display", "clock", "raw"):
+        candidate, _ = _parse_minute_with_extra(record.get(key))
+        if candidate is not None:
+            return candidate
+    return None
+
+
 def _extract_goal_minutes(payload: Any) -> list[int]:
+    _log_payload_shape("summary", payload)
     minutes: list[int] = []
     for record in _walk_dicts(payload):
-        kind = " ".join(
-            str(record.get(key) or "")
-            for key in ("type", "incident_type", "event_type", "name", "class", "incident")
-        ).lower()
-        if "goal" not in kind and "score" not in kind:
-            # Some payloads only mark goals via "is_goal".
-            if record.get("is_goal") is not True and record.get("goal") is not True:
-                continue
-        minute = _minute_value(record)
-        if minute is None:
-            minute = _parse_minute_candidate(record.get("time") or record.get("value"))
+        if not _is_goal_incident(record):
+            continue
+        minute = _goal_minute_from_record(record)
         if minute is not None and 0 <= minute <= 130:
             minutes.append(minute)
     # Preserve chronological order without duplicates.
@@ -301,6 +380,8 @@ def _extract_goal_minutes(payload: Any) -> list[int]:
             continue
         seen.add(minute)
         ordered.append(minute)
+    if _debug_enabled():
+        logger.info("flashscore-goal-minutes extracted=%s", ordered)
     return ordered
 
 
@@ -363,7 +444,7 @@ def _match_from_details_record(
     """Build a live patch from /matches/details when the payload is a flat status object."""
     home_score = _score_value(record, "home")
     away_score = _score_value(record, "away")
-    minute = _minute_value(record)
+    minute, minute_extra = _minute_and_extra(record)
     status = _status_value(record)
     if home_score is None and away_score is None and minute is None and status == "scheduled":
         return None
@@ -371,6 +452,7 @@ def _match_from_details_record(
         update={
             "status": status or base.status,
             "minute": minute if minute is not None else base.minute,
+            "minute_extra": minute_extra if minute is not None else base.minute_extra,
             "home_score": home_score if home_score is not None else base.home_score,
             "away_score": away_score if away_score is not None else base.away_score,
         }
@@ -584,6 +666,7 @@ def _collect_matches(
         home_odds = embedded_odds[0] if embedded_odds else None
         draw_odds = embedded_odds[1] if embedded_odds else None
         away_odds = embedded_odds[2] if embedded_odds else None
+        minute, minute_extra = _minute_and_extra(value)
         candidate = FlashscoreMatchRead(
             event_id=event_id,
             start_time=_datetime_value(value, "start_time", "startTime", "timestamp", "start_timestamp"),
@@ -591,7 +674,8 @@ def _collect_matches(
             home_team=home_team,
             away_team=away_team,
             status=_status_value(value),
-            minute=_minute_value(value),
+            minute=minute,
+            minute_extra=minute_extra,
             home_score=_score_value(value, "home"),
             away_score=_score_value(value, "away"),
             home_odds=home_odds,
@@ -622,6 +706,7 @@ def _merge_live_matches(scheduled: list[FlashscoreMatchRead], live: list[Flashsc
                 update={
                     "status": _prefer_status(previous.status, live_match.status),
                     "minute": live_match.minute if live_match.minute is not None else previous.minute,
+                    "minute_extra": live_match.minute_extra if live_match.minute is not None else previous.minute_extra,
                     "home_score": live_match.home_score if live_match.home_score is not None else previous.home_score,
                     "away_score": live_match.away_score if live_match.away_score is not None else previous.away_score,
                     "start_time": previous.start_time or live_match.start_time,
@@ -800,6 +885,7 @@ def _prefer_live(previous: FlashscoreMatchRead, candidate: FlashscoreMatchRead) 
         update={
             "status": _prefer_status(previous.status, candidate.status),
             "minute": candidate.minute if candidate.minute is not None else previous.minute,
+            "minute_extra": candidate.minute_extra if candidate.minute is not None else previous.minute_extra,
             "home_score": candidate.home_score if candidate.home_score is not None else previous.home_score,
             "away_score": candidate.away_score if candidate.away_score is not None else previous.away_score,
             "start_time": previous.start_time or candidate.start_time,
@@ -876,13 +962,35 @@ def _score_value(record: dict[str, Any], side: str) -> int | None:
 
 
 def _minute_value(record: dict[str, Any]) -> int | None:
+    return _minute_and_extra(record)[0]
+
+
+def _minute_and_extra(record: dict[str, Any]) -> tuple[int | None, int | None]:
+    """Base live minute plus added time (e.g. (45, 2) for "45+2'")."""
     # Avoid generic "time" — Flashscore often stores kickoff timestamps there.
-    value = _value(record, "minute", "live_time", "liveTime", "clock", "match_time", "game_time")
-    parsed = _parse_minute_candidate(value)
-    if parsed is not None:
-        return parsed
+    for key in ("minute", "live_time", "liveTime", "clock", "match_time", "game_time"):
+        raw = record.get(key)
+        if raw is None:
+            continue
+        base, extra = _parse_minute_with_extra(raw)
+        if base is not None:
+            return base, extra
     stage = record.get("stage") or record.get("match_status")
-    return _parse_minute_candidate(stage)
+    return _parse_minute_with_extra(stage)
+
+
+def _parse_minute_with_extra(value: Any) -> tuple[int | None, int | None]:
+    base = _parse_minute_candidate(value)
+    if base is None:
+        return None, None
+    if isinstance(value, str) and "+" in value:
+        after = value.split("+", 1)[1]
+        digits = "".join(character for character in after if character.isdigit())
+        if digits:
+            extra = int(digits)
+            if 0 < extra <= 30:
+                return base, extra
+    return base, None
 
 
 def _parse_minute_candidate(value: Any) -> int | None:
