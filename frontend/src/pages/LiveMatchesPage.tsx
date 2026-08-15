@@ -816,8 +816,9 @@ function buildLiveCommentaryLine(event: SofaScoreTeamEvent, snapshot?: LiveMatch
 
 function formatLiveMinute(event: SofaScoreTeamEvent, snapshot?: LiveMatchSnapshot) {
   const minute = snapshot?.minute ?? event.minute;
+  const extra = snapshot?.minute_extra ?? event.minute_extra;
   if (minute != null) {
-    return `Minuto ${formatRegularMatchMinute(minute)}`;
+    return extra && extra > 0 ? `Minuto ${minute}+${extra}` : `Minuto ${formatRegularMatchMinute(minute)}`;
   }
   const estimated = estimateLiveMinute(event);
   if (estimated != null) {

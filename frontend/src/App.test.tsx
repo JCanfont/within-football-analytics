@@ -798,7 +798,7 @@ describe("App", () => {
     expect(await screen.findByText("Cuota local")).toBeInTheDocument();
     expect(screen.getAllByText("1,45").length).toBeGreaterThan(0);
     expect(screen.getByText("Esperando SofaScore")).toBeInTheDocument();
-    expect(screen.getByText("Gol <30'")).toBeInTheDocument();
+    expect(screen.getByText("Primer gol")).toBeInTheDocument();
   }, 30000);
 
   it("emails once when SofaScore shows the low-odds team scored before minute 30", async () => {

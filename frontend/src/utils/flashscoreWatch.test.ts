@@ -4,6 +4,7 @@ import {
   SLOW_LIVE_REFRESH_MS,
   applyGoalIncidents,
   favoriteEarlyGoalMinute,
+  formatMinuteDisplay,
   isAlertEligible,
   liveRefreshIntervalMs,
   mergeFlashscoreWithSofaScore,
@@ -67,6 +68,61 @@ describe("flashscoreWatch", () => {
     expect(enriched.early_goal_minute).toBe(8);
     expect(enriched.early_favorite_goal).toBe(true);
     expect(favoriteEarlyGoalMinute(enriched)).toBe(8);
+  });
+
+  it("refreshes the live minute and preserves added time instead of keeping a stale value", () => {
+    const merged = mergeFlashscoreWithSofaScore(
+      [baseMatch({ minute: 12, home_score: 0, away_score: 0, status: "inprogress" })],
+      [{
+        event_id: 99,
+        start_time: "2026-08-08T18:00:00Z",
+        status: "inprogress",
+        minute: 45,
+        minute_extra: 2,
+        competition: "LaLiga",
+        home_team: "Getafe CF",
+        away_team: "RC Celta",
+        home_score: 0,
+        away_score: 0,
+      }],
+    );
+
+    expect(merged[0].minute).toBe(45);
+    expect(merged[0].minute_extra).toBe(2);
+    expect(formatMinuteDisplay(merged[0].minute, merged[0].minute_extra)).toBe("45+2");
+  });
+
+  it.each([
+    [5, true],
+    [30, true],
+    [31, false],
+    [67, false],
+  ])("shows the first goal at %i' and classifies goalUnder30=%s", (goalMinute, expectedUnder30) => {
+    const enriched = applyGoalIncidents(
+      baseMatch({ minute: Math.max(goalMinute, 31), home_score: 1, away_score: 0 }),
+      [{ minute: goalMinute, is_home: true, home_score: 1, away_score: 0 }],
+    );
+
+    expect(enriched.first_goal_minute).toBe(goalMinute);
+    expect(enriched.goal_under_30).toBe(expectedUnder30);
+  });
+
+  it("has no first goal minute for a 0-0 match", () => {
+    const match = withEarlyGoalFlags(baseMatch({ minute: 55, home_score: 0, away_score: 0 }));
+    expect(match.first_goal_minute).toBeNull();
+    expect(match.goal_under_30).toBe(false);
+  });
+
+  it("keeps the first goal minute sticky across later updates", () => {
+    const detected = applyGoalIncidents(
+      baseMatch({ minute: 31, home_score: 1, away_score: 0 }),
+      [{ minute: 31, is_home: true, home_score: 1, away_score: 0 }],
+    );
+    expect(detected.first_goal_minute).toBe(31);
+
+    const later = withEarlyGoalFlags({ ...detected, minute: 80 });
+    expect(later.first_goal_minute).toBe(31);
+    expect(later.goal_under_30).toBe(false);
   });
 
   it("does not treat a late goal in the timeline as an early goal", () => {

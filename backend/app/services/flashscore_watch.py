@@ -94,7 +94,11 @@ def merge_flashscore_with_sofascore(
         data = match.model_dump()
         if event is not None:
             data["status"] = event.status or match.status
-            data["minute"] = event.minute if event.minute is not None else match.minute
+            # Always take the freshly computed live minute; never keep a stale captured value
+            # when the provider has live timing for the event.
+            if event.minute is not None:
+                data["minute"] = event.minute
+                data["minute_extra"] = event.minute_extra
             data["home_score"] = event.home_score if event.home_score is not None else match.home_score
             data["away_score"] = event.away_score if event.away_score is not None else match.away_score
             data["sofascore_event_id"] = event.event_id
@@ -106,7 +110,13 @@ def apply_goal_incidents(
     match: FlashscoreMatchRead,
     goals: list[SofaScoreGoalIncident],
 ) -> FlashscoreMatchRead:
-    """Attach the real goal minutes from the SofaScore timeline and re-evaluate flags."""
+    """Attach the real goal minutes from the SofaScore timeline and re-evaluate flags.
+
+    An empty timeline (e.g. a transient provider glitch) never wipes a minute already
+    detected — the previously stored minutes are kept.
+    """
+    if not goals:
+        return with_early_goal_flags(match)
     home_minutes = sorted({goal.minute for goal in goals if goal.is_home})
     away_minutes = sorted({goal.minute for goal in goals if not goal.is_home})
     data = match.model_dump()
@@ -167,6 +177,12 @@ def with_early_goal_flags(match: FlashscoreMatchRead) -> FlashscoreMatchRead:
     else:
         early_goal_minute = None
 
+    # First goal of the match (any team), taken only from the timeline and kept sticky
+    # once detected. Never inferred from the current scoreline.
+    all_incident_minutes = sorted(home_minutes + away_minutes)
+    first_goal_minute = all_incident_minutes[0] if all_incident_minutes else match.first_goal_minute
+    goal_under_30 = first_goal_minute is not None and first_goal_minute <= EARLY_GOAL_MINUTE
+
     return match.model_copy(
         update={
             "home_goal_minutes": home_minutes,
@@ -174,6 +190,8 @@ def with_early_goal_flags(match: FlashscoreMatchRead) -> FlashscoreMatchRead:
             "early_goal": saw_early_goal,
             "early_favorite_goal": saw_early_favorite_goal,
             "early_goal_minute": early_goal_minute,
+            "first_goal_minute": first_goal_minute,
+            "goal_under_30": goal_under_30,
             "alert_eligible": saw_early_favorite_goal or is_alert_eligible(match),
         }
     )

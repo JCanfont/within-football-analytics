@@ -79,6 +79,84 @@ def _watched_match(**overrides) -> FlashscoreMatchRead:
     return FlashscoreMatchRead(**base)
 
 
+def test_merge_refreshes_live_minute_and_added_time() -> None:
+    # A stale captured minute must be replaced by the fresh live minute on each poll.
+    match = FlashscoreMatchRead(
+        event_id="fs-1",
+        competition="LaLiga",
+        home_team="Getafe",
+        away_team="Celta",
+        status="inprogress",
+        minute=12,
+        home_odds=1.4,
+        away_odds=7.0,
+        favorite_side="home",
+        favorite_team="Getafe",
+        favorite_odds=1.4,
+    )
+    event = SofaScoreTeamEvent(
+        event_id=99,
+        start_time=datetime(2026, 8, 8, 18, 0, tzinfo=UTC),
+        status="inprogress",
+        minute=45,
+        minute_extra=2,
+        competition="LaLiga",
+        home_team="Getafe CF",
+        away_team="RC Celta",
+        home_score=0,
+        away_score=0,
+    )
+
+    merged = flashscore_watch.merge_flashscore_with_sofascore([match], [event])
+
+    assert merged[0].minute == 45
+    assert merged[0].minute_extra == 2
+
+
+def test_first_goal_minute_classification_by_minute() -> None:
+    cases = {5: True, 30: True, 31: False, 67: False}
+    for goal_minute, expected_under_30 in cases.items():
+        enriched = flashscore_watch.apply_goal_incidents(
+            _watched_match(minute=goal_minute if goal_minute > 30 else 30, home_score=1, away_score=0),
+            [SofaScoreGoalIncident(minute=goal_minute, is_home=True, home_score=1, away_score=0)],
+        )
+        assert enriched.first_goal_minute == goal_minute
+        assert enriched.goal_under_30 is expected_under_30
+
+
+def test_first_goal_minute_is_the_earliest_goal() -> None:
+    enriched = flashscore_watch.apply_goal_incidents(
+        _watched_match(minute=70, home_score=1, away_score=1),
+        [
+            SofaScoreGoalIncident(minute=67, is_home=True, home_score=1, away_score=0),
+            SofaScoreGoalIncident(minute=5, is_home=False, home_score=1, away_score=1),
+        ],
+    )
+    assert enriched.first_goal_minute == 5
+    assert enriched.goal_under_30 is True
+
+
+def test_goalless_match_has_no_first_goal_minute() -> None:
+    match = flashscore_watch.with_early_goal_flags(
+        _watched_match(minute=55, home_score=0, away_score=0)
+    )
+    assert match.first_goal_minute is None
+    assert match.goal_under_30 is False
+
+
+def test_first_goal_minute_is_sticky_across_updates() -> None:
+    detected = flashscore_watch.apply_goal_incidents(
+        _watched_match(minute=31, home_score=1, away_score=0),
+        [SofaScoreGoalIncident(minute=31, is_home=True, home_score=1, away_score=0)],
+    )
+    assert detected.first_goal_minute == 31
+
+    # A later poll without a fresh timeline must not lose the detected first-goal minute.
+    later = flashscore_watch.with_early_goal_flags(detected.model_copy(update={"minute": 80}))
+    assert later.first_goal_minute == 31
+    assert later.goal_under_30 is False
+
+
 def test_apply_goal_incidents_uses_real_minute_not_poll_minute() -> None:
     # Poll observed the goal at minute 27, but the timeline shows it happened at minute 8.
     match = flashscore_watch.with_early_goal_flags(_watched_match())
