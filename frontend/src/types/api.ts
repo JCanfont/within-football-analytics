@@ -439,6 +439,23 @@ export type SofaScoreLiveEventsResult = {
   events: SofaScoreTeamEvent[];
 };
 
+export type SofaScoreGoalIncident = {
+  minute: number;
+  added_time?: number | null;
+  is_home: boolean;
+  home_score?: number | null;
+  away_score?: number | null;
+  player?: string | null;
+};
+
+export type SofaScoreEventIncidentsResult = {
+  provider: string;
+  event_id: number;
+  source_url?: string | null;
+  message: string;
+  goals: SofaScoreGoalIncident[];
+};
+
 export type SofaScoreStoredEventsResult = {
   provider: string;
   sport?: string | null;
@@ -539,6 +556,11 @@ export type FlashscoreMatch = {
   /** Sticky: the watched favorite team scored while minute ≤ 30. */
   early_favorite_goal?: boolean;
   early_goal_minute?: number | null;
+  /** SofaScore event id resolved by team-name match; used to fetch the goal timeline. */
+  sofascore_event_id?: number | null;
+  /** Real goal minutes from the SofaScore incident timeline (not the poll minute). */
+  home_goal_minutes?: number[];
+  away_goal_minutes?: number[];
 };
 
 export type FlashscoreMatchesResult = {

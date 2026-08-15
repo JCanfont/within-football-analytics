@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   FAST_LIVE_REFRESH_MS,
   SLOW_LIVE_REFRESH_MS,
+  applyGoalIncidents,
+  favoriteEarlyGoalMinute,
   isAlertEligible,
   liveRefreshIntervalMs,
   mergeFlashscoreWithSofaScore,
@@ -50,6 +52,33 @@ describe("flashscoreWatch", () => {
     expect(merged[0].early_favorite_goal).toBe(true);
     expect(merged[0].early_goal_minute).toBe(18);
     expect(merged[0].alert_eligible).toBe(true);
+    expect(merged[0].sofascore_event_id).toBe(99);
+  });
+
+  it("replaces the poll-minute guess with the real goal minute from the timeline", () => {
+    const polled = withEarlyGoalFlags(baseMatch({ minute: 27, home_score: 1, away_score: 0 }));
+    expect(polled.early_goal_minute).toBe(27); // approximation before the timeline is known
+
+    const enriched = applyGoalIncidents(polled, [
+      { minute: 8, is_home: true, home_score: 1, away_score: 0 },
+    ]);
+
+    expect(enriched.home_goal_minutes).toEqual([8]);
+    expect(enriched.early_goal_minute).toBe(8);
+    expect(enriched.early_favorite_goal).toBe(true);
+    expect(favoriteEarlyGoalMinute(enriched)).toBe(8);
+  });
+
+  it("does not treat a late goal in the timeline as an early goal", () => {
+    const polled = withEarlyGoalFlags(baseMatch({ minute: 52, home_score: 1, away_score: 0 }));
+    const enriched = applyGoalIncidents(polled, [
+      { minute: 41, is_home: true, home_score: 1, away_score: 0 },
+    ]);
+
+    expect(enriched.home_goal_minutes).toEqual([41]);
+    expect(enriched.early_goal).toBe(false);
+    expect(enriched.early_favorite_goal).toBe(false);
+    expect(enriched.early_goal_minute).toBeNull();
   });
 
   it("keeps the early-goal signal after the match leaves the first 30 minutes", () => {

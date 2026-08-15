@@ -9,6 +9,8 @@ from app.config import get_settings
 from app.schemas.api import (
     LiveMatchSnapshot,
     LiveProviderStatus,
+    SofaScoreEventIncidentsResult,
+    SofaScoreGoalIncident,
     SofaScoreLiveEventsResult,
     SofaScoreTeamEvent,
     SofaScoreTeamEventsResult,
@@ -63,6 +65,38 @@ def fetch_live_events(sport: str = "football") -> SofaScoreLiveEventsResult:
         sport=sport,
         message=f"{len(events)} partidos en directo encontrados en SofaScore.",
         events=[_team_event_from_payload(event) for event in events],
+    )
+
+
+def fetch_event_incidents(event_id: int) -> SofaScoreEventIncidentsResult:
+    """Return the goal timeline (with real minutes) for a SofaScore event."""
+    payload = _crawlora_get("sofascore/event-incidents", id=event_id)
+    data = payload.get("data") or {}
+    goals: list[SofaScoreGoalIncident] = []
+    for item in data.get("incidents") or []:
+        if str(item.get("type") or "").lower() != "goal":
+            continue
+        minute = _to_int(item.get("time"))
+        if minute is None:
+            continue
+        player = item.get("player")
+        goals.append(
+            SofaScoreGoalIncident(
+                minute=minute,
+                added_time=_to_int(item.get("added_time")),
+                is_home=bool(item.get("is_home")),
+                home_score=_to_int(item.get("home_score")),
+                away_score=_to_int(item.get("away_score")),
+                player=str(player) if player else None,
+            )
+        )
+    goals.sort(key=lambda goal: (goal.minute, goal.added_time or 0))
+    return SofaScoreEventIncidentsResult(
+        provider=PROVIDER_NAME,
+        event_id=int(event_id),
+        source_url=data.get("source_url"),
+        message=f"{len(goals)} goles en la cronologia SofaScore.",
+        goals=goals,
     )
 
 

@@ -197,6 +197,11 @@ class FlashscoreMatchRead(BaseModel):
     early_goal: bool = False
     early_favorite_goal: bool = False
     early_goal_minute: int | None = None
+    # SofaScore event id resolved by team-name match; needed to fetch the goal timeline.
+    sofascore_event_id: int | None = None
+    # Real goal minutes from the SofaScore incident timeline (not the poll minute).
+    home_goal_minutes: list[int] = Field(default_factory=list)
+    away_goal_minutes: list[int] = Field(default_factory=list)
 
 
 class FlashscoreMatchesResult(BaseModel):
@@ -540,6 +545,23 @@ class SofaScoreTeamEvent(BaseModel):
     is_interest: bool = False
     interest_label: str | None = None
     interest_match_id: int | None = None
+
+
+class SofaScoreGoalIncident(BaseModel):
+    minute: int
+    added_time: int | None = None
+    is_home: bool
+    home_score: int | None = None
+    away_score: int | None = None
+    player: str | None = None
+
+
+class SofaScoreEventIncidentsResult(BaseModel):
+    provider: str
+    event_id: int
+    source_url: str | None = None
+    message: str
+    goals: list[SofaScoreGoalIncident] = Field(default_factory=list)
 
 
 class SofaScoreTeamEventsResult(BaseModel):
