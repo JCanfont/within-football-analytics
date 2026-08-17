@@ -266,9 +266,11 @@ def enrich_matches_with_goal_minutes(
     goal_minute_by_id: dict[str, int] = {}
 
     def lookup(match: FlashscoreMatchRead) -> tuple[str, int] | None:
+        # /matches/match/commentary is the confirmed FlashScore4 goal-timeline endpoint;
+        # summary is kept only as a best-effort fallback for plans that expose it.
         for path in (
-            f"{base_url}/api/flashscore/v2/matches/match/summary",
             f"{base_url}/api/flashscore/v2/matches/match/commentary",
+            f"{base_url}/api/flashscore/v2/matches/match/summary",
         ):
             try:
                 payload = _get_json(path, headers, {"match_id": match.event_id})
@@ -363,26 +365,56 @@ def _goal_minute_from_record(record: dict[str, Any]) -> int | None:
     return None
 
 
+def _record_score_total(record: dict[str, Any]) -> int | None:
+    """Running score total from a timeline/commentary entry (e.g. "1 - 0" -> 1)."""
+    for key in ("score_at", "score", "result", "current_score", "scoreStr", "score_str"):
+        raw = record.get(key)
+        if isinstance(raw, str):
+            numbers = re.findall(r"\d+", raw)
+            if len(numbers) >= 2:
+                return int(numbers[0]) + int(numbers[1])
+    home = _int_value(_value(record, "score_home", "home_score", "homeScore"))
+    away = _int_value(_value(record, "score_away", "away_score", "awayScore"))
+    if home is not None and away is not None:
+        return home + away
+    return None
+
+
 def _extract_goal_minutes(payload: Any) -> list[int]:
+    """Goal minutes from a Flashscore summary/commentary/timeline payload.
+
+    Primary: incident labels that say "goal". Fallback (label/language independent):
+    the earliest minute at which the running score first reaches >= 1.
+    """
     _log_payload_shape("summary", payload)
-    minutes: list[int] = []
+    label_minutes: list[int] = []
+    scored_entries: list[tuple[int, int]] = []
     for record in _walk_dicts(payload):
-        if not _is_goal_incident(record):
-            continue
         minute = _goal_minute_from_record(record)
-        if minute is not None and 0 <= minute <= 130:
-            minutes.append(minute)
-    # Preserve chronological order without duplicates.
-    seen: set[int] = set()
-    ordered: list[int] = []
-    for minute in minutes:
-        if minute in seen:
+        if minute is None or not (0 <= minute <= 130):
             continue
-        seen.add(minute)
-        ordered.append(minute)
+        if _is_goal_incident(record):
+            label_minutes.append(minute)
+        total = _record_score_total(record)
+        if total is not None:
+            scored_entries.append((minute, total))
+
+    minutes = sorted(set(label_minutes))
+    if not minutes and scored_entries:
+        # No explicit goal labels: use the first minute the running total becomes a goal.
+        scored_entries.sort(key=lambda item: item[0])
+        for minute, total in scored_entries:
+            if total >= 1:
+                minutes = [minute]
+                break
     if _debug_enabled():
-        logger.info("flashscore-goal-minutes extracted=%s", ordered)
-    return ordered
+        logger.info(
+            "flashscore-goal-minutes labels=%s scored=%s -> %s",
+            sorted(set(label_minutes)),
+            scored_entries[:10],
+            minutes,
+        )
+    return minutes
 
 
 def _load_day_board(

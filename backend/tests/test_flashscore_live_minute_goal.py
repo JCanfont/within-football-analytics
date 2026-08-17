@@ -56,15 +56,33 @@ def _summary_with_goals(*incidents: dict) -> dict:
     return {"code": 200, "data": {"incidents": list(incidents)}}
 
 
-def test_extract_goal_minutes_reads_action_field_and_order() -> None:
+def test_extract_goal_minutes_reads_action_field_sorted_ascending() -> None:
     payload = _summary_with_goals(
         {"type": "period_score", "period": "1st Half", "minute": None, "action": "Period score", "score_at": "1 - 0"},
         {"type": "incident", "action": "Goal", "minute": "31'", "score_at": "1 - 0"},
         {"type": "incident", "action": "Yellow card", "minute": "40'"},
         {"type": "incident", "action": "Own Goal", "minute": "5'", "score_at": "1 - 1"},
     )
-    # Ordered as they appear; period score is ignored, card ignored, goals kept (incl. own goal).
-    assert flashscore_provider._extract_goal_minutes(payload) == [31, 5]
+    # Sorted ascending so the first goal (earliest minute) is minutes[0]; card/period ignored.
+    assert flashscore_provider._extract_goal_minutes(payload) == [5, 31]
+
+
+def test_extract_goal_minutes_score_progression_without_goal_label() -> None:
+    # Commentary entries carry a running score but no explicit "Goal" label/keyword.
+    payload = _summary_with_goals(
+        {"type": "comment", "minute": "3'", "text": "Kick off", "score_at": "0 - 0"},
+        {"type": "comment", "minute": "23'", "text": "What a strike!", "score_at": "1 - 0"},
+        {"type": "comment", "minute": "40'", "text": "Chance", "score_at": "1 - 0"},
+    )
+    assert flashscore_provider._extract_goal_minutes(payload) == [23]
+
+
+def test_extract_goal_minutes_score_progression_home_away_fields() -> None:
+    payload = _summary_with_goals(
+        {"minute": "10'", "score_home": 0, "score_away": 0},
+        {"minute": "67'", "score_home": 0, "score_away": 1},
+    )
+    assert flashscore_provider._extract_goal_minutes(payload) == [67]
 
 
 def test_extract_goal_minutes_excludes_disallowed_goals() -> None:
